@@ -5,7 +5,6 @@ import { post, API_ENDPOINTS } from '../../lib/api'
 import { toast } from 'sonner'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../lib/store'
-import { notifyNewUserSignup } from '../../lib/notifications'
 import {
   ArrowRight,
   Check,
@@ -130,10 +129,6 @@ export default function PhoneAuth() {
 
         await executeLogin(email.trim(), password)
 
-        const { data: { user: newUser } } = await supabase.auth.getUser()
-        if (newUser) {
-          await notifyNewUserSignup(username.trim(), newUser.id)
-        }
       }
     } catch (err: any) {
       console.error('[PhoneAuth] auth error:', err)

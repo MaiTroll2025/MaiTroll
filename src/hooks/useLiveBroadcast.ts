@@ -40,6 +40,7 @@ export interface LiveBroadcastSession {
   isConnected: boolean
   remoteParticipants: Map<string, RemoteParticipant>
   connect: () => Promise<void>
+  suspendForBattle: () => Promise<void>
   toggleCamera: () => Promise<void>
   toggleMicrophone: () => Promise<void>
   /** Sets the microphone to a fixed state and keeps the UI in sync. */
@@ -310,8 +311,14 @@ export function useLiveBroadcast({
         mic: existingMic?.track?.sid || existingMic?.trackSid || null,
       })
 
-      let activeVideoTrack = (existingCam?.track as LocalVideoTrack | null) || null
-      let activeAudioTrack = (existingMic?.track as LocalAudioTrack | null) || null
+      let activeVideoTrack =
+        (existingCam?.track as LocalVideoTrack | null) ||
+        localTracksRef.current?.[1] ||
+        null
+      let activeAudioTrack =
+        (existingMic?.track as LocalAudioTrack | null) ||
+        localTracksRef.current?.[0] ||
+        null
 
       if (!activeVideoTrack || !activeAudioTrack) {
         const fresh = await createLocalTracks({
@@ -457,6 +464,28 @@ export function useLiveBroadcast({
     setRemoteParticipants(new Map())
   }, [disconnectLiveKitRoom])
 
+  const suspendForBattle = useCallback(async () => {
+    const room = roomRef.current
+    if (!room) return
+
+    for (const publication of room.localParticipant.trackPublications.values()) {
+      if (!publication.track) continue
+      try {
+        await room.localParticipant.unpublishTrack(publication.track, false)
+      } catch (error) {
+        console.warn('[useLiveBroadcast] Failed to unpublish track while suspending for battle:', error)
+      }
+    }
+
+    detachLiveKitHandlers(room)
+    room.removeAllListeners()
+    await room.disconnect(false)
+    roomRef.current = null
+    livekitRoomDisconnectedCountRef.current += 1
+    setIsConnected(false)
+    setRemoteParticipants(new Map())
+  }, [detachLiveKitHandlers])
+
   // Cleanup on unmount — but NOT when we're adopting a transferred room.
   useEffect(() => {
     return () => {
@@ -476,6 +505,7 @@ export function useLiveBroadcast({
     isConnected,
     remoteParticipants,
     connect,
+    suspendForBattle,
     toggleCamera,
     toggleMicrophone,
     setMicrophoneEnabled,

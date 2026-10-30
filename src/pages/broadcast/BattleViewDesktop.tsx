@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { Loader2, Coins, Crown, Flame, Skull, X, RefreshCw, LogOut, MessageCircle, Home } from "lucide-react";
@@ -8,15 +8,15 @@ import type { BattleViewController } from "../../hooks/useBattleViewController";
 import useTrollTime from "../../hooks/useTrollTime";
 import TrollTimeBanner from "../../components/battle/TrollTimeBanner";
 import ActiveBattlesPanel from "../../components/broadcast/battle/ActiveBattlesPanel";
-import BattleScoreboard from "../../components/broadcast/battle/BattleScoreboard";
 import BattleBottomBar from "../../components/broadcast/battle/BattleBottomBar";
 import BattleActivityFeed from "../../components/broadcast/battle/BattleActivityFeed";
 import BattleChat from "../../components/broadcast/BattleChat";
 import MuteHandler from "../../components/broadcast/MuteHandler";
 import GiftTray from "../../components/broadcast/GiftTray";
 import QuickGiftRow from "../../components/broadcast/QuickGiftRow";
-import { MemoBattleArena, BattleConnectionStatus } from "../../components/broadcast/BattleArena";
-import MatchFoundOverlay from "../../components/broadcast/MatchFoundOverlay";
+import { BattleConnectionStatus } from "../../components/broadcast/BattleArena";
+import BattleArenaRoomPreview from "../../pages/dev/BattleArenaRoomPreview";
+  import MatchFoundOverlay from "../../components/broadcast/MatchFoundOverlay";
 
 /**
  * Desktop BattleView — visually and functionally identical to the original
@@ -32,12 +32,12 @@ export default function BattleViewDesktop({ battleView }: { battleView: BattleVi
     participantInfo,
     participantSnapshots,
     departedSeatKeys,
+    battleParticipants,
     activeBattles,
     activeBattlesLoading,
     battleId,
     timeLeft,
     isSuddenDeath,
-    handleBack,
     handleGiftSelect,
     battleLocalAudioTrack,
     battleLocalVideoTrack,
@@ -52,8 +52,7 @@ export default function BattleViewDesktop({ battleView }: { battleView: BattleVi
     profile,
     userIdToLiveKitIdentity,
     effectiveUserId,
-    isBroadcaster,
-    isRandomBattle,
+    isBroadcaster,    isRandomBattle,
     giftRecipientId,
     isMobileViewport,
     giftStreamId,
@@ -77,9 +76,41 @@ export default function BattleViewDesktop({ battleView }: { battleView: BattleVi
     error,
     handleSelectBattle,
     preBattleCountdown,
+    onOpenBroadcasterControls,
+    onToggleCamera,
+    onToggleMic,
   } = battleView;
 
   const navigate = useNavigate();
+
+  // Convert real battle participants into green/purple seat arrays so the
+  // arena preview renders real users instead of mock "Green Seat N" data.
+  const battleSeats = useMemo(() => {
+    const green: any[] = [];
+    const purple: any[] = [];
+    for (const p of (battleParticipants || [])) {
+      if (p.role !== 'stage' || !p.user_id || !['challenger', 'opponent'].includes(p.team)) continue;
+      const expectedStreamId = p.team === 'challenger' ? challengerStream?.id : opponentStream?.id;
+      if (p.source_stream_id && p.source_stream_id !== expectedStreamId) continue;
+      const seat = {
+        id: p.user_id,
+        userId: p.user_id,
+        user_id: p.user_id,
+        name: p.profile?.username || p.username || 'Participant',
+        username: p.profile?.username || p.username,
+        avatarUrl: p.profile?.avatar_url,
+        side: p.team === 'challenger' ? 'green' : 'purple',
+        team: p.team,
+        score: p.score || 0,
+        role: p.role,
+        seatIndex: p.seat_index,
+        sourceStreamId: p.source_stream_id,
+      };
+      if (p.team === 'opponent') purple.push(seat);
+      else green.push(seat);
+    }
+    return { green, purple };
+  }, [battleParticipants, challengerStream?.id, opponentStream?.id]);
 
   // Server-authoritative Troll Time state for this battle.
   const trollTime = useTrollTime(battleId);
@@ -172,25 +203,15 @@ export default function BattleViewDesktop({ battleView }: { battleView: BattleVi
       </aside>
 
       {/* CENTER COLUMN — scoreboard / stage / bottom bar */}
-      <main className="relative flex min-w-0 flex-1 flex-col">
-        <TrollTimeBanner
-          active={trollTime.active}
-          multiplier={trollTime.multiplier}
-          endsAt={trollTime.endsAt}
-          eventId={trollTime.eventId}
-        />
-        <BattleScoreboard
-          challengerName={challengerStream?.title}
-          opponentName={opponentStream?.title}
-          challengerScore={battle?.score_challenger || 0}
-          opponentScore={battle?.score_opponent || 0}
-          timeLeft={timeLeft}
-          isSuddenDeath={isSuddenDeath}
-          battleStatus={battle?.status}
-          onBack={handleBack}
-        />
+        <main className="relative flex min-w-0 flex-1 flex-col">
+          <TrollTimeBanner
+            active={trollTime.active}
+            multiplier={trollTime.multiplier}
+            endsAt={trollTime.endsAt}
+            eventId={trollTime.eventId}
+          />
 
-        <div className="pointer-events-none absolute right-2 top-16 z-30">
+          <div className="pointer-events-none absolute right-2 top-16 z-30">
           <BattleConnectionStatus connectionStatus={connectionStatus} />
         </div>
 
@@ -214,62 +235,67 @@ export default function BattleViewDesktop({ battleView }: { battleView: BattleVi
           }}
         >
           <div className="relative flex h-full w-full items-start justify-center overflow-hidden">
-            {/* Battle Arena */}
-            <MemoBattleArena
-              onGift={handleGiftSelect}
+            {/* Battle Arena - Production BattleArenaRoomPreview */}
+            <BattleArenaRoomPreview
+              battle={{
+                id: battle?.id || battleId || '',
+                challenger: challengerStream?.title || 'Broadcaster',
+                opponent: opponentStream?.title || 'Opponent',
+                scoreC: battle?.score_challenger || 0,
+                scoreO: battle?.score_opponent || 0,
+                viewers: participantSnapshots?.length || 0,
+                mode: battle?.mode || 'random',
+                artC: 'green',
+                artO: 'purple',
+              }}
+              onClose={handleReturnToStream}
               battleId={battleId}
+              currentUserId={effectiveUserId}
               localAudioTrack={battleLocalAudioTrack}
               localVideoTrack={battleLocalVideoTrack}
-              localIsCameraEnabled={isCameraEnabled}
-              localIsMicEnabled={isMicEnabled}
+              cameraEnabled={isCameraEnabled}
+              micEnabled={isMicEnabled}
               remoteUsers={remoteUsers}
               trackRevision={trackRevision}
-              challengerStreamId={challengerStream.id}
-              opponentStreamId={opponentStream.id}
-              challengerHostId={challengerStream.user_id}
-              opponentHostId={opponentStream.user_id}
-              challengerHostName={challengerStream.title}
-              opponentHostName={opponentStream.title}
-              challengerBoxCount={challengerStream.box_count || 1}
-              opponentBoxCount={opponentStream.box_count || 1}
-              onChangeBoxCount={setTeamBoxCount}
-              isRandomBattle={isRandomBattle}
-              departedSeatKeys={departedSeatKeys}
-              challengerScore={battle?.score_challenger || 0}
-              opponentScore={battle?.score_opponent || 0}
-              challengerCrownInfo={challengerCrownInfo}
-              opponentCrownInfo={opponentCrownInfo}
-              isSuddenDeath={isSuddenDeath}
-              onTrollOpponent={handleTrollOpponent}
-              canTroll={isSuddenDeath && participantInfo?.role === "host"}
-              currentUserTeam={participantInfo?.team}
               userIdToLiveKitIdentity={userIdToLiveKitIdentity}
-              currentUserProfile={profile}
-              onOpenStaffActions={(participant) => {
-                const streamId =
-                  participant.sourceStreamId ||
-                  (participant.team === "challenger" ? challengerStream.id : opponentStream.id);
-                window.dispatchEvent(
-                  new CustomEvent("Mai Troll:open-user-actions", {
-                    detail: {
-                      userId: participant.identity,
-                      username: participant.name,
-                      streamId,
-                      battleId,
-                      role: participant.role,
-                      team: participant.team,
-                      source: "battle_box",
-                    },
-                  })
-                );
-              }}
-              currentUserId={effectiveUserId}
+              challengerHostId={challengerStream?.user_id || ''}
+              opponentHostId={opponentStream?.user_id || ''}
+              challengerHostName={challengerStream?.title || ''}
+              opponentHostName={opponentStream?.title || ''}
+              challengerStreamId={challengerStream?.id || ''}
+              opponentStreamId={opponentStream?.id || ''}
+              greenSeats={battleSeats.green}
+              purpleSeats={battleSeats.purple}
               isBroadcaster={isBroadcaster}
-              timeLeft={timeLeft}
+              isRandomBattle={isRandomBattle}
               battleStatus={battle?.status}
+              timeLeft={timeLeft}
+              onGift={handleGiftSelect}
+              onToggleCamera={onToggleCamera}
+              onToggleMic={onToggleMic}
+              onOpenBroadcasterControls={onOpenBroadcasterControls}
+              onChangeBoxCount={setTeamBoxCount}
+              onForfeit={handleLeaveBattle}
+              onRematch={handleRematch}
+              onLeaveBattle={handleLeaveBattle}
+              canForfeit={isBroadcaster}
+              canRematch={isBroadcaster && showRematchOption}
+              showDemoActions={false}
+              showInternalChat={false}
             />
           </div>
         </div>
+
+        {showRematchOption && battle?.status === 'active' && participantInfo?.role === 'host' && (
+          <button
+            type="button"
+            onClick={handleRematch}
+            className="fixed left-1/2 top-20 z-[60] -translate-x-1/2 rounded-full border border-fuchsia-300/50 bg-fuchsia-600 px-5 py-2 text-sm font-black text-white shadow-lg shadow-fuchsia-900/40"
+          >
+            <RefreshCw size={14} className="mr-2 inline" />
+            Rematch now
+          </button>
+        )}
 
         {/* Battle status banner between grid and gifting */}
         {battle?.status === "starting" || battle?.status === "ready" ? (
@@ -450,7 +476,7 @@ export default function BattleViewDesktop({ battleView }: { battleView: BattleVi
         )}
 
         {/* Mobile Bottom Action Bar */}
-        <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-md border-t border-white/10" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+        <div className="xl:hidden fixed bottom-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-md border-t border-white/10" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
           <div className="flex items-center justify-around px-4 py-3">
             {/* Chat Button */}
             <button
@@ -538,7 +564,7 @@ export default function BattleViewDesktop({ battleView }: { battleView: BattleVi
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="md:hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md"
+              className="xl:hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md"
               onClick={() => setShowMobileChat(false)}
             >
               <motion.div

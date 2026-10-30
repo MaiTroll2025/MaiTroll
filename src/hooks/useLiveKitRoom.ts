@@ -1370,6 +1370,35 @@ export function useLiveKitRoom({
      }
    }, [handleParticipantJoined, handleParticipantLeft, handleTrackSubscribed, handleTrackUnsubscribed])
 
+  const suspendRoom = useCallback(async () => {
+    const room = roomRef.current
+    if (!room) return
+
+    try {
+      for (const publication of room.localParticipant.trackPublications.values()) {
+        if (!publication.track) continue
+        try {
+          await room.localParticipant.unpublishTrack(publication.track, false)
+        } catch (error) {
+          console.warn('[useLiveKitRoom] Failed to unpublish track while suspending room:', error)
+        }
+      }
+
+      room.removeAllListeners()
+      await room.disconnect(false)
+    } catch (error) {
+      console.error('[useLiveKitRoom] Failed to suspend room:', error)
+      throw error
+    } finally {
+      roomRef.current = null
+      joinedRef.current = false
+      joiningRef.current = false
+      setIsConnected(false)
+      setIsPublishing(false)
+      setRemoteUsers([])
+    }
+  }, [])
+
   const setCameraEnabled = useCallback(async (enabled: boolean) => {
     if (audioOnly || roomType === 'pod') return false
 
@@ -1579,6 +1608,7 @@ export function useLiveKitRoom({
     joinAsPublisher,
     joinAsAudience,
     leaveRoom,
+    suspendRoom,
     publishLocalTracks,
     unpublishLocalTracks,
     toggleCamera,

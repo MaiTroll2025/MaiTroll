@@ -12,7 +12,6 @@ interface RandomBattleBannerProps {
   onStartQueue?: () => void;
   onStopQueue?: () => void;
   isBusy?: boolean;
-  canStartQueue?: boolean;
   mobileSafe?: boolean;
 }
 
@@ -23,7 +22,6 @@ export default function RandomBattleBanner({
   onStartQueue,
   onStopQueue,
   isBusy = false,
-  canStartQueue = true,
   mobileSafe = false,
 }: RandomBattleBannerProps) {
   const [countdown, setCountdown] = useState<number | null>(null);
@@ -215,18 +213,18 @@ export default function RandomBattleBanner({
               {onStartQueue && (
                 <button
                   onClick={onStartQueue}
-                  disabled={isBusy || !canStartQueue}
-                  title={!canStartQueue ? 'Fill the current Battle Pot before starting the queue' : undefined}
+                  disabled={isBusy}
+
                   className={cn(
                     'px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all',
                     'bg-gradient-to-r from-purple-500 to-pink-500 text-white',
                     'shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40',
                     'hover:scale-105 active:scale-95',
-                    (isBusy || !canStartQueue) && 'opacity-50 cursor-not-allowed',
+                    isBusy && 'opacity-50 cursor-not-allowed',
                   )}
                 >
                   <Swords size={14} />
-                  {canStartQueue ? 'Start Queue' : 'Battle Pot Not Full'}
+                  Start Queue
                 </button>
               )}
             </div>

@@ -270,32 +270,6 @@ BEGIN
     );
   END IF;
 
-  SELECT battle_unlocked INTO v_unlocked
-  FROM public.user_profiles
-  WHERE id = p_broadcaster_id;
-
-  IF NOT v_unlocked THEN
-    RETURN jsonb_build_object(
-      'matched', false,
-      'message', 'Broadcaster has not unlocked random battles. Complete the initial 100-coin Battle Pot first.'
-    );
-  END IF;
-
-  SELECT status INTO v_round_status
-  FROM public.battle_pot_rounds
-  WHERE broadcaster_id = p_broadcaster_id
-    AND round_type = 'subsequent_battle'
-    AND status = 'reached'
-  ORDER BY created_at DESC
-  LIMIT 1;
-
-  IF NOT FOUND OR v_round_status <> 'reached' THEN
-    RETURN jsonb_build_object(
-      'matched', false,
-      'message', 'Battle pot round not complete. Viewers must contribute 10 coins to start the next battle.'
-    );
-  END IF;
-
   SELECT * INTO v_self
   FROM public.streams
   WHERE id = p_stream_id AND user_id = p_broadcaster_id

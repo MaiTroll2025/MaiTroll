@@ -102,6 +102,7 @@ export interface MaiVoiceMessageMeta {
   message_id: string;
   sender_id: string;
   sender_name: string;
+  sender_avatar?: string | null;
   duration_ms: number;
   expires_at: string;
   created_at: string;

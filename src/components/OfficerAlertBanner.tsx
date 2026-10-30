@@ -19,7 +19,7 @@ export default function OfficerAlertBanner() {
     if (!isOfficer) return;
 
     const checkAlerts = async () => {
-      // Check for stalled payouts (> 30 mins pending)
+      // Check for unresolved cashout requests (> 30 mins pending)
       const thirtyMinsAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
       
       const { data: stalledPayouts } = await supabase
@@ -28,26 +28,12 @@ export default function OfficerAlertBanner() {
         .eq('status', 'pending')
         .lt('created_at', thirtyMinsAgo);
 
-      // Check for failed payouts
-      const { data: failedPayouts } = await supabase
-        .from('payout_requests')
-        .select('id')
-        .eq('status', 'rejected');
-
       const newAlerts = [];
       
       if (stalledPayouts && stalledPayouts.length > 0) {
         newAlerts.push({
           type: 'delay',
-          message: `${stalledPayouts.length} payout(s) pending > 30 mins! Action required.`,
-          link: '/admin/cashout-manager'
-        });
-      }
-
-      if (failedPayouts && failedPayouts.length > 0) {
-        newAlerts.push({
-          type: 'error',
-          message: `${failedPayouts.length} payout(s) failed delivery! Check ASAP.`,
+          message: `${stalledPayouts.length} cashout request(s) pending > 30 mins! Action required.`,
           link: '/admin/cashout-manager'
         });
       }

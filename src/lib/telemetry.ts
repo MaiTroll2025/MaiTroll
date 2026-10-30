@@ -141,6 +141,8 @@ export function resetTelemetry(): void {
   }
 }
 
+import { trackOutboundClick } from './outboundClickTracker';
+
 export function initTelemetry() {
   // Breadcrumbs and UI/submit tracking are for analytics purposes only.
   // They must NOT initialize until analytics consent is given.
@@ -158,7 +160,25 @@ export function initTelemetry() {
       data: { text, id: target.id, class: target.className }
     });
     detectRageClick(e);
+
+    // Record outbound link clicks for admin website-traffic monitoring.
+    const anchor = target.closest?.('a') as HTMLAnchorElement | null;
+    if (anchor?.href) {
+      trackOutboundClick(anchor.href);
+    } else {
+      const href = target.getAttribute?.('href');
+      if (href) trackOutboundClick(href);
+    }
   }, true);
+
+  // Patch window.open so ad/payment/download popups are also tracked.
+  const originalOpen = window.open.bind(window);
+  window.open = function (url?: string, ...rest: any[]) {
+    if (url && url !== 'about:blank' && url !== '') {
+      trackOutboundClick(url);
+    }
+    return originalOpen(url as string, ...rest);
+  };
 
   document.addEventListener('submit', (e) => {
     const target = e.target as HTMLFormElement | null

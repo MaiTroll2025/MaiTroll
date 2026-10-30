@@ -36,11 +36,13 @@ export function applyCameraVideoPresentation(
     track?: CameraTrackLike
     facingMode?: CameraFacingMode
     isLocal: boolean
+    mirror?: boolean
   },
 ): void {
   applyBroadcastTrackZoom(video, {
     track: options.track,
     facingMode: options.facingMode,
     isLocal: options.isLocal,
+    mirror: options.mirror,
   })
 }

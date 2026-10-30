@@ -72,6 +72,9 @@ const shouldIgnoreBugCenterError = (errorLike: unknown) => {
     text.includes('google-analytics.com') ||
     text.includes('/g/collect') ||
     text.includes('/collect?v=2') ||
+    // PushAlert third-party push provider noise
+    text.includes('pushalert') ||
+    stack.includes('pushalert') ||
     // Auth token expiration is normal — not a bug
     text.includes('refresh_token_not_found') ||
     text.includes('invalid refresh token') ||
@@ -162,6 +165,13 @@ try {
     // The consent-changed event is dispatched by ConsentContext whenever
     // the user accepts/rejects updates preferences.
     // =================================================================
+    // Outbound click tracking is admin-only telemetry (no PII leaves the
+    // server, IPs are masked in the UI) and is NOT consent-gated, so it
+    // initializes immediately for every visitor.
+    import('./lib/outboundClickTracker').then(({ initOutboundClickTracker }) => {
+      try { initOutboundClickTracker(); } catch { /* silent */ }
+    });
+
     import('./lib/consent').then(({ hasAnalyticsConsent }) => {
       if (hasAnalyticsConsent()) {
         import('./lib/telemetry').then(({ initTelemetry }) => {
@@ -276,6 +286,9 @@ const shouldIgnoreNetworkErrorForBugCenter = (url: string) => {
     url.includes('/collect?v=2') ||
     url.includes('facebook.net') ||
     url.includes('connect.facebook.net') ||
+    // PushAlert (third-party push notification provider) — its optin/subscription
+    // calls frequently fail due to ad blockers/CORS and are non-critical.
+    url.includes('pushalert.co') ||
 // Non-critical catalog fetches with graceful fallback — already caught by callers
      url.includes('/rest/v1/profile_frames') ||
       // native_push_tokens upsert runs on every phone app start; a 403 from a
@@ -319,8 +332,11 @@ const shouldIgnoreNetworkErrorForBugCenter = (url: string) => {
             console.warn('[BugCenter] Circuit breaker tripped: Supabase returning 522. Bug reporting paused for 2 min.')
             return response
           }
-          // Handle HTTP 0 (network/CORS/insecure context/aborted) - classify appropriately
-          if (response.status === 0) {
+           // Handle HTTP 0 (network/CORS/insecure context/aborted) - classify appropriately
+           if (response.status === 0) {
+             if (shouldIgnoreNetworkErrorForBugCenter(urlString)) {
+               return response;
+             }
             const errorKey = `http0_${urlString}`;
             // Deduplicate HTTP 0 errors - only report once per URL per session
             if (!reportedHttpZeroErrors.has(errorKey)) {

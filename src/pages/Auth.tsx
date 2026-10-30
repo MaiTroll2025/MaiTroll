@@ -10,7 +10,6 @@ import NavBubble from '../components/NavBubble';
 import { MaiTrollTheme } from '../styles/trollCityTheme';
 import { moderation } from '@/services/maitrollModeration';
 import { checkAndAutoArrestNewAccount, getCurrentIP } from '@/services/ipTracking';
-import { notifyNewUserSignup } from '../lib/notifications';
 
 interface AuthProps {
   embedded?: boolean;
@@ -554,8 +553,6 @@ try {
             toast.error('Account restricted due to policy violation. Please contact support.')
             // The App.tsx jail guard will redirect to /jail
           }
-          await notifyNewUserSignup(finalUsername, loggedInUser.id)
-
         // Redeem founder invite code if provided
         const codeToRedeem = founderInviteCode.trim() || localStorage.getItem('founder_invite_code')
         if (codeToRedeem && loggedInUser?.id) {

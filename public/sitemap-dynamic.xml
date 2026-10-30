@@ -4,84 +4,84 @@
         xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
         http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
   <!-- ============================================================ -->
-  <!-- DYNAMIC SITEMAP - Generated 2026-10-28                          -->
-  <!-- 121 URLs                                           -->
+  <!-- DYNAMIC SITEMAP - Generated 2026-10-30                          -->
+  <!-- 84 URLs                                           -->
   <!-- ============================================================ -->
   <url>
     <loc>https://www.maitroll.com/</loc>
-    <lastmod>2026-10-28</lastmod>
+    <lastmod>2026-10-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.maitroll.com/about</loc>
-    <lastmod>2026-10-28</lastmod>
+    <lastmod>2026-10-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.maitroll.com/terms</loc>
-    <lastmod>2026-10-28</lastmod>
+    <lastmod>2026-10-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.maitroll.com/features/broadcasting-app</loc>
-    <lastmod>2026-10-28</lastmod>
+    <lastmod>2026-10-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.maitroll.com/features/social-media</loc>
-    <lastmod>2026-10-28</lastmod>
+    <lastmod>2026-10-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.maitroll.com/updates</loc>
-    <lastmod>2026-10-28</lastmod>
+    <lastmod>2026-10-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.maitroll.com/blog</loc>
-    <lastmod>2026-10-28</lastmod>
+    <lastmod>2026-10-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.maitroll.com/utromail</loc>
-    <lastmod>2026-10-28</lastmod>
+    <lastmod>2026-10-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.maitroll.com/mai-pay</loc>
-    <lastmod>2026-10-28</lastmod>
+    <lastmod>2026-10-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.maitroll.com/troll-court</loc>
-    <lastmod>2026-10-28</lastmod>
+    <lastmod>2026-10-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.maitroll.com/mai-life</loc>
-    <lastmod>2026-10-28</lastmod>
+    <lastmod>2026-10-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.maitroll.com/mai-sing-off</loc>
-    <lastmod>2026-10-28</lastmod>
+    <lastmod>2026-10-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.maitroll.com/hytrogaming</loc>
-    <lastmod>2026-10-28</lastmod>
+    <lastmod>2026-10-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -106,6 +106,12 @@
   <url>
     <loc>https://www.maitroll.com/profile/Misty7756</loc>
     <lastmod>2026-10-25</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.maitroll.com/profile/lkblblhbjk</loc>
+    <lastmod>2026-10-30</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
@@ -152,14 +158,44 @@
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://www.maitroll.com/profile/joshuatucker95</loc>
-    <lastmod>2026-10-28</lastmod>
+    <loc>https://www.maitroll.com/profile/gbzfddf</loc>
+    <lastmod>2026-10-29</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.maitroll.com/profile/gbhliblibli</loc>
+    <lastmod>2026-10-29</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://www.maitroll.com/profile/iosdev</loc>
     <lastmod>2026-10-28</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.maitroll.com/profile/joshuatucker95</loc>
+    <lastmod>2026-10-30</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.maitroll.com/profile/lhjblhbv</loc>
+    <lastmod>2026-10-30</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.maitroll.com/profile/nxfgnxgfn</loc>
+    <lastmod>2026-10-29</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.maitroll.com/profile/huryyy</loc>
+    <lastmod>2026-10-29</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
@@ -362,338 +398,80 @@
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://www.maitroll.com/live/614a9ff9-73c1-46b2-bccc-006dbe2b9781</loc>
-    <lastmod>2026-10-27</lastmod>
+    <loc>https://www.maitroll.com/live/a5c88162-885c-4d72-86fa-92dffd5b665a</loc>
+    <lastmod>2026-10-30</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://www.maitroll.com/live/859d54b9-3f46-451b-84e4-473c75566db8</loc>
-    <lastmod>2026-10-27</lastmod>
+    <loc>https://www.maitroll.com/live/335d07fe-8983-41d4-9f8a-6e5d25d59e36</loc>
+    <lastmod>2026-10-30</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://www.maitroll.com/live/9c955e8d-7cbd-4679-9394-00c187bb86a3</loc>
-    <lastmod>2026-10-27</lastmod>
+    <loc>https://www.maitroll.com/live/a9b7f3d4-61cb-407f-b297-2de62a3f51c2</loc>
+    <lastmod>2026-10-30</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://www.maitroll.com/live/2efa22cd-ebc4-485e-ba48-47e2522e40f4</loc>
-    <lastmod>2026-10-27</lastmod>
+    <loc>https://www.maitroll.com/live/7787e7c1-167c-4f7b-a530-478a6b9266b4</loc>
+    <lastmod>2026-10-30</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://www.maitroll.com/live/31098cc1-3a32-4b76-8979-6ad18f2b1268</loc>
-    <lastmod>2026-10-26</lastmod>
+    <loc>https://www.maitroll.com/live/6d56100d-af11-46e3-88be-93729b5326a8</loc>
+    <lastmod>2026-10-30</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://www.maitroll.com/live/f046ad0b-3ab9-4c8a-a00a-acdfb3dc5ac8</loc>
-    <lastmod>2026-10-25</lastmod>
+    <loc>https://www.maitroll.com/live/a6b1ebe8-8134-4588-9b04-a59ba86e2991</loc>
+    <lastmod>2026-10-30</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://www.maitroll.com/live/a66395f5-dee3-4457-82a2-e48a21620bc2</loc>
-    <lastmod>2026-10-25</lastmod>
+    <loc>https://www.maitroll.com/live/ffe0af35-21f1-43f3-8bc9-73b4daecf08b</loc>
+    <lastmod>2026-10-30</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://www.maitroll.com/live/c90c7a76-5cfc-4453-a1f3-e3c744c68e36</loc>
-    <lastmod>2026-10-25</lastmod>
+    <loc>https://www.maitroll.com/live/31a2905c-789b-4247-8c4a-e0552604e8be</loc>
+    <lastmod>2026-10-30</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://www.maitroll.com/live/8a40bac8-7bc4-4627-bcaf-5881a08b256b</loc>
-    <lastmod>2026-10-25</lastmod>
+    <loc>https://www.maitroll.com/live/0b1c229d-2eb7-4649-af4e-4e8f2bdba94b</loc>
+    <lastmod>2026-10-30</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://www.maitroll.com/live/73cd0175-e662-4fa5-ba20-d14f5425cab9</loc>
-    <lastmod>2026-10-25</lastmod>
+    <loc>https://www.maitroll.com/live/99e67acd-a08b-4524-a50f-ccce52366f75</loc>
+    <lastmod>2026-10-30</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://www.maitroll.com/live/4df6139c-200c-4d93-b77d-efef74a01acc</loc>
-    <lastmod>2026-10-25</lastmod>
+    <loc>https://www.maitroll.com/live/187f6e3a-3499-47a4-a931-b8e60f3bab3e</loc>
+    <lastmod>2026-10-29</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://www.maitroll.com/live/a2d55585-a4c1-4794-ac37-90fc8ff475aa</loc>
-    <lastmod>2026-10-25</lastmod>
+    <loc>https://www.maitroll.com/live/927d4012-0968-45fa-9e98-66b35f4bbdbb</loc>
+    <lastmod>2026-10-29</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://www.maitroll.com/live/4c0a5a03-b3df-4a6b-aa32-a97b0b6d010e</loc>
-    <lastmod>2026-10-25</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/live/30191399-7b3b-41d1-9476-e6c635a7cb7f</loc>
-    <lastmod>2026-10-25</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/live/64e6c69f-5b08-4676-af73-b20d505c4c4b</loc>
-    <lastmod>2026-10-25</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/live/c0ecd3b5-3c45-4b4d-95b1-df3b8ee88540</loc>
-    <lastmod>2026-10-23</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/live/1c6d5538-49aa-4e90-9935-84ba214f017e</loc>
-    <lastmod>2026-10-23</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/live/543b3054-2c73-46d6-aca6-1c37c60cee27</loc>
-    <lastmod>2026-10-23</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/live/c49d10e5-de7b-4dcf-b49a-52408372f89d</loc>
-    <lastmod>2026-10-23</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/live/0891a05a-e8a0-4923-bc27-cdbddb80291b</loc>
-    <lastmod>2026-10-23</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/live/bee1940a-3e24-4ae3-91cc-6013c9a6fe57</loc>
-    <lastmod>2026-10-23</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/live/6d5c4d7a-72ea-4dbc-9e05-def590bb1207</loc>
-    <lastmod>2026-10-23</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/live/1ba18453-a37b-40b6-a5be-c6cbb274f30e</loc>
-    <lastmod>2026-10-23</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/live/22f00dff-5019-48b8-8f62-cc4ec1fe74bf</loc>
-    <lastmod>2026-10-23</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/live/5fc73986-d97f-4f8f-a963-8ebe495a3fe5</loc>
-    <lastmod>2026-10-23</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/live/65f6ff44-6e45-46b2-8ded-af7f912bda61</loc>
-    <lastmod>2026-10-23</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/live/b0b5381c-0cab-4b0a-a2c8-11322f825501</loc>
-    <lastmod>2026-10-23</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/live/c3cfc931-5f80-4d34-8e1c-bb936e934e54</loc>
-    <lastmod>2026-10-22</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/live/0e9c405c-9892-4570-b5e1-2a640697713a</loc>
-    <lastmod>2026-10-22</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/live/fd959eaa-ff7d-45c9-9661-f9c6999919a3</loc>
-    <lastmod>2026-10-22</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/live/6b67e28d-8eb4-49e2-9243-89f7604e71f8</loc>
-    <lastmod>2026-10-22</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/live/09196815-4714-4f3b-ac3f-309ce25f1b9b</loc>
-    <lastmod>2026-10-22</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/live/20a0746c-d96d-439d-b264-4fef4dd1206c</loc>
-    <lastmod>2026-10-22</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/live/58469e0a-78c0-451b-8a37-77cc63f32c26</loc>
-    <lastmod>2026-10-22</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/live/d1de3556-a6cd-4b78-a34d-41315e3d3f4e</loc>
-    <lastmod>2026-10-22</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/live/2465ebed-8696-4f97-90ae-9fed4837cb6f</loc>
-    <lastmod>2026-10-22</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/live/1b09adbe-acd0-4aeb-9b79-60bb9a59c741</loc>
-    <lastmod>2026-10-22</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/live/6669c36e-eb82-4d1d-928e-476ae0b72163</loc>
-    <lastmod>2026-10-22</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/live/3f3de154-b02f-4909-a8b4-03956639246d</loc>
-    <lastmod>2026-10-22</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/live/bdbe292b-3841-4b63-b371-2225f806d7ea</loc>
-    <lastmod>2026-10-22</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/live/52eb0145-adf1-462e-b5a1-bd41f29d77a9</loc>
-    <lastmod>2026-10-22</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/live/028f7be5-a705-4134-a0f2-fc792f2e2d0b</loc>
-    <lastmod>2026-10-22</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/live/beb077a7-7583-41b0-b43d-9250d91a2b5d</loc>
-    <lastmod>2026-10-22</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/live/b1cfac5a-651f-4b93-bc98-8c1fc0cd29eb</loc>
-    <lastmod>2026-10-22</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/live/ff6f9662-c96d-4333-8198-642cb07473d6</loc>
-    <lastmod>2026-10-22</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/live/8a99ec34-c792-4d60-8bc2-1a9307008682</loc>
-    <lastmod>2026-10-22</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/live/21721b0b-4845-4999-ac1f-7100c805f838</loc>
-    <lastmod>2026-10-22</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/live/9a025f3e-fb50-4fea-8455-c1c410140beb</loc>
-    <lastmod>2026-10-22</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/live/cb1a24d7-d0f2-47c3-98e2-319227e2667f</loc>
-    <lastmod>2026-10-22</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/live/e56754ab-3987-4eb8-9da0-f790542c7d41</loc>
-    <lastmod>2026-10-22</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/live/b39903a6-b5b7-4525-b62c-21dd10ff4d98</loc>
-    <lastmod>2026-10-22</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/live/888060d9-f564-4085-ab32-71dcafe8b6be</loc>
-    <lastmod>2026-10-21</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/live/d8da9bf5-2f9f-435f-955c-368e50149883</loc>
-    <lastmod>2026-10-21</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/live/a02dd633-2fc4-4e1e-9b75-388d3bd8ca1b</loc>
-    <lastmod>2026-10-21</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/live/44f15027-59e6-42f9-97fc-bc970fee4302</loc>
-    <lastmod>2026-10-21</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/live/0ad742dc-e993-4ecb-ae96-83248b492353</loc>
-    <lastmod>2026-10-21</lastmod>
+    <loc>https://www.maitroll.com/live/5c87a055-321a-4421-b6d4-222b48fae23b</loc>
+    <lastmod>2026-10-29</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
   </url>

@@ -61,7 +61,7 @@ import {
   GiftSystemProvider,
 } from '@/lib/hooks/useGiftSystem'
 import UndoRecentGiftBar from '@/components/broadcast/UndoRecentGiftBar'
-import { BattlePot } from '@/components/broadcast/BattlePot'
+
 import { useTargetedGiftQueue, type StreamGiftEvent } from '@/hooks/useTargetedGiftQueue'
 import { hydrateGiftForOverlay } from '@/lib/gifts'
 import { getGiftVisualConfig } from '@/lib/giftVisuals'
@@ -2285,6 +2285,22 @@ const canClickFloatingChatUsername =
   const leaveRoom = liveKitRoom.leaveRoom
   const joinAsAudience = liveKitRoom.joinAsAudience
   const unpublishLocalTracks = liveKitRoom.unpublishLocalTracks
+  const [battleRoomSuspended, setBattleRoomSuspended] = useState(false)
+  const suspendOriginalRoomForBattle = useCallback(async () => {
+    setBattleRoomSuspended(true)
+    hasJoinedAudienceRef.current = false
+    joiningAudienceRef.current = false
+    audienceJoinAttemptedKeyRef.current = null
+    currentRoomKeyRef.current = null
+    await liveKitRoom.suspendRoom()
+  }, [liveKitRoom.suspendRoom])
+  const resumeOriginalRoomAfterBattle = useCallback(() => {
+    hasJoinedAudienceRef.current = false
+    joiningAudienceRef.current = false
+    audienceJoinAttemptedKeyRef.current = null
+    currentRoomKeyRef.current = null
+    setBattleRoomSuspended(false)
+  }, [])
   leaveCurrentRoomRef.current = async () => {
     await leaveRoom()
   }
@@ -2303,6 +2319,7 @@ const canClickFloatingChatUsername =
    ======================================================================== */
 
   useEffect(() => {
+    if (battleRoomSuspended) return
     if (!resolvedStreamId || !stream || !hasResolvedRTCProvider || !roomId || !viewerIdentity) {
       return
     }
@@ -2324,6 +2341,14 @@ const canClickFloatingChatUsername =
       return
     }
 
+    const activeSeatStatus = String(mySeat?.status || '').toLowerCase()
+    const canPublishFromSeat = Boolean(
+      user?.id &&
+      mySeat &&
+      ['reserved', 'camera_starting', 'active', 'live'].includes(activeSeatStatus) &&
+      (mySeat.user_id === user.id || mySeat.guest_id === user.id),
+    )
+
     joiningAudienceRef.current = true
 
     let mounted = true
@@ -2333,7 +2358,7 @@ const canClickFloatingChatUsername =
       streamId: resolvedStreamId,
       roomName: roomId,
       viewerIdentity,
-      publishCapable: false,
+      publishCapable: canPublishFromSeat,
     })
       .then((res: any) => {
           if (!mounted) return
@@ -2372,6 +2397,12 @@ const canClickFloatingChatUsername =
      viewerIdentity,
      joinAsAudience,
      viewerError,
+     battleRoomSuspended,
+     mySeat?.id,
+     mySeat?.status,
+     mySeat?.user_id,
+     mySeat?.guest_id,
+     user?.id,
    ])
 
   /* ========================================================================
@@ -3202,6 +3233,7 @@ useEffect(() => {
   }, [mySeat, user?.id])
 
   useEffect(() => {
+    if (battleRoomSuspended) return
     if (!room || !isConnected) {
       return
     }
@@ -3261,11 +3293,13 @@ useEffect(() => {
       mySeat?.seat_index,
       markSeatLive,
       viewerIdentity,
+      battleRoomSuspended,
     ])
 
   const wasOnStageRef = useRef(isUserOnStage)
 
   useEffect(() => {
+    if (battleRoomSuspended) return
     if (!hasResolvedRTCProvider) return
 
     if (wasOnStageRef.current) {
@@ -3315,7 +3349,7 @@ useEffect(() => {
         joiningAudienceRef.current = false
       }
     })()
-   }, [isUserOnStage, hasResolvedRTCProvider, roomId, resolvedStreamId, viewerIdentity, joinAsAudience, publishLiveKitTracks, battleId, mySeat?.seat_index, markSeatLive])
+   }, [isUserOnStage, hasResolvedRTCProvider, roomId, resolvedStreamId, viewerIdentity, joinAsAudience, publishLiveKitTracks, battleId, mySeat?.seat_index, markSeatLive, battleRoomSuspended])
 
   /* ========================================================================
       AUDIENCE PRESENCE
@@ -4487,8 +4521,14 @@ useEffect(() => {
               battleId={stream.battle_id!}
               currentStreamId={streamId}
               viewerId={user?.id || anonViewerId}
+              localTracks={[
+                liveKitRoom.localAudioTrack ?? undefined,
+                liveKitRoom.localVideoTrack ?? undefined,
+              ]}
               remoteUsers={liveKitRoom.remoteUsers}
               userIdToLiveKitIdentity={userIdToLiveKitIdentity}
+              onSuspendOriginalRoom={suspendOriginalRoomForBattle}
+              onResumeOriginalRoom={resumeOriginalRoomAfterBattle}
               returnPathTemplate="/watch/:id"
               onReturnToStream={() => {
                 setStream((prev) =>
@@ -4737,15 +4777,7 @@ useEffect(() => {
               )}
             </div>
 
-            {stream?.user_id && (
-              <BattlePot
-                broadcasterId={stream.user_id}
-                streamId={resolvedStreamId}
-                isMobile
-                className="pointer-events-auto w-full overflow-hidden rounded-2xl border border-[#FFD166]/35 shadow-[0_0_20px_rgba(255,209,102,0.09)]"
-                onBattleStart={() => {}}
-              />
-            )}
+
 
             <div className="flex w-full items-start justify-between gap-2">
               {/* City Status Orb and Mai Bag stay directly under the ticker. */}
@@ -5520,5 +5552,3 @@ useEffect(() => {
     </GiftSystemProvider>
   )
 }
-
-

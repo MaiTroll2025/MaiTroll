@@ -82,6 +82,11 @@ export default function BattleViewMobile({ battleView }: { battleView: BattleVie
     handleBack,
     handleSelectBattle,
     handleReturnToStream,
+    handleLeaveBattle,
+    leaveLoading,
+    showRematchOption,
+    handleRematch,
+    participantInfo,
     followBroadcaster,
     shareBroadcast: _shareBroadcast,
     loading,
@@ -90,6 +95,7 @@ export default function BattleViewMobile({ battleView }: { battleView: BattleVie
     preBattleCountdown,
     onToggleCamera,
     onToggleMic: _onToggleMic,
+    onOpenBroadcasterControls,
     battleLocalVideoTrack,
     battleLocalAudioTrack,
   } = battleView;
@@ -236,7 +242,11 @@ export default function BattleViewMobile({ battleView }: { battleView: BattleVie
     }
 
     if (vm.userId === effectiveUserId) {
-      void onToggleCamera();
+      if (vm.role === 'host') {
+        onOpenBroadcasterControls?.();
+      } else {
+        void onToggleCamera();
+      }
       return;
     }
 
@@ -461,6 +471,19 @@ export default function BattleViewMobile({ battleView }: { battleView: BattleVie
                   <X size={18} />
                 </button>
               </div>
+              {isBroadcaster && battleStatus === "active" && (
+                <button
+                  type="button"
+                  disabled={leaveLoading}
+                  onClick={() => {
+                    setDrawerOpen(false);
+                    void handleLeaveBattle();
+                  }}
+                  className="mb-3 w-full rounded-xl border border-red-400/30 bg-red-500/15 px-4 py-3 text-left text-sm font-bold text-red-200 disabled:opacity-50"
+                >
+                  {leaveLoading ? "Forfeiting…" : "Forfeit Battle"}
+                </button>
+              )}
               <div className="flex flex-col gap-2">
                 {(activeBattles as ActiveBattle[]).map((b) => (
                   <button
@@ -493,16 +516,25 @@ export default function BattleViewMobile({ battleView }: { battleView: BattleVie
         )}
       </AnimatePresence>
 
-      {/* End-of-battle return prompt */}
-      {showResults && battleStatus === "ended" && (
-        <div className="fixed inset-x-0 bottom-20 z-40 flex justify-center px-4">
-          <button
-            onClick={handleReturnToStream}
-            className="rounded-full bg-amber-500 px-6 py-2 font-bold text-black shadow-lg active:scale-95 inline-flex items-center gap-1.5"
-          >
-            <LogOut size={16} />
-            Return Now
-          </button>
+      {(showRematchOption && participantInfo?.role === "host" || showResults && battleStatus === "ended") && (
+        <div className="fixed inset-x-0 bottom-20 z-40 flex justify-center gap-2 px-4">
+          {showRematchOption && participantInfo?.role === "host" && (
+            <button
+              onClick={handleRematch}
+              className="rounded-full bg-fuchsia-600 px-5 py-2 font-bold text-white shadow-lg active:scale-95 inline-flex items-center gap-1.5"
+            >
+              Rematch
+            </button>
+          )}
+          {showResults && battleStatus === "ended" && (
+            <button
+              onClick={handleReturnToStream}
+              className="rounded-full bg-amber-500 px-6 py-2 font-bold text-black shadow-lg active:scale-95 inline-flex items-center gap-1.5"
+            >
+              <LogOut size={16} />
+              Return Now
+            </button>
+          )}
         </div>
       )}
     </div>

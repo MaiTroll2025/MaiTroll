@@ -6,6 +6,8 @@ import { supabase } from '../lib/supabase';
 import { openNotificationDestination } from '../lib/notificationDestination';
 
 let nativeListenerRegistered = false;
+const recentlyShownNotifications = new Map<string, number>();
+const NOTIFICATION_DEDUPE_WINDOW_MS = 60_000;
 
 export default function GlobalNotificationHandler() {
   const playNotificationSound = useCallback(() => {
@@ -17,6 +19,18 @@ export default function GlobalNotificationHandler() {
   }, []);
 
   const showInAppNotification = useCallback((title: string, body: string, data?: any) => {
+    const notificationId = String(data?.notification_id || '').trim();
+    if (notificationId) {
+      const now = Date.now();
+      for (const [id, shownAt] of recentlyShownNotifications) {
+        if (now - shownAt >= NOTIFICATION_DEDUPE_WINDOW_MS) {
+          recentlyShownNotifications.delete(id);
+        }
+      }
+      if (recentlyShownNotifications.has(notificationId)) return;
+      recentlyShownNotifications.set(notificationId, now);
+    }
+
     playNotificationSound();
     
     toast.custom((t) => (
@@ -82,7 +96,10 @@ export default function GlobalNotificationHandler() {
     
     const title = payload.title || 'Mai Troll';
     const body = payload.body || 'New notification';
-    const data = { route: payload.url || '/' };
+    const data = {
+      ...(payload.data && typeof payload.data === 'object' ? payload.data : {}),
+      route: payload.url || payload.data?.route || '/',
+    };
     
     showInAppNotification(title, body, data);
   }, [showInAppNotification]);

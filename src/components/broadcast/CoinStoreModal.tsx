@@ -18,10 +18,9 @@ interface CoinStoreModalProps {
   isOpen: boolean;
   onClose: () => void;
   embedded?: boolean;
-  allowCardPayment?: boolean;
 }
 
-export default function CoinStoreModal({ isOpen, onClose, embedded = false, allowCardPayment = true }: CoinStoreModalProps) {
+export default function CoinStoreModal({ isOpen, onClose, embedded = false }: CoinStoreModalProps) {
   const { user, profile } = useAuthStore();
   const [activeTab, setActiveTab] = useState<'coins' | 'frames'>('coins');
   const [selectedPack, setSelectedPack] = useState<CoinPackage | null>(null);
@@ -45,7 +44,6 @@ export default function CoinStoreModal({ isOpen, onClose, embedded = false, allo
   const [purchasingFrameId, setPurchasingFrameId] = useState<string | null>(null);
   
   const [showPayPalPayment, setShowPayPalPayment] = useState(false);
-  const [showCardPayment, setShowCardPayment] = useState(false);
   const paymentInProgressRef = useRef(false);
 
    const fetchCoinPacks = async () => {
@@ -77,7 +75,6 @@ export default function CoinStoreModal({ isOpen, onClose, embedded = false, allo
     // Reset payment state only when the modal is opened, not on unrelated rerenders.
     setSelectedPack(null);
     setShowPayPalPayment(false);
-    setShowCardPayment(false);
     paymentInProgressRef.current = false;
   }, [isOpen, loadCatalog, loadUserFrames, onClose, user?.id]);
 
@@ -98,29 +95,6 @@ export default function CoinStoreModal({ isOpen, onClose, embedded = false, allo
       setShowPayPalPayment(true);
     };
 
-    const handleCardCheckout = (pkg: CoinPackage) => {
-      if (!allowCardPayment) {
-        return;
-      }
-
-      if (!user?.id) {
-        toast.error('Sign in to use the coin store.')
-        return
-      }
-
-      const pkgWithTax: any = {
-        ...pkg,
-        price: pkg.price,
-        purchaseType: 'coins',
-        metadata: { source: 'broadcast_quick_store' },
-        forceCard: true,
-      };
-      paymentInProgressRef.current = true;
-      setSelectedPack(pkgWithTax);
-      setShowPayPalPayment(false);
-      setShowCardPayment(true);
-    };
-
     // Helper to calculate final price
     const getFinalPrice = (price: string) => {
       const numPrice = parseFloat(price.replace('$', ''));
@@ -132,14 +106,12 @@ export default function CoinStoreModal({ isOpen, onClose, embedded = false, allo
     paymentInProgressRef.current = false;
     toast.success(`Successfully purchased ${selectedPack?.coins.toLocaleString()} coins!`);
     setShowPayPalPayment(false);
-    setShowCardPayment(false);
     setSelectedPack(null);
   };
 
   const resetPaymentState = useCallback(() => {
     paymentInProgressRef.current = false;
     setShowPayPalPayment(false);
-    setShowCardPayment(false);
     setSelectedPack(null);
   }, []);
 
@@ -287,14 +259,6 @@ export default function CoinStoreModal({ isOpen, onClose, embedded = false, allo
                            >
                              PayPal
                            </button>
-                           {allowCardPayment && (
-                             <button
-                               onClick={(e) => { e.stopPropagation(); handleCardCheckout(pkg); }}
-                               className="px-3 py-1 bg-zinc-800 text-white rounded-md text-sm border border-zinc-700"
-                             >
-                               Credit Card
-                             </button>
-                           )}
                          </div>
                        </div>
                      </button>
@@ -376,7 +340,7 @@ export default function CoinStoreModal({ isOpen, onClose, embedded = false, allo
        </div>
 
         <PayPalPaymentModal
-         isOpen={showPayPalPayment || showCardPayment}
+         isOpen={showPayPalPayment}
          onClose={() => {
            resetPaymentState();
          }}

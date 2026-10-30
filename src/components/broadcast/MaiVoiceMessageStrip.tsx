@@ -2,24 +2,16 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Mic, Pause, Play, ShieldAlert } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-import { maiVoiceInvoke, type MaiVoiceMessageMeta } from '../../lib/maiVoice';
+import { maiVoiceInvoke, recordMaiVoiceMessageListen, type MaiVoiceMessageMeta } from '../../lib/maiVoice';
 
 interface MaiVoiceMessageStripProps {
   messages: MaiVoiceMessageMeta[];
-  /** Ids a moderator removed â€” they are hidden from the audience. */
+  /** Ids a moderator removed — they are hidden from the audience. */
   removedMessageIds?: string[];
   /** Called when a viewer reports a voice message. */
   onReport?: (messageId: string) => void;
 }
 
-/**
- * Shows the recorded voice messages of the room as playable chat bubbles.
- *
- * The bubbles sit in the chat feed right above the composer, so a voice
- * message reads like any other chat message. The audio itself is only fetched
- * when someone presses play, and it is removed from storage one minute after
- * the message was sent.
- */
 export const MaiVoiceMessageStrip: React.FC<MaiVoiceMessageStripProps> = ({
   messages,
   removedMessageIds = [],
@@ -70,12 +62,19 @@ export const MaiVoiceMessageStrip: React.FC<MaiVoiceMessageStripProps> = ({
         });
         setLoadingId(null);
         if (!result.ok) {
-          toast.error(result.error);
+          if (result.code === 'UNAUTHORIZED') {
+            toast.error('Sign in to play voice messages.');
+          } else {
+            toast.error(result.error);
+          }
           return;
         }
         url = result.data.url;
         urlCacheRef.current.set(messageId, url);
       }
+
+      // Track the listen on the server.
+      void recordMaiVoiceMessageListen(messageId);
 
       // A new clip always replaces the one that is playing.
       if (playingId && playingId !== messageId) stopPlayback();
@@ -107,6 +106,7 @@ export const MaiVoiceMessageStrip: React.FC<MaiVoiceMessageStripProps> = ({
         const isPlaying = playingId === item.message_id;
         const isLoading = loadingId === item.message_id;
         const seconds = Math.max(1, Math.round((item.duration_ms ?? 0) / 1000));
+        const firstLetter = item.sender_name?.charAt(0)?.toUpperCase() || '?';
 
         return (
           <motion.div
@@ -116,6 +116,18 @@ export const MaiVoiceMessageStrip: React.FC<MaiVoiceMessageStripProps> = ({
             transition={{ type: 'spring', stiffness: 380, damping: 28 }}
             className="flex max-w-[92%] items-center gap-2.5 self-start rounded-2xl rounded-bl-md border border-yellow-400/25 bg-black/80 px-3 py-2 shadow-lg shadow-black/40 backdrop-blur"
           >
+            <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full overflow-hidden border border-yellow-400/30 bg-yellow-500/10">
+              {item.sender_avatar ? (
+                <img
+                  src={item.sender_avatar}
+                  alt={`${item.sender_name}'s avatar`}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <span className="text-[11px] font-black text-yellow-300">{firstLetter}</span>
+              )}
+            </div>
+
             <button
               type="button"
               onClick={() => void playMessage(item.message_id)}
@@ -138,7 +150,7 @@ export const MaiVoiceMessageStrip: React.FC<MaiVoiceMessageStripProps> = ({
                 <span className="truncate text-[11px] font-bold text-white">{item.sender_name}</span>
                 <span className="shrink-0 text-[10px] text-zinc-400">{seconds}s</span>
               </div>
-              <div className="text-[10px] text-zinc-500">Voice message â€¢ {(item as any).listener_count || 0} listened</div>
+              <div className="text-[10px] text-zinc-500">Voice message • {(item as any).listener_count || 0} listened</div>
               {isPlaying && (
                 <div className="mt-1 h-0.5 w-24 overflow-hidden rounded-full bg-white/10">
                   <div

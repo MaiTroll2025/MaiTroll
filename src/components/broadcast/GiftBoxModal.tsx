@@ -443,7 +443,7 @@ const GiftBoxModalComponent = function GiftBoxModal({
               <div className="flex items-center justify-between border-b border-white/10 px-3 py-2 text-xs text-slate-400">
                 <span>Quick Store • buy coins without leaving the stream</span>
               </div>
-              <CoinStoreModal isOpen={true} onClose={() => setActiveTab('gifts')} embedded allowCardPayment={false} />
+              <CoinStoreModal isOpen={true} onClose={() => setActiveTab('gifts')} embedded />
             </div>
           ) : activeTab === 'mkeys' ? (
             /* 🔑 MKEY — an invitation, not a tip. Same backend on web and phone. */

@@ -39,6 +39,20 @@ CREATE POLICY "Admins can view outbound clicks" ON public.outbound_clicks
 CREATE POLICY "Users can view own clicks" ON public.outbound_clicks
   FOR SELECT USING (auth.uid() = user_id);
 
+-- Enable realtime for outbound_clicks so the admin monitor can subscribe live.
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime'
+      AND schemaname = 'public'
+      AND tablename = 'outbound_clicks'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.outbound_clicks;
+    RAISE NOTICE 'Added outbound_clicks to supabase_realtime';
+  END IF;
+END $$;
+
 -- Refresh schema
 NOTIFY pgrst, 'reload schema';
 

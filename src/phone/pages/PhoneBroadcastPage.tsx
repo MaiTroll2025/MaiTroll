@@ -66,7 +66,7 @@ import { useCashoutBanner } from '@/hooks/useCashoutBanner'
 import { usePullToRefresh } from '@/hooks/usePullToRefresh'
 import FeaturedGiftBanner from '@/components/broadcast/FeaturedGiftBanner'
 import RandomBattleBanner from '@/components/broadcast/RandomBattleBanner'
-import { BattlePot } from '@/components/broadcast/BattlePot'
+
 import TrollUpSlideModal from '@/components/trollup/TrollUpSlideModal'
 import MaiVoiceComposerActions from '@/components/broadcast/MaiVoiceComposerActions'
 import MaiVoiceMessageStrip from '@/components/broadcast/MaiVoiceMessageStrip'
@@ -2216,7 +2216,68 @@ export default function PhoneBroadcastPage() {
              onToggleMic={
                session.toggleMicrophone
              }
+             onSuspendOriginalRoom={
+               session.suspendForBattle
+             }
+             onResumeOriginalRoom={
+               session.connect
+             }
+             onOpenBroadcasterControls={() =>
+               setShowHostSettings(true)
+             }
            />
+           {showHostSettings && stream && (
+             <div
+               className="absolute inset-0 z-[100] flex items-end justify-center bg-black/60 backdrop-blur-sm"
+               onClick={() => setShowHostSettings(false)}
+             >
+               <div
+                 className="w-full max-w-md rounded-t-3xl border-t border-white/10 bg-slate-950/95 p-4 pb-[calc(env(safe-area-inset-bottom)+1rem)]"
+                 onClick={(event) => event.stopPropagation()}
+               >
+                 <div className="mb-3 flex items-center justify-between">
+                   <span className="text-sm font-black text-white">Host Settings</span>
+                   <button
+                     type="button"
+                     onClick={() => setShowHostSettings(false)}
+                     className="grid h-8 w-8 place-items-center rounded-full bg-white/10 text-white"
+                   >
+                     <X size={16} />
+                   </button>
+                 </div>
+                 <MobileBroadcastHostSettings
+                   isMicOn={session.micEnabled}
+                   isCamOn={session.cameraEnabled}
+                   isLive={stream.status === 'live'}
+                   hasRgbEffect={!!stream.has_rgb_effect}
+                   isChatLocked={!!stream.is_chat_locked}
+                   unreadMessageCount={0}
+                   seatCount={stream.seat_count ?? 0}
+                   onUpdateSeatCount={handleUpdateSeatCount}
+                   onToggleMic={session.toggleMicrophone}
+                   onToggleCamera={session.toggleCamera}
+                   onFlipCamera={session.flipCamera}
+                   onGift={handleGift}
+                   onShare={handleOpenShareModal}
+                   onOpenMessage={() => {}}
+                   onEndStream={endStream}
+                   onOpenCoinStore={() => {}}
+                   onOpenWebCoinStore={handleOpenWebCoinStore}
+                   onInviteFollowers={handleInviteFollowers}
+                   onToggleRGB={() => {}}
+                   onTextPopup={() => {}}
+                   onMuteAllSeats={muteAllSeats}
+                   onUnmuteAllSeats={unmuteAllSeats}
+                   onCameraOffAllSeats={cameraOffAllSeats}
+                   onCameraOnAllSeats={cameraOnAllSeats}
+                   seatControls={seatControls}
+                   onTrollUp={() => setShowTrollUpModal(true)}
+                   onPinProducts={() => setIsPinProductModalOpen(true)}
+                   disabled={areBroadcastSeatsDisabled() || isEnding}
+                 />
+               </div>
+             </div>
+           )}
            {import.meta.env.DEV && (
              <div className="pointer-events-none absolute inset-x-0 top-20 z-50 flex justify-center">
                <div className="rounded-xl border border-white/10 bg-black/70 px-2 py-1 text-[10px] font-mono text-fuchsia-300/90 backdrop-blur">
@@ -2520,17 +2581,7 @@ export default function PhoneBroadcastPage() {
                 />
               </div>
             )}
-            {stream?.user_id && (
-              <div className="pointer-events-auto w-full">
-                <BattlePot
-                  broadcasterId={stream.user_id}
-                  streamId={streamId}
-                  isMobile
-                  canManageRounds
-                  onBattleStart={() => {}}
-                />
-              </div>
-            )}
+
           </div>
         )}
 

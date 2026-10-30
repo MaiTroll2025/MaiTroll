@@ -73,7 +73,7 @@ import { logActiveChannels } from '../../lib/realtimeChannelDiagnostics'
 import BroadcastTextPopupOverlay from '../../components/broadcast/BroadcastTextPopupOverlay'
 import PaidChatViewerModal from '../../components/broadcast/PaidChatViewerModal'
 import RandomBattleBanner from '../../components/broadcast/RandomBattleBanner'
-import { BattlePot } from '../../components/broadcast/BattlePot'
+
 import CityStatusPanel from '../../components/city/CityStatusPanel'
 import { useFeaturedLive } from '../../hooks/useFeaturedLive'
 import { useResolvedStream, useResolvedStreamId } from '../../hooks/useStreamRoute'
@@ -974,10 +974,7 @@ function ViewerPage() {
    // Broadcaster's equipped profile frame
    const broadcasterFrame = useUserFrame((stream as any)?.user_id)
 
-   const [isBattlePotReady, setIsBattlePotReady] = useState(false)
-   const handleBattlePotReadinessChange = useCallback((isReady: boolean) => {
-     setIsBattlePotReady(isReady)
-   }, [])
+
    const updateStreamPatch = useCallback((patch: Partial<Stream>) => {
      setStream((previous) => previous ? { ...previous, ...patch } : previous)
    }, [])
@@ -986,7 +983,7 @@ function ViewerPage() {
      userId: user?.id,
      isBroadcaster: isViewerBroadcaster,
      isBattleUnlocked: profile?.battle_unlocked === true,
-     isBattlePotReady,
+
      onStreamUpdate: updateStreamPatch,
    })
    const randomBattlePhase = randomBattleQueue.phase
@@ -2229,6 +2226,22 @@ const roomId = String(getLiveKitRoomName(stream as Stream | null, streamId) || '
   const isConnected = liveKitRoom.isConnected
   const joinAsAudience = liveKitRoom.joinAsAudience
   const leaveRoom = liveKitRoom.leaveRoom
+  const [battleRoomSuspended, setBattleRoomSuspended] = useState(false)
+  const suspendOriginalRoomForBattle = useCallback(async () => {
+    setBattleRoomSuspended(true)
+    hasJoinedAudienceRef.current = false
+    joiningAudienceRef.current = false
+    currentRoomKeyRef.current = null
+    audienceJoinAttemptedKeyRef.current = null
+    await liveKitRoom.suspendRoom()
+  }, [liveKitRoom.suspendRoom])
+  const resumeOriginalRoomAfterBattle = useCallback(() => {
+    hasJoinedAudienceRef.current = false
+    joiningAudienceRef.current = false
+    currentRoomKeyRef.current = null
+    audienceJoinAttemptedKeyRef.current = null
+    setBattleRoomSuspended(false)
+  }, [])
   const setMicEnabled = liveKitRoom.setMicEnabled
   const setCameraEnabled = liveKitRoom.setCameraEnabled
   const room = liveKitRoom.room
@@ -3639,6 +3652,7 @@ useStreamRealtime(
 
   useEffect(() => {
 
+     if (battleRoomSuspended) return
      if (!hasResolvedRTCProvider) return
 
      if (user?.id) {
@@ -3757,7 +3771,7 @@ useStreamRealtime(
      }
 
     // Audience join flow moved to a focused effect below (primitive deps only)
-   }, [streamId, roomId, isActive, hasResolvedRTCProvider, isUserOnStage, isPublishing, isConnected, audienceJoinRevision, room, joinAsAudience, publishLocalTracks, unpublishLocalTracks, leaveLiveKitRoom, leaveSeat, markSeatLive, mySeat?.id, mySeat?.seat_index, user?.id, navigate, viewerIdentity])
+   }, [streamId, roomId, isActive, hasResolvedRTCProvider, isUserOnStage, isPublishing, isConnected, audienceJoinRevision, room, joinAsAudience, publishLocalTracks, unpublishLocalTracks, leaveLiveKitRoom, leaveSeat, markSeatLive, mySeat?.id, mySeat?.seat_index, user?.id, navigate, viewerIdentity, battleRoomSuspended])
 
   // Reset audience join refs when changing streams so we can re-attempt on new stream
   useEffect(() => {
@@ -3770,6 +3784,7 @@ useStreamRealtime(
   // Focused effect for audience join — keep dependencies primitive to avoid
   // re-running due to object identity changes.
   useEffect(() => {
+    if (battleRoomSuspended) return
     if (!streamId) return
     if (!isActive) return
     if (!hasResolvedRTCProvider) return
@@ -3873,7 +3888,7 @@ useStreamRealtime(
       })
 
     return () => { cancelled = true }
-  }, [streamId, isActive, hasResolvedRTCProvider, roomId, user?.id, viewerIdentity, joinAsAudience, stableAnonId, retryAdmissionKey, passiveBunnyPlaybackUrl, isUserOnStage])
+  }, [streamId, isActive, hasResolvedRTCProvider, roomId, user?.id, viewerIdentity, joinAsAudience, stableAnonId, retryAdmissionKey, passiveBunnyPlaybackUrl, isUserOnStage, battleRoomSuspended])
 
    const _stageSlots = useMemo(() => {
     const liveSeats = activeSeats.slice(0, Math.max(0, effectiveBoxCount - 1))
@@ -4019,11 +4034,18 @@ useStreamRealtime(
               battleId={stream.battle_id!}
               currentStreamId={streamId}
               viewerId={user?.id || stableAnonId}
-              remoteUsers={liveKitRoom.remoteUsers}
-              userIdToLiveKitIdentity={userIdToLiveKitIdentity}
-              onReturnToStream={() => {
-                refreshStream();
-              }}
+                      localTracks={
+                        localAudioTrack || localVideoTrack
+                          ? [localAudioTrack || undefined, localVideoTrack || undefined]
+                          : null
+                      }
+                      remoteUsers={liveKitRoom.remoteUsers}
+                      userIdToLiveKitIdentity={userIdToLiveKitIdentity}
+                      onSuspendOriginalRoom={suspendOriginalRoomForBattle}
+                      onResumeOriginalRoom={resumeOriginalRoomAfterBattle}
+                      onReturnToStream={() => {
+                        refreshStream();
+                      }}
               onToggleCamera={handleToggleCamera}
               onToggleMic={handleToggleMic}
              />
@@ -4298,15 +4320,7 @@ useStreamRealtime(
                       onGiftUser={onGift}
                     />
                     {hostId && <TopSubscribersBar broadcasterId={hostId} />}
-                    {stream && hostId && (
-                      <BattlePot
-                        broadcasterId={hostId}
-                        streamId={stream.id}
-                        compact
-                        canManageRounds={isViewerBroadcaster}
-                        onBattlePotReadinessChange={handleBattlePotReadinessChange}
-                      />
-                    )}
+
                     <WishlistMiniBrowserButton
                       wishlistUrl={broadcastTicker.data.wishlistUrl}
                       broadcasterDisplayName={hostName}
@@ -4348,28 +4362,14 @@ useStreamRealtime(
                phase={randomBattlePhase}
                delayUntil={randomBattleQueue.delayUntil}
                isBroadcaster={isViewerBroadcaster}
-               onStartQueue={isViewerBroadcaster ? randomBattleQueue.startQueue : undefined}
-               onStopQueue={isViewerBroadcaster ? randomBattleQueue.stopQueue : undefined}
-               isBusy={randomBattleQueue.isBusy}
-               canStartQueue={randomBattleQueue.canUseRandomBattles && isBattlePotReady}
+                onStartQueue={isViewerBroadcaster ? randomBattleQueue.startQueue : undefined}
+                onStopQueue={isViewerBroadcaster ? randomBattleQueue.stopQueue : undefined}
+                isBusy={randomBattleQueue.isBusy}
                mobileSafe={isMobileViewer}
              />
            )}
 
-{/* Gift-funded Battle Pot for unlocking / funding battles */}
-            {stream && isMobileViewer && (
-               <BattlePot
-                 broadcasterId={stream.user_id}
-                 streamId={stream.id}
-                 isMobile
-                 canManageRounds={isViewerBroadcaster}
-                 onBattlePotReadinessChange={handleBattlePotReadinessChange}
-                 onBattleStart={() => {
-                   // Notify that a battle is starting so UI can react
-                 }}
-                 className="relative z-40 mx-auto w-full max-w-3xl shrink-0 px-4 py-2"
-               />
-            )}
+
 
    <main
                 className={cn(

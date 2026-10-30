@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Link } from 'react-router-dom'
-import { ArrowRight, ChevronRight, Crown, Gavel, MessageCircle, FileText, HelpCircle, Home, Mail, Play, Radio, Search, Sparkles, Trophy, Users, Shield, Gamepad2, Download } from 'lucide-react';
+import { ArrowRight, ChevronRight, Coins, Crown, Gavel, MessageCircle, FileText, HelpCircle, Home, Mail, Play, Radio, Search, Sparkles, Trophy, Users, Shield, Gamepad2, Download } from 'lucide-react';
 
 import PhoneHeader from '../PhoneHeader'
 import { useAuthStore } from '@/lib/store'
@@ -1103,6 +1103,38 @@ export default function PhoneHomepage({
                 {newPostCount}
               </span>
             )}
+
+            <ArrowRight
+              size={15}
+              className="text-[#FF7A00]/50 transition-transform group-hover:translate-x-0.5"
+            />
+          </button>
+
+          {/* -------------------------------------------------------------- */}
+          {/* Coins — buy Troll Coins via website with redirect back to app  */}
+          {/* -------------------------------------------------------------- */}
+
+          <button
+            type="button"
+            onClick={() => {
+              const redirect = encodeURIComponent(window.location.origin + '/coins')
+              window.open(`https://www.maitroll.com/coins?redirect=${redirect}`, '_blank')
+            }}
+            className={`group flex w-full items-center gap-3 rounded-2xl ${neonBorder} bg-gradient-to-r from-[#FF7A00]/10 via-[#0D0814] to-[#A855F7]/10 p-4 text-left transition active:scale-[0.99]`}
+          >
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#FF7A00]/20 bg-[#FF7A00]/10">
+              <Coins size={18} className="text-[#FF7A00]" />
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-black text-white">
+                Buy Troll Coins
+              </p>
+
+              <p className="text-[9px] font-bold text-zinc-500">
+                Purchase coins on the website, then return to the app
+              </p>
+            </div>
 
             <ArrowRight
               size={15}

@@ -188,6 +188,12 @@ export function useStreamSeats(
   const refreshTimersRef = useRef<number[]>([])
   const seatsRef = useRef<Record<number, SeatSession>>({})
   const mySeatRef = useRef<SeatSession | null>(null)
+  const streamConfigRef = useRef(_streamData)
+  const streamConfigStreamIdRef = useRef(streamId)
+  if (streamConfigStreamIdRef.current !== streamId) {
+    streamConfigStreamIdRef.current = streamId
+    streamConfigRef.current = _streamData
+  }
 
   const safeSetSeats = useCallback((updater: React.SetStateAction<Record<number, SeatSession>>) => {
     if (!mountedRef.current) return
@@ -966,9 +972,17 @@ export function useStreamSeats(
     if (prev?.are_seats_locked !== curr?.are_seats_locked) changed.push('are_seats_locked')
 
     prevStreamDataRef.current = curr
+    const latestConfig = streamConfigRef.current || {}
+    const needsRefresh = changed.filter((field) => {
+      if (field === 'seat_prices') {
+        return JSON.stringify(latestConfig.seat_prices) !== JSON.stringify(curr.seat_prices)
+      }
+      return latestConfig[field] !== curr[field]
+    })
+    streamConfigRef.current = curr
 
-    if (changed.length > 0) {
-      scheduleRefresh(`stream-prop-update:${changed.join(',')}`, 0)
+    if (needsRefresh.length > 0) {
+      scheduleRefresh(`stream-prop-update:${needsRefresh.join(',')}`, 0)
     }
   }, [_streamData, scheduleRefresh])
 
@@ -987,11 +1001,19 @@ export function useStreamSeats(
         (payload) => {
           const newRow = (payload as any).new
           if (!newRow) return
+          const previousRow = streamConfigRef.current || {}
           const changed: string[] = []
-          if (newRow.seat_count !== undefined) changed.push('seat_count')
-          if (newRow.box_count !== undefined) changed.push('box_count')
-          if (newRow.seat_prices !== undefined) changed.push('seat_prices')
-          if (newRow.are_seats_locked !== undefined) changed.push('are_seats_locked')
+          if (newRow.seat_count !== undefined && newRow.seat_count !== previousRow.seat_count) changed.push('seat_count')
+          if (newRow.box_count !== undefined && newRow.box_count !== previousRow.box_count) changed.push('box_count')
+          if (newRow.seat_prices !== undefined && JSON.stringify(newRow.seat_prices) !== JSON.stringify(previousRow.seat_prices)) changed.push('seat_prices')
+          if (newRow.are_seats_locked !== undefined && newRow.are_seats_locked !== previousRow.are_seats_locked) changed.push('are_seats_locked')
+          streamConfigRef.current = {
+            ...previousRow,
+            seat_count: newRow.seat_count ?? previousRow.seat_count,
+            box_count: newRow.box_count ?? previousRow.box_count,
+            seat_prices: newRow.seat_prices ?? previousRow.seat_prices,
+            are_seats_locked: newRow.are_seats_locked ?? previousRow.are_seats_locked,
+          }
           if (changed.length === 0) return
           scheduleRefresh(`stream-config-update:${changed.join(',')}`, 400)
           if (typeof _refreshStageConfig === 'function') {
@@ -1026,28 +1048,6 @@ export function useStreamSeats(
       if (channel) supabase.removeChannel(channel)
     }
   }, [streamId, scheduleRefresh])
-
-  useEffect(() => {
-    mountedRef.current = true
-
-    return () => {
-      mountedRef.current = false
-      clearRefreshTimers()
-    }
-  }, [clearRefreshTimers])
-
-  useEffect(() => {
-    if (!streamId) {
-      setSeats({})
-      setMySeat(null)
-      seatsRef.current = {}
-      mySeatRef.current = null
-      setSeatVersion((v) => v + 1)
-      return
-    }
-
-    void fetchSeats('mount')
-  }, [streamId, fetchSeats])
 
   const pendingSeatRequests: any[] = []
   const loadingSeatRequests = false

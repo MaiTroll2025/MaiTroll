@@ -689,6 +689,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
     let isBattleRoom = false;
     let battleBroadcaster = false;
+    let battleStageParticipant = false;
     let battleStatus = "";
 
     const userIsAdmin = isAnonymousViewer ? false : isAdmin(profile);
@@ -884,6 +885,41 @@ Deno.serve(async (req: Request): Promise<Response> => {
         opponentOwnerId && opponentOwnerId === userId;
       battleBroadcaster = userOwnsChallenger || userOwnsOpponent;
 
+      if (!battleBroadcaster && category === "seat") {
+        const { data: stageParticipant, error: stageParticipantError } = await adminDb
+          .from("battle_participants")
+          .select("source_stream_id")
+          .eq("battle_id", battleId)
+          .eq("user_id", userId)
+          .eq("role", "stage")
+          .maybeSingle();
+
+        if (stageParticipantError) {
+          console.error("[livekit-token][battle] Stage participant lookup failed", {
+            battleId,
+            userId,
+            error: stageParticipantError.message,
+          });
+          return withCors(
+            {
+              success: false,
+              error: "Could not verify battle stage access.",
+              code: "battle_stage_lookup_failed",
+            },
+            500,
+            req,
+          );
+        }
+
+        battleStageParticipant = Boolean(
+          stageParticipant?.source_stream_id &&
+            [
+              battle.challenger_stream_id,
+              battle.opponent_stream_id,
+            ].includes(stageParticipant.source_stream_id),
+        );
+      }
+
       console.log("[livekit-token][battle]", {
         battleId,
         roomName,
@@ -894,8 +930,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
         opponentOwnerId,
         resolvedParticipantType: battleBroadcaster
           ? "broadcaster"
-          : "viewer",
-        canPublish: battleBroadcaster,
+          : battleStageParticipant
+            ? "stage"
+            : "viewer",
+        canPublish: battleBroadcaster || battleStageParticipant,
         canSubscribe: true,
       });
 
@@ -906,6 +944,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
           category === "mai-voice-publisher"
             ? "mai-voice-publisher"
             : "host";
+      } else if (battleStageParticipant) {
+        category = "seat";
       } else if (
         category === "host" ||
         category === "publisher" ||
@@ -1024,7 +1064,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       category === "seat" &&
       !userOwnsStream &&
       !userIsAdmin &&
-      !(isBattleRoom && battleBroadcaster)
+      !(isBattleRoom && (battleBroadcaster || battleStageParticipant))
     ) {
       const hasStagePass = await userHasStagePass(
         adminDb,

@@ -27,7 +27,11 @@ export default function AdminErrors() {
   const loadErrors = useCallback(async () => {
     try {
       setLoading(true)
-      let query = supabase.from('system_errors').select('*').order('created_at', { ascending: false })
+      let query = supabase
+        .from('system_errors')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(100)
       if (filter !== 'all') {
         query = query.eq('status', filter)
       }

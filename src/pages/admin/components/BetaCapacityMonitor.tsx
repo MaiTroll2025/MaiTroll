@@ -170,6 +170,11 @@ export default function BetaCapacityMonitor() {
     try {
       const response = await fetch('/api/admin/capacity')
       if (!response.ok) throw new Error(`HTTP ${response.status}`)
+      const contentType = response.headers.get('content-type') || ''
+      if (!contentType.includes('application/json')) {
+        const text = await response.text()
+        throw new Error(`Expected JSON from /api/admin/capacity but got ${contentType}: ${text.slice(0, 200)}`)
+      }
       const json = await response.json()
       setData(prev => ({
         ...prev,

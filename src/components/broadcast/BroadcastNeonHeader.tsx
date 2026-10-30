@@ -53,7 +53,6 @@ export interface BroadcastNeonHeaderProps {
    onActiveViewersClick?: () => void
    onGiftUser?: (userId: string) => void
    onModerateUser?: (info: ModerateUserInfo) => void
-   isBattlePotReady?: boolean
     randomBattleQueue?: {
       phase: QueuePhase
       delayUntil?: number | null
@@ -97,7 +96,6 @@ export default function BroadcastNeonHeader({
     audienceMaxVisible: _audienceMaxVisible = 8,
     onGiftUser: _onGiftUser,
     onModerateUser: _onModerateUser,
-    isBattlePotReady = false,
     randomBattleQueue,
 }: BroadcastNeonHeaderProps) {
     const { profile } = useAuthStore()
@@ -351,7 +349,6 @@ export default function BroadcastNeonHeader({
                onStartQueue={randomBattleQueue.startQueue}
                onStopQueue={randomBattleQueue.stopQueue}
                isBusy={randomBattleQueue.isBusy}
-               canStartQueue={isBattlePotReady}
                mobileSafe={false}
              />
            )}

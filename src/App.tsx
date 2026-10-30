@@ -295,6 +295,8 @@ const TMFamilyInviteHandler = lazyWithRetry(() => import("./components/trollmatc
 const EmbedPage = lazyWithRetry(() => import("./pages/broadcast/EmbedPage"));
 
 const HomepageBackgroundShowcase = lazyWithRetry(() => import("./pages/dev/HomepageBackgroundShowcase"));
+const BattleArenaPreview = lazyWithRetry(() => import("./pages/dev/BattleArenaPreview"));
+const BattleArenaPreviewPhone = lazyWithRetry(() => import("./pages/dev/BattleArenaPreviewPhone"));
 const BlockedUsers = lazyWithRetry(() => import("./pages/BlockedUsers"));
 
 const AuthenticatedHome = lazyWithRetry(() => import("./pages/Home"));
@@ -1735,6 +1737,9 @@ const appShell = (
                  <Route path="/xtrollz/*" element={<Navigate to="/mai-sing-off" replace />} />
 
                  <Route path="/dev/theme-preview" element={<ThemePreviewPage />} />
+{import.meta.env.DEV && <Route path="/dev/battle-arena-preview" element={<BattleArenaPreview />} />}
+{import.meta.env.DEV && <Route path="/dev/battle-arena-preview-phone" element={<BattleArenaPreviewPhone />} />}
+{import.meta.env.DEV && <Route path="/dev/battle-arena-preview/:battleId" element={<BattleArenaPreview />} />}
                 <Route path="/dev/homepage-preview" element={<HomepageBackgroundShowcase />} />
 
                  {/* Safety Page (standalone) */}

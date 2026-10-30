@@ -494,35 +494,11 @@ serve(async (req) => {
         const userIdsToCheck = subscriptions.map(s => s.user_id);
         const { data: enabledUsers } = await supabase
           .from('user_profiles')
-          .select('id, push_notifications_enabled, role, is_admin, is_troll_officer, is_lead_officer')
+          .select('id, push_notifications_enabled')
           .in('id', userIdsToCheck);
         
         const enabledUserIds = new Set(enabledUsers?.filter(u => u.push_notifications_enabled !== false).map(u => u.id) || []);
         filteredSubscriptions = subscriptions.filter(s => enabledUserIds.has(s.user_id));
-        
-        // Check online presence: skip push for online admins (they'll see in-app notifications)
-        const onlineAdminIds = new Set(
-          (enabledUsers || [])
-            .filter(u => {
-              const isAdmin = u.role === 'admin' || u.role === 'superadmin' || u.role === 'owner' ||
-                u.role === 'ceo' || u.is_admin === true;
-              return isAdmin;
-            })
-            .map(u => u.id)
-        );
-        
-        if (onlineAdminIds.size > 0) {
-          const { data: presenceData } = await supabase
-            .from('user_presence')
-            .select('user_id, is_online')
-            .in('user_id', Array.from(onlineAdminIds));
-          
-          const onlineIds = new Set(
-            (presenceData || []).filter(p => p.is_online).map(p => p.user_id)
-          );
-          
-          filteredSubscriptions = filteredSubscriptions.filter(s => !onlineIds.has(s.user_id));
-        }
         
         console.log('[Push] Eligible web push subscriptions:', filteredSubscriptions.length);
       }

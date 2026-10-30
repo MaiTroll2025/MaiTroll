@@ -22860,6 +22860,17 @@ BEGIN
     ALTER PUBLICATION supabase_realtime ADD TABLE public.utromail_thread_members;
     RAISE NOTICE 'Added utromail_thread_members to supabase_realtime';
   END IF;
+
+  -- Add outbound_clicks to realtime publication (admin live website-click monitor)
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime'
+      AND schemaname = 'public'
+      AND tablename = 'outbound_clicks'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.outbound_clicks;
+    RAISE NOTICE 'Added outbound_clicks to supabase_realtime';
+  END IF;
 END $$;
 
 -- Function: get_user_vehicle_assets

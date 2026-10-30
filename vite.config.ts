@@ -9,6 +9,9 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.ts'],
     include: ['src/**/*.test.{ts,tsx}'],
   },
+  server: {
+    host: true,
+  },
   resolve: {
     alias: {
       '@': resolve(__dirname, './src'),

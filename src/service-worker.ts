@@ -308,7 +308,7 @@ self.addEventListener('push', (event) => {
     icon: notificationData.icon || '/icons/icon-192.png',
     badge: notificationData.badge || '/icons/icon-72.png',
     image: notificationData.image,
-    tag: notificationData.tag || 'troll-city-notification',
+    tag: notificationData.tag || notificationData.data?.notification_id || `maitroll-${Date.now()}`,
     requireInteraction: notificationData.requireInteraction || false,
     silent: notificationData.silent === true,
     vibrate: notificationData.vibrate || [200, 100, 200],
@@ -368,19 +368,18 @@ self.addEventListener('push', (event) => {
   }
   
   event.waitUntil(
-    self.registration.showNotification(title, notificationOptions)
-  );
-  
-  // Notify open clients
-  event.waitUntil(
     (async () => {
-      const clients = await self.clients.matchAll({ type: 'window' });
-      clients.forEach((client) => {
-        client.postMessage({
+      const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      const visibleClient = clients.find((client) => client.visibilityState === 'visible');
+      if (visibleClient) {
+        visibleClient.postMessage({
           type: 'PUSH_RECEIVED',
           payload: notificationData
         });
-      });
+        return;
+      }
+
+      await self.registration.showNotification(title, notificationOptions);
     })()
   );
 });

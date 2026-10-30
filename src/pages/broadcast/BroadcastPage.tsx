@@ -36,7 +36,7 @@ import { RoleInviteHandler } from '../../components/broadcast/RoleInviteHandler'
 import { Stream } from '../../types/broadcast'
 import BroadcastBottomBar from '../../components/broadcast/BroadcastBottomBar'
 import BroadcastNeonHeader from '../../components/broadcast/BroadcastNeonHeader'
-import { BattlePot } from '../../components/broadcast/BattlePot'
+
 import AudienceBubbleTicker from '@/components/broadcast/AudienceBubbleTicker'
 import MobileAudienceTicker from '@/components/broadcast/MobileAudienceTicker'
 import BroadcastOfficerModal from '../../components/broadcast/BroadcastOfficerModal'
@@ -1550,7 +1550,7 @@ const { seats, mySeat, leaveSeat, refreshSeats, removeSeat, removeSeatByUserId }
      })
    }, [remoteParticipants])
 
-   const disconnectLiveKitRoom = useCallback(async () => {
+   const disconnectLiveKitRoom = useCallback(async (preserveLocalTracks = false) => {
     if (liveKitDisconnectPromiseRef.current) {
       await liveKitDisconnectPromiseRef.current
       return
@@ -1575,7 +1575,10 @@ const { seats, mySeat, leaveSeat, refreshSeats, removeSeat, removeSeatByUserId }
         for (const publication of publications) {
           if (!publication.track) continue
           try {
-            await room.localParticipant.unpublishTrack(publication.track)
+            await room.localParticipant.unpublishTrack(
+              publication.track,
+              !preserveLocalTracks,
+            )
           } catch (e) {
             console.warn('[BroadcastPage] Error unpublishing LiveKit track:', e)
           }
@@ -1589,7 +1592,7 @@ const { seats, mySeat, leaveSeat, refreshSeats, removeSeat, removeSeatByUserId }
       }
 
       try {
-        await room.disconnect()
+        await room.disconnect(!preserveLocalTracks)
       } catch (e) {
         console.warn('[BroadcastPage] Error disconnecting LiveKit room:', e)
       } finally {
@@ -1783,10 +1786,25 @@ useEffect(() => {
   const liveKitDisconnectPromiseRef = useRef<Promise<void> | null>(null)
   const handleStreamEndRef = useRef<() => Promise<void>>(() => Promise.resolve())
   const liveKitConnectionKeyRef = useRef<string | null>(null)
+  const [battleRoomSuspended, setBattleRoomSuspended] = useState(false)
   const anonymousViewerIdRef = useRef(`anon-viewer-${Math.random().toString(36).slice(2, 10)}`)
   const viewerCountUpdateRef = useRef(0)
   const stageTouchStartYRef = useRef<number | null>(null)
   const stageTouchCurrentYRef = useRef<number | null>(null)
+
+  const suspendBroadcastRoomForBattle = useCallback(async () => {
+    setBattleRoomSuspended(true)
+    hasJoinedRef.current = false
+    liveKitConnectionKeyRef.current = null
+    await disconnectLiveKitRoom(true)
+    setRemoteParticipants(new Map())
+  }, [disconnectLiveKitRoom])
+
+  const resumeBroadcastRoomAfterBattle = useCallback(() => {
+    hasJoinedRef.current = false
+    liveKitConnectionKeyRef.current = null
+    setBattleRoomSuspended(false)
+  }, [])
   
   // Debug: Log when remoteParticipants changes (throttled)
   const lastRemoteLogRef = useRef(0);
@@ -2758,17 +2776,14 @@ const ranked = senderIds
   const updateStreamPatch = useCallback((patch: Partial<Stream>) => {
     setStream((prev) => prev ? { ...prev, ...patch } : prev);
   }, []);
-  const [isBattlePotReady, setIsBattlePotReady] = useState(false)
-  const handleBattlePotReadinessChange = useCallback((isReady: boolean) => {
-    setIsBattlePotReady(isReady)
-  }, [])
+
 
   const randomBattleQueue = useRandomBattleQueueController({
     stream,
     userId: user?.id,
     isBroadcaster: isHost,
     isBattleUnlocked: profile?.battle_unlocked === true,
-    isBattlePotReady,
+
     onStreamUpdate: updateStreamPatch,
   });
 
@@ -4142,6 +4157,7 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
     if (!stream || !stream.id || !hasUserIdentity) {
       return;
     }
+    if (battleRoomSuspended) return
 
     // Only connect to LiveKit if the stream is actually live
     // This prevents RTC session minutes from accumulating when there's no broadcast.
@@ -4836,6 +4852,7 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
           attachLiveKitHandlers,
           detachLiveKitHandlers,
           disconnectLiveKitRoom,
+          battleRoomSuspended,
         ])
 
   // Dedicated unmount-only teardown: fully disconnect the LiveKit room exactly
@@ -6040,7 +6057,21 @@ const toggleMicrophone = useCallback(async () => {
     stream?.battle_mode === 'random_queue' &&
     !!stream?.battle_id &&
     stream?.is_battle === true &&
-    (stream?.battle_status === 'ready' || stream?.battle_status === 'starting' || stream?.battle_status === 'active');
+    (stream?.battle_status === 'ready' ||
+      stream?.battle_status === 'starting' ||
+      stream?.battle_status === 'waiting' ||
+      stream?.battle_status === 'active');
+
+  if (import.meta.env.DEV && stream?.battle_id) {
+    console.log('[BroadcastPage] BattleView entry decision', {
+      streamId,
+      battleId: stream.battle_id,
+      battleMode: stream.battle_mode,
+      isBattle: stream.is_battle,
+      battleStatus: stream.battle_status,
+      shouldShowRandomBattleArena,
+    });
+  }
 
   // PHASE 2: Derive stable battleId for BattleView key � prevents remount on stream state updates
    const activeBattleId = shouldShowRandomBattleArena ? stream?.battle_id ?? null : null;
@@ -6352,6 +6383,7 @@ const toggleMicrophone = useCallback(async () => {
               battleId={stream.battle_id!}
               currentStreamId={streamId || stream.id}
               viewerId={memoizedViewerId}
+              returnPathTemplate="/broadcast/:id"
               localTracks={battleLocalTracks}
               remoteUsers={remoteUsers}
               userIdToLiveKitIdentity={userIdToLiveKitIdentity}
@@ -6370,6 +6402,27 @@ const toggleMicrophone = useCallback(async () => {
               }}
               onToggleCamera={toggleCamera}
               onToggleMic={toggleMicrophone}
+              onSuspendOriginalRoom={suspendBroadcastRoomForBattle}
+              onResumeOriginalRoom={resumeBroadcastRoomAfterBattle}
+              onOpenBroadcasterControls={() => setIsBroadcasterControlsOpen(true)}
+            />
+            <BroadcasterControlsModal
+              isOpen={isBroadcasterControlsOpen}
+              onClose={() => setIsBroadcasterControlsOpen(false)}
+              isMicOn={micEnabled}
+              isCamOn={cameraEnabled}
+              isLive={stream?.status === 'live'}
+              liveViewerCount={liveViewerCount}
+              isHost={isHost}
+              onToggleMic={toggleMicrophone}
+              onToggleCam={toggleCamera}
+              onGift={handleGiftHost}
+              onShare={handleOpenShareModal}
+              onOpenMessage={() => { setIsBroadcasterControlsOpen(false); setIsMessagePopupOpen(true) }}
+              onOpenMoreMenu={handleOpenMoreMenu}
+              onEndStream={handleStreamEnd}
+              onInviteFollowers={handleInviteFollowers}
+              onOpenCoinStore={user?.id ? handleOpenCoinStore : undefined}
             />
             <div className="pointer-events-none fixed inset-0 z-[250]">
               <GiftVideoOverlay gifts={recentGifts} onFinish={handleRemoveGiftOverlay} />
@@ -6476,7 +6529,7 @@ const toggleMicrophone = useCallback(async () => {
                   onLiveKitMicMute={onLiveKitMicMute}
                   onLiveKitMicUnmute={onLiveKitMicUnmute}
                   randomBattleQueue={isHost ? randomBattleQueue : undefined}
-                  isBattlePotReady={isBattlePotReady}
+
                   liveViewerCount={liveViewerCount}
                   onActiveViewersClick={onActiveViewersClick}
                 />
@@ -6560,16 +6613,7 @@ const toggleMicrophone = useCallback(async () => {
                       onModerateUser={handleOpenUserAction}
                   />
                   <div className="relative z-10 flex shrink-0 items-center gap-2">
-                    {isHost && !isMobileHost && stream?.user_id && (
-                      <BattlePot
-                        broadcasterId={stream.user_id}
-                        streamId={stream.id}
-                        compact
-                        canManageRounds
-                        onBattlePotReadinessChange={handleBattlePotReadinessChange}
-                        onBattleStart={() => {}}
-                      />
-                    )}
+
                       <WishlistMiniBrowserButton
                         wishlistUrl={broadcastTicker.data.wishlistUrl}
                         broadcasterDisplayName={broadcasterDisplayName}
@@ -8945,7 +8989,6 @@ const showFallback =
                 <CoinStoreModal
                   isOpen={isCoinStoreOpen}
                   onClose={handleCloseCoinStore}
-                  allowCardPayment={false}
                 />
                 </div>
               )}

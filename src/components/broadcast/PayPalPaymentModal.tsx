@@ -53,7 +53,6 @@ export default function PayPalPaymentModal({
   const [step, setStep] = useState<PaymentStep>('select')
   const [paymentResult, setPaymentResult] = useState<any>(null)
   const [sdkReady, setSdkReady] = useState(false)
-  const [forceCard, setForceCard] = useState(false)
   const [paypalError, setPaypalError] = useState(false)
 
   const paypalButtonsRef = useRef<HTMLDivElement | null>(null)
@@ -78,12 +77,8 @@ export default function PayPalPaymentModal({
   const purchaseType = pkg?.purchaseType || 'coins'
 
   const modalRenderKey = useMemo(() => {
-    return `${packageId}:${coins}:${amountUsd}:${forceCard ? 'card' : 'paypal'}`
-  }, [amountUsd, coins, forceCard, packageId])
-
-  useEffect(() => {
-    setForceCard(Boolean(pkg?.forceCard))
-  }, [pkg?.forceCard])
+    return `${packageId}:${coins}:${amountUsd}`
+  }, [amountUsd, coins, packageId])
 
   useEffect(() => {
     serverAmountUsdRef.current = null
@@ -149,7 +144,7 @@ export default function PayPalPaymentModal({
     await new Promise<void>((resolve, reject) => {
       const script = document.createElement('script')
       script.dataset.tcPaypalSdk = 'true'
-      script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&intent=capture`
+      script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&intent=capture&disable-funding=card`
       script.async = true
 
       script.onload = () => resolve()
@@ -287,10 +282,6 @@ export default function PayPalPaymentModal({
     const buttonsConfig: any = { createOrder, onApprove, onError, onCancel }
 
     try {
-      if (forceCard && window.paypal?.FUNDING?.CARD) {
-        buttonsConfig.fundingSource = window.paypal.FUNDING.CARD
-      }
-
       const buttons = window.paypal.Buttons(buttonsConfig)
       paypalInstanceRef.current = buttons
 
@@ -314,7 +305,7 @@ export default function PayPalPaymentModal({
       console.error('[PayPalPaymentModal] Failed to render PayPal buttons:', err)
       toast.error('Unable to load PayPal checkout')
     }
-  }, [isOpen, pkg, amountUsd, requireCoins, coins, paypalError, safelyClosePayPalButtons, clearPayPalContainer, modalRenderKey, userId, packageId, packageName, purchaseType, onPaymentSuccess, forceCard])
+  }, [isOpen, pkg, amountUsd, requireCoins, coins, paypalError, safelyClosePayPalButtons, clearPayPalContainer, modalRenderKey, userId, packageId, packageName, purchaseType, onPaymentSuccess])
 
   useEffect(() => {
     if (!isOpen || !pkg) return

@@ -358,6 +358,8 @@ function announceGlobalEvent(event: { title: string; icon: string; priority: num
     if (error) {
       console.error('Failed to announce global event:', error)
     }
+  }).catch((err) => {
+    console.error('Failed to announce global event (unhandled):', err)
   })
 }
 

@@ -243,38 +243,24 @@ export const BattleVideoRenderer = ({
   videoTrack,
   isHost = false,
   isLocal = false,
+  mirror,
 }: {
   videoTrack?: LocalVideoTrack | RemoteVideoTrack;
   isHost?: boolean;
   isLocal?: boolean;
+  mirror?: boolean;
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
-    if (!videoTrack || !containerRef.current) return;
-    const currentTrackId = videoTrack.sid || (videoTrack as any).id;
-    if (currentTrackId && videoRef.current) {
-      return;
-    }
-    const existingVideoElement = containerRef.current.querySelector('video');
-    if (existingVideoElement) {
-      try {
-        if (videoRef.current) {
-          videoTrack.detach(videoRef.current);
-        }
-      } catch (e) {
-        console.warn('[BattleVideoRenderer] Failed to detach existing video element:', e);
-      }
-      existingVideoElement.remove();
-      videoRef.current = null;
-    }
+    const container = containerRef.current;
+    if (!videoTrack || !container) return;
+
     try {
       const videoElement = videoTrack.attach() as HTMLVideoElement;
-      videoRef.current = videoElement;
       videoElement.style.width = '100%';
       videoElement.style.height = '100%';
-      videoElement.style.objectFit = 'contain';
+      videoElement.style.objectFit = 'cover';
       videoElement.style.display = 'block';
       videoElement.style.backgroundColor = 'black';
       videoElement.autoplay = true;
@@ -287,12 +273,22 @@ export const BattleVideoRenderer = ({
       applyCameraVideoPresentation(videoElement, {
         track: videoTrack.mediaStreamTrack,
         isLocal,
+        mirror,
       });
-      containerRef.current.appendChild(videoElement);
+      container.appendChild(videoElement);
+
+      return () => {
+        try {
+          videoTrack.detach(videoElement);
+        } catch (err) {
+          console.warn('[BattleVideoRenderer] Failed to detach video element:', err);
+        }
+        videoElement.remove();
+      };
     } catch (err) {
       console.error('[BattleVideoRenderer] attach() threw error:', err);
     }
-  }, [videoTrack, isLocal]);
+  }, [videoTrack, isLocal, mirror]);
 
   if (!videoTrack) {
     if (isHost) {
@@ -721,6 +717,16 @@ const BattleArena = ({
           : 'lose'
       : null;
 
+  // â”€â”€ Preview-style seat selection + gift gifting state â”€â”€
+  const [selectedSeats, setSelectedSeats] = useState<Set<string>>(new Set());
+  const [selectedGift, setSelectedGift] = useState<{ id: string; name: string; icon: string; cost: number } | null>(null);
+  const [arenaGifts, setArenaGifts] = useState<{ id: string; name: string; icon: string; cost: number }[]>([]);
+  const [powerSlots, setPowerSlots] = useState<{ challenger: string[]; opponent: string[] }>({ challenger: [], opponent: [] });
+  const [powerAnnounce, setPowerAnnounce] = useState('');
+  const [fullSlotsMsg, setFullSlotsMsg] = useState<'challenger' | 'opponent' | null>(null);
+  const [rematchChallenger, setRematchChallenger] = useState(false);
+  const [rematchOpponent, setRematchOpponent] = useState(false);
+
   const lastKnownTrackRef = useRef<Record<string, { video?: RemoteVideoTrack; audio?: RemoteAudioTrack }>>({});
   const [preBattleCountdown, setPreBattleCountdown] = useState<number | null>(null);
   const [cameraCheckResults, setCameraCheckResults] = useState<Record<string, { hasParticipant: boolean; hasPublication: boolean; hasSubscription: boolean; hasVideo: boolean }>>({});
@@ -753,6 +759,43 @@ const BattleArena = ({
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
+
+  // â”€â”€ Load purchasable gifts from Supabase (filter to those with video_url) â”€â”€
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data } = await supabase.from('gift_items').select('*').order('coin_cost', { ascending: true });
+        if (!active) return;
+        if (data && data.length) {
+          const mapped = data
+            .filter((g: any) => !!g.video_url)
+            .map((g: any) => ({
+              id: g.id,
+              name: (g.name || '').replace(/^gift_/, ''),
+              icon: g.icon || '🎁',
+              cost: g.coin_cost || g.value || 0,
+            }));
+          if (mapped.length) {
+            setArenaGifts(mapped);
+            if (!selectedGift) setSelectedGift(mapped[0]);
+          }
+        }
+      } catch {
+        // keep empty gifts; gifting falls back to side gift buttons
+      }
+    })();
+    return () => { active = false; };
+  }, [selectedGift]);
+
+  // â”€â€€ Rematch votes from both sides trigger sudden-death reset â”€â€€
+  useEffect(() => {
+    if (rematchChallenger && rematchOpponent) {
+      setRematchChallenger(false);
+      setRematchOpponent(false);
+      setPowerSlots({ challenger: [], opponent: [] });
+    }
+  }, [rematchChallenger, rematchOpponent]);
 
   const isMobileViewport = isMobileLayout;
 
@@ -1737,6 +1780,57 @@ const BattleArena = ({
     onTrollOpponent(targetStreamId);
   };
 
+  // â”€â”€ Send selected gift to selected seats, or to host if none selected â”€â”€
+  const sendGiftToSelection = () => {
+    if (isBroadcaster) return;
+    const gift = selectedGift;
+    if (!gift) return;
+    const targets = [...selectedSeats];
+    if (targets.length === 0) {
+      // default to challenger host
+      if (challengerHostId && challengerStreamId) onGift(challengerHostId, challengerStreamId);
+      return;
+    }
+    targets.forEach((key) => {
+      const team = key.startsWith('challenger') ? 'challenger' : 'opponent';
+      const streamId = team === 'challenger' ? challengerStreamId : opponentStreamId;
+      const hostId = team === 'challenger' ? challengerHostId : opponentHostId;
+      // Use the seat key as a pseudo-identity for per-seat scoring; fall back to host
+      const targetId = key === `${team}-host` ? hostId : `${team}:${key}`;
+      if (streamId && hostId) onGift(targetId, streamId);
+    });
+    setSelectedSeats(new Set());
+  };
+
+  // â”€â”€ Power-up activation â”€â”€
+  const activatePower = (team: 'challenger' | 'opponent', index: number) => {
+    const pu = powerSlots[team][index];
+    if (!pu) return;
+    setPowerSlots((prev) => ({
+      ...prev,
+      [team]: prev[team].filter((_, i) => i !== index),
+    }));
+    setPowerAnnounce(`${team === 'challenger' ? challengerHostName : opponentHostName} activated ${pu}`);
+    setTimeout(() => setPowerAnnounce(''), 2500);
+  };
+
+  const tryActivatePower = (team: 'challenger' | 'opponent') => {
+    if (powerSlots[team].length >= 6) {
+      setFullSlotsMsg(team);
+      setTimeout(() => setFullSlotsMsg(null), 2000);
+      return;
+    }
+    setPowerSlots((prev) => ({ ...prev, [team]: [...prev[team], 'power-up'] }));
+    setPowerAnnounce(`${team === 'challenger' ? challengerHostName : opponentHostName} activated a power-up`);
+    setTimeout(() => setPowerAnnounce(''), 2500);
+  };
+
+  // â”€â”€ Rematch vote â”€â”€
+  const handleRematchVote = (team: 'challenger' | 'opponent') => {
+    if (team === 'challenger') setRematchChallenger(true);
+    else setRematchOpponent(true);
+  };
+
   // Generate slots for each team.
   // IMPORTANT: empty seats are NOT rendered by default â€” only the broadcaster
   // box (host) shows until seats are explicitly added by a broadcaster
@@ -1829,17 +1923,16 @@ const BattleArena = ({
       ? 'opponent'
       : 'tie';
 
+  const _totalScore = Math.max(1, challengerScore + opponentScore);
+  const challengerPct = Math.round((challengerScore / _totalScore) * 100);
+  const opponentPct = Math.round((opponentScore / _totalScore) * 100);
+
   const challengerGlowClass = battleLeadTeam === 'challenger'
     ? 'border-2 border-emerald-500/90 shadow-[0_0_30px_rgba(16,185,129,0.45)]'
     : 'border-2 border-emerald-500/20';
   const opponentGlowClass = battleLeadTeam === 'opponent'
     ? 'border-2 border-fuchsia-500/90 shadow-[0_0_30px_rgba(192,38,211,0.45)]'
     : 'border-2 border-fuchsia-500/20';
-  const vsGlowClass = battleLeadTeam === 'challenger'
-    ? 'text-emerald-300 drop-shadow-[0_0_20px_rgba(16,185,129,0.85)]'
-    : battleLeadTeam === 'opponent'
-      ? 'text-fuchsia-300 drop-shadow-[0_0_20px_rgba(192,38,211,0.85)]'
-      : 'text-white/90 drop-shadow-[0_0_12px_rgba(255,255,255,0.45)]';
 
   // Mobile-optimized grid layout: horizontal layout for mobile, vertical split for desktop
   const getGridClass = (totalSlots: number) => {
@@ -1946,36 +2039,121 @@ return (
             </div>
           </div>
 
-          {/* Center: VS + Score + Timer */}
-          <div className="flex-none flex items-center justify-center gap-3 h-16 px-2">
-            {/* Challenger score */}
-            <div className="flex-1 flex flex-col items-end">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-purple-400 truncate max-w-full">{challengerHostName || 'Challenger'}</span>
-              <span className="font-mono text-lg font-black leading-none text-purple-400">{challengerScore.toLocaleString()}</span>
-            </div>
-
-            {/* Center VS + Timer */}
-            <div className="flex flex-col items-center gap-0.5 flex-shrink-0">
-              <div className={cn(
-                'flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/60',
-                vsGlowClass
-              )}>
-                <span className="text-xs font-black uppercase tracking-wider">VS</span>
+          {/* Center: Preview Scoreboard + VS + Timer */}
+          <section className="border border-white/10 rounded-2xl bg-black/50 p-2.5 flex flex-col gap-2 shadow-[0_14px_45px_#0007,inset_0_1px_#ffffff09]">
+            <div className="relative flex items-center justify-between gap-2 min-h-[48px]">
+              <div className="score-side flex items-center gap-2 min-w-0 pr-[38px]">
+                <span className="w-1 h-1 rounded-full bg-green-400 shadow-[0_0_14px_#63ff9b]" />
+                <div className="min-w-0">
+                  <div className="score-name text-[9px] font-bold uppercase tracking-[0.15em] text-purple-400 truncate max-w-[26vw]">{challengerHostName || 'CHALLENGER'}</div>
+                  <div className="score-number font-mono text-lg font-black leading-none text-purple-400">{challengerScore.toLocaleString()}</div>
+                </div>
               </div>
-              <div className={cn(
-                "font-mono text-xs font-bold leading-none",
-                isSuddenDeath ? "text-red-500" : "text-white"
-              )}>
-                {battleStatus === 'ended' ? "ENDED" : timeLeft !== undefined ? `${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')}` : "3:00"}
+              <div className="score-vs absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 flex h-6 w-6 items-center justify-center rounded-full border border-white/10 bg-black/60">
+                <span className="text-[7px] font-black uppercase tracking-wider">VS</span>
+              </div>
+              <div className="score-side flex items-center gap-2 min-w-0 pl-[38px] right">
+                <div className="min-w-0">
+                  <div className="score-name text-[9px] font-bold uppercase tracking-[0.15em] text-emerald-400 truncate max-w-[26vw]">{opponentHostName || 'OPPONENT'}</div>
+                  <div className="score-number font-mono text-lg font-black leading-none text-emerald-400">{opponentScore.toLocaleString()}</div>
+                </div>
+                <span className="w-1 h-1 rounded-full bg-purple-400 shadow-[0_0_14px_#c084fc]" />
               </div>
             </div>
-
-            {/* Opponent score */}
-            <div className="flex-1 flex flex-col items-start">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 truncate max-w-full">{opponentHostName || 'Opponent'}</span>
-              <span className="font-mono text-lg font-black leading-none text-emerald-400">{opponentScore.toLocaleString()}</span>
+            <div className="fire-track relative h-[17px] rounded-full border border-white/10 bg-black/40 mt-2 overflow-hidden shadow-[inset_0_1px_3px_#0008]">
+              <div className="fire-green h-full bg-green-400" style={{ width: `${challengerPct}%` }} />
+              <div className="fire-purple h-full bg-purple-400" style={{ width: `${opponentPct}%` }} />
             </div>
-          </div>
+            <div className="score-meta flex items-center justify-between gap-2 mt-1 text-[8px] font-black uppercase tracking-[0.15em] text-white/40">
+              <span className="green-label text-green-300">GREEN FIRE · {challengerPct}%</span>
+              <span className="absolute left-1/2 -translate-x-1/2 z-10 text-center whitespace-nowrap">POWER METER</span>
+              <span className="purple-label text-purple-300">PURPLE FIRE · {opponentPct}%</span>
+            </div>
+          </section>
+
+          {/* â”€â€€ Preview-style gift selection + power-up controls â”€â€€ */}
+          {!isBroadcaster && arenaGifts.length > 0 && (
+            <section className="mt-2 flex flex-col gap-1 px-1">
+              <div className="flex items-center justify-between gap-2 px-1 pt-1 text-[9px] font-bold uppercase tracking-wider text-white/50">
+                <span>{selectedSeats.size} SEAT{selectedSeats.size === 1 ? '' : 'S'} SELECTED</span>
+                {powerAnnounce && (
+                  <span className="flex-1 text-center text-[9px] font-bold text-white bg-white/[0.05] rounded px-2 border border-white/10">
+                    {powerAnnounce}
+                  </span>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-2 px-1">
+                {arenaGifts.map((gift) => (
+                  <button
+                    key={gift.id}
+                    onClick={() => { setSelectedGift(gift); sendGiftToSelection(); }}
+                    className={cn(
+                      'action-btn flex flex-col items-center justify-center gap-1 py-2 rounded-lg border border-white/10 bg-black/40 text-white hover:bg-white/[0.08] transition',
+                      selectedGift?.id === gift.id ? 'border-green-400 bg-green-400/10' : ''
+                    )}
+                  >
+                    <span className="text-2xl">{gift.icon}</span>
+                    <span className="text-[9px]">{gift.cost}</span>
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center justify-between gap-2 px-1 pb-1">
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-[8px] text-[#8dffb8] font-bold">{challengerHostName || 'CHALLENGER'}</span>
+                  {powerSlots.challenger.length > 0 && (
+                    <div className="flex gap-1">
+                      {powerSlots.challenger.map((pu, i) => (
+                        <button
+                          key={i}
+                          onClick={() => activatePower('challenger', i)}
+                          className="h-6 w-6 rounded border border-white/20 bg-white/[0.05] text-white/70 hover:bg-white/[0.12]"
+                          title={pu}
+                        >
+                          {pu.slice(0, 1).toUpperCase()}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <button onClick={() => tryActivatePower('challenger')} className="action-btn text-[8px] h-7">
+                    ⚡ ACTIVATE
+                  </button>
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-[8px] text-[#d8aaff] font-bold">{opponentHostName || 'OPPONENT'}</span>
+                  {powerSlots.opponent.length > 0 && (
+                    <div className="flex gap-1">
+                      {powerSlots.opponent.map((pu, i) => (
+                        <button
+                          key={i}
+                          onClick={() => activatePower('opponent', i)}
+                          className="h-6 w-6 rounded border border-white/20 bg-white/[0.05] text-white/70 hover:bg-white/[0.12]"
+                          title={pu}
+                        >
+                          {pu.slice(0, 1).toUpperCase()}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <button onClick={() => tryActivatePower('opponent')} className="action-btn text-[8px] h-7">
+                    ⚡ ACTIVATE
+                  </button>
+                </div>
+              </div>
+              <div className="flex gap-1 px-1 pb-1">
+                <button onClick={() => handleRematchVote('challenger')} className="flex-1 action-btn text-[9px]">
+                  {rematchChallenger ? '✓ CHALLENGER REMATCH' : 'CHALLENGER REMATCH'}
+                </button>
+                <button onClick={() => handleRematchVote('opponent')} className="flex-1 action-btn text-[9px]">
+                  {rematchOpponent ? '✓ OPPONENT REMATCH' : 'OPPONENT REMATCH'}
+                </button>
+              </div>
+              {fullSlotsMsg && (
+                <div className="px-1 pt-1 text-[9px] font-bold text-amber-100 bg-amber-300/10 rounded border border-amber-300/30 text-center">
+                  Slots full
+                </div>
+              )}
+            </section>
+          )}
 
           {/* Opponent Side - Bottom */}
           <div className={cn(
@@ -2115,36 +2293,121 @@ return (
             </div>
           </div>
 
-          {/* Center: VS + Timer + Score */}
-          <div className="flex-none flex items-center justify-center gap-2 h-16 px-2">
-            {/* Challenger score */}
-            <div className="flex-1 flex flex-col items-end">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-purple-400 truncate max-w-full">{challengerHostName || 'Challenger'}</span>
-              <span className="font-mono text-lg font-black leading-none text-purple-400">{challengerScore.toLocaleString()}</span>
-            </div>
-
-            {/* Center VS + Timer */}
-            <div className="flex flex-col items-center gap-0.5 flex-shrink-0">
-              <div className={cn(
-                'flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/60',
-                vsGlowClass
-              )}>
-                <span className="text-xs font-black uppercase tracking-wider">VS</span>
+          {/* Center: Preview Scoreboard + VS + Timer */}
+          <section className="border border-white/10 rounded-2xl bg-black/50 p-2 flex flex-col gap-2 shadow-[0_14px_45px_#0007,inset_0_1px_#ffffff09]">
+            <div className="relative flex items-center justify-between gap-2 min-h-[44px]">
+              <div className="score-side flex items-center gap-2 min-w-0 pr-[34px]">
+                <span className="w-1 h-1 rounded-full bg-green-400 shadow-[0_0_14px_#63ff9b]" />
+                <div className="min-w-0">
+                  <div className="score-name text-[8px] font-bold uppercase tracking-[0.15em] text-purple-400 truncate max-w-[24vw]">{challengerHostName || 'CHALLENGER'}</div>
+                  <div className="score-number font-mono text-base font-black leading-none text-purple-400">{challengerScore.toLocaleString()}</div>
+                </div>
               </div>
-              <div className={cn(
-                "font-mono text-xs font-bold leading-none",
-                isSuddenDeath ? "text-red-500" : "text-white"
-              )}>
-                {battleStatus === 'ended' ? "ENDED" : timeLeft !== undefined ? `${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')}` : "3:00"}
+              <div className="score-vs absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 flex h-5 w-5 items-center justify-center rounded-full border border-white/10 bg-black/60">
+                <span className="text-[6px] font-black uppercase tracking-wider">VS</span>
+              </div>
+              <div className="score-side flex items-center gap-2 min-w-0 pl-[34px] right">
+                <div className="min-w-0">
+                  <div className="score-name text-[8px] font-bold uppercase tracking-[0.15em] text-emerald-400 truncate max-w-[24vw]">{opponentHostName || 'OPPONENT'}</div>
+                  <div className="score-number font-mono text-base font-black leading-none text-emerald-400">{opponentScore.toLocaleString()}</div>
+                </div>
+                <span className="w-1 h-1 rounded-full bg-purple-400 shadow-[0_0_14px_#c084fc]" />
               </div>
             </div>
-
-            {/* Opponent score */}
-            <div className="flex-1 flex flex-col items-start">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 truncate max-w-full">{opponentHostName || 'Opponent'}</span>
-              <span className="font-mono text-lg font-black leading-none text-emerald-400">{opponentScore.toLocaleString()}</span>
+            <div className="fire-track relative h-[15px] rounded-full border border-white/10 bg-black/40 mt-1 overflow-hidden shadow-[inset_0_1px_3px_#0008]">
+              <div className="fire-green h-full bg-green-400" style={{ width: `${challengerPct}%` }} />
+              <div className="fire-purple h-full bg-purple-400" style={{ width: `${opponentPct}%` }} />
             </div>
-          </div>
+            <div className="score-meta flex items-center justify-between gap-2 mt-1 text-[7px] font-black uppercase tracking-[0.15em] text-white/40">
+              <span className="green-label text-green-300">GREEN FIRE · {challengerPct}%</span>
+              <span className="absolute left-1/2 -translate-x-1/2 z-10 text-center whitespace-nowrap">POWER METER</span>
+              <span className="purple-label text-purple-300">PURPLE FIRE · {opponentPct}%</span>
+            </div>
+          </section>
+
+          {/* â”€â€€ Preview-style gift selection + power-up controls â”€â€€ */}
+          {!isBroadcaster && arenaGifts.length > 0 && (
+            <section className="mt-2 flex flex-col gap-1 px-1">
+              <div className="flex items-center justify-between gap-2 px-1 pt-1 text-[9px] font-bold uppercase tracking-wider text-white/50">
+                <span>{selectedSeats.size} SEAT{selectedSeats.size === 1 ? '' : 'S'} SELECTED</span>
+                {powerAnnounce && (
+                  <span className="flex-1 text-center text-[9px] font-bold text-white bg-white/[0.05] rounded px-2 border border-white/10">
+                    {powerAnnounce}
+                  </span>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-2 px-1">
+                {arenaGifts.map((gift) => (
+                  <button
+                    key={gift.id}
+                    onClick={() => { setSelectedGift(gift); sendGiftToSelection(); }}
+                    className={cn(
+                      'action-btn flex flex-col items-center justify-center gap-1 py-2 rounded-lg border border-white/10 bg-black/40 text-white hover:bg-white/[0.08] transition',
+                      selectedGift?.id === gift.id ? 'border-green-400 bg-green-400/10' : ''
+                    )}
+                  >
+                    <span className="text-2xl">{gift.icon}</span>
+                    <span className="text-[9px]">{gift.cost}</span>
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center justify-between gap-2 px-1 pb-1">
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-[8px] text-[#8dffb8] font-bold">{challengerHostName || 'CHALLENGER'}</span>
+                  {powerSlots.challenger.length > 0 && (
+                    <div className="flex gap-1">
+                      {powerSlots.challenger.map((pu, i) => (
+                        <button
+                          key={i}
+                          onClick={() => activatePower('challenger', i)}
+                          className="h-6 w-6 rounded border border-white/20 bg-white/[0.05] text-white/70 hover:bg-white/[0.12]"
+                          title={pu}
+                        >
+                          {pu.slice(0, 1).toUpperCase()}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <button onClick={() => tryActivatePower('challenger')} className="action-btn text-[8px] h-7">
+                    ⚡ ACTIVATE
+                  </button>
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-[8px] text-[#d8aaff] font-bold">{opponentHostName || 'OPPONENT'}</span>
+                  {powerSlots.opponent.length > 0 && (
+                    <div className="flex gap-1">
+                      {powerSlots.opponent.map((pu, i) => (
+                        <button
+                          key={i}
+                          onClick={() => activatePower('opponent', i)}
+                          className="h-6 w-6 rounded border border-white/20 bg-white/[0.05] text-white/70 hover:bg-white/[0.12]"
+                          title={pu}
+                        >
+                          {pu.slice(0, 1).toUpperCase()}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <button onClick={() => tryActivatePower('opponent')} className="action-btn text-[8px] h-7">
+                    ⚡ ACTIVATE
+                  </button>
+                </div>
+              </div>
+              <div className="flex gap-1 px-1 pb-1">
+                <button onClick={() => handleRematchVote('challenger')} className="flex-1 action-btn text-[9px]">
+                  {rematchChallenger ? '✓ CHALLENGER REMATCH' : 'CHALLENGER REMATCH'}
+                </button>
+                <button onClick={() => handleRematchVote('opponent')} className="flex-1 action-btn text-[9px]">
+                  {rematchOpponent ? '✓ OPPONENT REMATCH' : 'OPPONENT REMATCH'}
+                </button>
+              </div>
+              {fullSlotsMsg && (
+                <div className="px-1 pt-1 text-[9px] font-bold text-amber-100 bg-amber-300/10 rounded border border-amber-300/30 text-center">
+                  Slots full
+                </div>
+              )}
+            </section>
+          )}
 
           {/* Opponent Side - bottom */}
           <div className={cn(
@@ -2324,34 +2587,121 @@ return (
             </div>
           </div>
 
-          {/* Center: VS + Score + Timer */}
-          <div className="flex-none w-24 flex flex-col items-center justify-center gap-1.5 px-1">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-white/40">
-              {isSuddenDeath ? "SUDDEN DEATH" : "1v1 BATTLE"}
-            </span>
-            <div className={cn(
-              'flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-black/60',
-              vsGlowClass
-            )}>
-              <span className="text-lg font-black uppercase tracking-[0.15em]">VS</span>
+          {/* Center: Preview Scoreboard + VS + Timer */}
+          <section className="border border-white/10 rounded-2xl bg-black/50 p-2 flex flex-col gap-2 shadow-[0_14px_45px_#0007,inset_0_1px_#ffffff09]">
+            <div className="relative flex items-center justify-between gap-2 min-h-[44px]">
+              <div className="score-side flex items-center gap-2 min-w-0 pr-[34px]">
+                <span className="w-1 h-1 rounded-full bg-green-400 shadow-[0_0_14px_#63ff9b]" />
+                <div className="min-w-0">
+                  <div className="score-name text-[8px] font-bold uppercase tracking-[0.15em] text-purple-400 truncate max-w-[24vw]">{challengerHostName || 'CHALLENGER'}</div>
+                  <div className="score-number font-mono text-base font-black leading-none text-purple-400">{challengerScore.toLocaleString()}</div>
+                </div>
+              </div>
+              <div className="score-vs absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 flex h-5 w-5 items-center justify-center rounded-full border border-white/10 bg-black/60">
+                <span className="text-[6px] font-black uppercase tracking-wider">VS</span>
+              </div>
+              <div className="score-side flex items-center gap-2 min-w-0 pl-[34px] right">
+                <div className="min-w-0">
+                  <div className="score-name text-[8px] font-bold uppercase tracking-[0.15em] text-emerald-400 truncate max-w-[24vw]">{opponentHostName || 'OPPONENT'}</div>
+                  <div className="score-number font-mono text-base font-black leading-none text-emerald-400">{opponentScore.toLocaleString()}</div>
+                </div>
+                <span className="w-1 h-1 rounded-full bg-purple-400 shadow-[0_0_14px_#c084fc]" />
+              </div>
             </div>
-            <div className={cn(
-              "font-mono text-sm font-black leading-none",
-              isSuddenDeath ? "text-red-500" : "text-white/70"
-            )}>
-              {battleStatus === 'ended' ? "ENDED" : timeLeft !== undefined ? `${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')}` : "3:00"}
+            <div className="fire-track relative h-[15px] rounded-full border border-white/10 bg-black/40 mt-1 overflow-hidden shadow-[inset_0_1px_3px_#0008]">
+              <div className="fire-green h-full bg-green-400" style={{ width: `${challengerPct}%` }} />
+              <div className="fire-purple h-full bg-purple-400" style={{ width: `${opponentPct}%` }} />
             </div>
-            <div className="flex items-center justify-between w-full">
-              <span className="font-mono text-base font-black text-purple-400">{challengerScore.toLocaleString()}</span>
-              <span className="text-[7px] font-bold text-white/30">Â·</span>
-              <span className="font-mono text-base font-black text-emerald-400">{opponentScore.toLocaleString()}</span>
+            <div className="score-meta flex items-center justify-between gap-2 mt-1 text-[7px] font-black uppercase tracking-[0.15em] text-white/40">
+              <span className="green-label text-green-300">GREEN FIRE · {challengerPct}%</span>
+              <span className="absolute left-1/2 -translate-x-1/2 z-10 text-center whitespace-nowrap">POWER METER</span>
+              <span className="purple-label text-purple-300">PURPLE FIRE · {opponentPct}%</span>
             </div>
-            <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-x-1 w-full">
-              <span className="text-right text-[8px] font-bold uppercase tracking-wider text-purple-400 truncate">{challengerHostName || 'A'}</span>
-              <span className="text-[7px] text-white/30">Â·</span>
-              <span className="text-left text-[8px] font-bold uppercase tracking-wider text-emerald-400 truncate">{opponentHostName || 'B'}</span>
-            </div>
-          </div>
+          </section>
+
+          {/* â”€â€€ Preview-style gift selection + power-up controls â”€â€€ */}
+          {!isBroadcaster && arenaGifts.length > 0 && (
+            <section className="mt-2 flex flex-col gap-1 px-1">
+              <div className="flex items-center justify-between gap-2 px-1 pt-1 text-[9px] font-bold uppercase tracking-wider text-white/50">
+                <span>{selectedSeats.size} SEAT{selectedSeats.size === 1 ? '' : 'S'} SELECTED</span>
+                {powerAnnounce && (
+                  <span className="flex-1 text-center text-[9px] font-bold text-white bg-white/[0.05] rounded px-2 border border-white/10">
+                    {powerAnnounce}
+                  </span>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-2 px-1">
+                {arenaGifts.map((gift) => (
+                  <button
+                    key={gift.id}
+                    onClick={() => { setSelectedGift(gift); sendGiftToSelection(); }}
+                    className={cn(
+                      'action-btn flex flex-col items-center justify-center gap-1 py-2 rounded-lg border border-white/10 bg-black/40 text-white hover:bg-white/[0.08] transition',
+                      selectedGift?.id === gift.id ? 'border-green-400 bg-green-400/10' : ''
+                    )}
+                  >
+                    <span className="text-2xl">{gift.icon}</span>
+                    <span className="text-[9px]">{gift.cost}</span>
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center justify-between gap-2 px-1 pb-1">
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-[8px] text-[#8dffb8] font-bold">{challengerHostName || 'CHALLENGER'}</span>
+                  {powerSlots.challenger.length > 0 && (
+                    <div className="flex gap-1">
+                      {powerSlots.challenger.map((pu, i) => (
+                        <button
+                          key={i}
+                          onClick={() => activatePower('challenger', i)}
+                          className="h-6 w-6 rounded border border-white/20 bg-white/[0.05] text-white/70 hover:bg-white/[0.12]"
+                          title={pu}
+                        >
+                          {pu.slice(0, 1).toUpperCase()}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <button onClick={() => tryActivatePower('challenger')} className="action-btn text-[8px] h-7">
+                    ⚡ ACTIVATE
+                  </button>
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-[8px] text-[#d8aaff] font-bold">{opponentHostName || 'OPPONENT'}</span>
+                  {powerSlots.opponent.length > 0 && (
+                    <div className="flex gap-1">
+                      {powerSlots.opponent.map((pu, i) => (
+                        <button
+                          key={i}
+                          onClick={() => activatePower('opponent', i)}
+                          className="h-6 w-6 rounded border border-white/20 bg-white/[0.05] text-white/70 hover:bg-white/[0.12]"
+                          title={pu}
+                        >
+                          {pu.slice(0, 1).toUpperCase()}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <button onClick={() => tryActivatePower('opponent')} className="action-btn text-[8px] h-7">
+                    ⚡ ACTIVATE
+                  </button>
+                </div>
+              </div>
+              <div className="flex gap-1 px-1 pb-1">
+                <button onClick={() => handleRematchVote('challenger')} className="flex-1 action-btn text-[9px]">
+                  {rematchChallenger ? '✓ CHALLENGER REMATCH' : 'CHALLENGER REMATCH'}
+                </button>
+                <button onClick={() => handleRematchVote('opponent')} className="flex-1 action-btn text-[9px]">
+                  {rematchOpponent ? '✓ OPPONENT REMATCH' : 'OPPONENT REMATCH'}
+                </button>
+              </div>
+              {fullSlotsMsg && (
+                <div className="px-1 pt-1 text-[9px] font-bold text-amber-100 bg-amber-300/10 rounded border border-amber-300/30 text-center">
+                  Slots full
+                </div>
+              )}
+            </section>
+          )}
 
           {/* Opponent Side */}
           <div className="flex-1 min-h-0 h-full flex flex-col gap-2 md:gap-3 overflow-y-auto pl-1 scrollbar-hide">
@@ -2536,36 +2886,121 @@ return (
             </div>
           </div>
 
-          {/* Center: VS + Score + Timer */}
-          <div className="flex-none w-28 flex flex-col items-center justify-center gap-2 px-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-white/40">
-              {isSuddenDeath ? "SUDDEN DEATH" : `${challengerSlots.length}v${opponentSlots.length} BATTLE`}
-            </span>
-            <div className={cn(
-              'flex h-16 w-16 items-center justify-center rounded-full border border-white/10 bg-black/60',
-              vsGlowClass
-            )}>
-              <span className="text-2xl font-black uppercase tracking-[0.2em]">VS</span>
-            </div>
-            <div className={cn(
-              "font-mono text-lg font-black leading-none",
-              isSuddenDeath ? "text-red-500" : "text-white"
-            )}>
-              {battleStatus === 'ended' ? "ENDED" : timeLeft !== undefined ? `${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')}` : "3:00"}
-            </div>
-            <div className="flex flex-col items-center gap-1 w-full">
-              <div className="flex items-center justify-between w-full">
-                <span className="font-mono text-lg font-black text-purple-400">{challengerScore.toLocaleString()}</span>
-                <span className="text-[8px] font-bold text-white/30">SCORE</span>
-                <span className="font-mono text-lg font-black text-emerald-400">{opponentScore.toLocaleString()}</span>
+          {/* Center: Preview Scoreboard + VS + Timer */}
+          <section className="border border-white/10 rounded-2xl bg-black/50 p-2 flex flex-col gap-2 shadow-[0_14px_45px_#0007,inset_0_1px_#ffffff09]">
+            <div className="relative flex items-center justify-between gap-2 min-h-[44px]">
+              <div className="score-side flex items-center gap-2 min-w-0 pr-[34px]">
+                <span className="w-1 h-1 rounded-full bg-green-400 shadow-[0_0_14px_#63ff9b]" />
+                <div className="min-w-0">
+                  <div className="score-name text-[8px] font-bold uppercase tracking-[0.15em] text-purple-400 truncate max-w-[24vw]">{challengerHostName || 'CHALLENGER'}</div>
+                  <div className="score-number font-mono text-base font-black leading-none text-purple-400">{challengerScore.toLocaleString()}</div>
+                </div>
               </div>
-              <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-x-1 w-full">
-                <span className="text-right text-[9px] font-bold uppercase tracking-wider text-purple-400 truncate">{challengerHostName || 'Player A'}</span>
-                <span className="text-[8px] text-white/30">Â·</span>
-                <span className="text-left text-[9px] font-bold uppercase tracking-wider text-emerald-400 truncate">{opponentHostName || 'Player B'}</span>
+              <div className="score-vs absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 flex h-5 w-5 items-center justify-center rounded-full border border-white/10 bg-black/60">
+                <span className="text-[6px] font-black uppercase tracking-wider">VS</span>
+              </div>
+              <div className="score-side flex items-center gap-2 min-w-0 pl-[34px] right">
+                <div className="min-w-0">
+                  <div className="score-name text-[8px] font-bold uppercase tracking-[0.15em] text-emerald-400 truncate max-w-[24vw]">{opponentHostName || 'OPPONENT'}</div>
+                  <div className="score-number font-mono text-base font-black leading-none text-emerald-400">{opponentScore.toLocaleString()}</div>
+                </div>
+                <span className="w-1 h-1 rounded-full bg-purple-400 shadow-[0_0_14px_#c084fc]" />
               </div>
             </div>
-          </div>
+            <div className="fire-track relative h-[15px] rounded-full border border-white/10 bg-black/40 mt-1 overflow-hidden shadow-[inset_0_1px_3px_#0008]">
+              <div className="fire-green h-full bg-green-400" style={{ width: `${challengerPct}%` }} />
+              <div className="fire-purple h-full bg-purple-400" style={{ width: `${opponentPct}%` }} />
+            </div>
+            <div className="score-meta flex items-center justify-between gap-2 mt-1 text-[7px] font-black uppercase tracking-[0.15em] text-white/40">
+              <span className="green-label text-green-300">GREEN FIRE · {challengerPct}%</span>
+              <span className="absolute left-1/2 -translate-x-1/2 z-10 text-center whitespace-nowrap">POWER METER</span>
+              <span className="purple-label text-purple-300">PURPLE FIRE · {opponentPct}%</span>
+            </div>
+          </section>
+
+          {/* â”€â€€ Preview-style gift selection + power-up controls â”€â€€ */}
+          {!isBroadcaster && arenaGifts.length > 0 && (
+            <section className="mt-2 flex flex-col gap-1 px-1">
+              <div className="flex items-center justify-between gap-2 px-1 pt-1 text-[9px] font-bold uppercase tracking-wider text-white/50">
+                <span>{selectedSeats.size} SEAT{selectedSeats.size === 1 ? '' : 'S'} SELECTED</span>
+                {powerAnnounce && (
+                  <span className="flex-1 text-center text-[9px] font-bold text-white bg-white/[0.05] rounded px-2 border border-white/10">
+                    {powerAnnounce}
+                  </span>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-2 px-1">
+                {arenaGifts.map((gift) => (
+                  <button
+                    key={gift.id}
+                    onClick={() => { setSelectedGift(gift); sendGiftToSelection(); }}
+                    className={cn(
+                      'action-btn flex flex-col items-center justify-center gap-1 py-2 rounded-lg border border-white/10 bg-black/40 text-white hover:bg-white/[0.08] transition',
+                      selectedGift?.id === gift.id ? 'border-green-400 bg-green-400/10' : ''
+                    )}
+                  >
+                    <span className="text-2xl">{gift.icon}</span>
+                    <span className="text-[9px]">{gift.cost}</span>
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center justify-between gap-2 px-1 pb-1">
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-[8px] text-[#8dffb8] font-bold">{challengerHostName || 'CHALLENGER'}</span>
+                  {powerSlots.challenger.length > 0 && (
+                    <div className="flex gap-1">
+                      {powerSlots.challenger.map((pu, i) => (
+                        <button
+                          key={i}
+                          onClick={() => activatePower('challenger', i)}
+                          className="h-6 w-6 rounded border border-white/20 bg-white/[0.05] text-white/70 hover:bg-white/[0.12]"
+                          title={pu}
+                        >
+                          {pu.slice(0, 1).toUpperCase()}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <button onClick={() => tryActivatePower('challenger')} className="action-btn text-[8px] h-7">
+                    ⚡ ACTIVATE
+                  </button>
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-[8px] text-[#d8aaff] font-bold">{opponentHostName || 'OPPONENT'}</span>
+                  {powerSlots.opponent.length > 0 && (
+                    <div className="flex gap-1">
+                      {powerSlots.opponent.map((pu, i) => (
+                        <button
+                          key={i}
+                          onClick={() => activatePower('opponent', i)}
+                          className="h-6 w-6 rounded border border-white/20 bg-white/[0.05] text-white/70 hover:bg-white/[0.12]"
+                          title={pu}
+                        >
+                          {pu.slice(0, 1).toUpperCase()}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <button onClick={() => tryActivatePower('opponent')} className="action-btn text-[8px] h-7">
+                    ⚡ ACTIVATE
+                  </button>
+                </div>
+              </div>
+              <div className="flex gap-1 px-1 pb-1">
+                <button onClick={() => handleRematchVote('challenger')} className="flex-1 action-btn text-[9px]">
+                  {rematchChallenger ? '✓ CHALLENGER REMATCH' : 'CHALLENGER REMATCH'}
+                </button>
+                <button onClick={() => handleRematchVote('opponent')} className="flex-1 action-btn text-[9px]">
+                  {rematchOpponent ? '✓ OPPONENT REMATCH' : 'OPPONENT REMATCH'}
+                </button>
+              </div>
+              {fullSlotsMsg && (
+                <div className="px-1 pt-1 text-[9px] font-bold text-amber-100 bg-amber-300/10 rounded border border-amber-300/30 text-center">
+                  Slots full
+                </div>
+              )}
+            </section>
+          )}
 
           {/* Opponent Side */}
           <div className="flex-1 min-h-0 h-full flex flex-col gap-2 md:gap-3 overflow-y-auto pl-1 scrollbar-hide">

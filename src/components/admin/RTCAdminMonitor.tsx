@@ -105,6 +105,7 @@ interface ClickStats {
   MaiTroll: number;
   googlePlay: number;
   topUrls: { url: string; count: number }[];
+  recentClicks: { url: string; clickedAt: string; label: string }[];
 }
 
 interface ModerationActionLog {
@@ -349,8 +350,9 @@ const staffRoles = ['admin', 'moderator', 'troll_officer', 'lead_troll_officer',
   const [recentSignups, setRecentSignups] = useState<UserListItem[]>([]);
   const [signupLoading, setSignupLoading] = useState(false);
 
-  const [clickStats, setClickStats] = useState<ClickStats>({ total: 0, MaiTroll: 0, googlePlay: 0, topUrls: [] });
+  const [clickStats, setClickStats] = useState<ClickStats>({ total: 0, MaiTroll: 0, googlePlay: 0, topUrls: [], recentClicks: [] });
   const [clickLoading, setClickLoading] = useState(false);
+  const [clickFlash, setClickFlash] = useState(false);
 
   const [cashoutBonusData, setCashoutBonusData] = useState<any[]>([]);
   const [cashoutLoading, setCashoutLoading] = useState(false);
@@ -641,11 +643,12 @@ return {
     setClickLoading(true);
     try {
       const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-      const [{ count: total }, { count: MaiTroll }, { count: googlePlay }, { data: topUrlsData }] = await Promise.all([
+      const [{ count: total }, { count: MaiTroll }, { count: googlePlay }, { data: topUrlsData }, { data: recentData }] = await Promise.all([
         supabase.from('outbound_clicks').select('id', { count: 'exact', head: true }),
         supabase.from('outbound_clicks').select('id', { count: 'exact', head: true }).ilike('url', '%MaiTroll.com%'),
         supabase.from('outbound_clicks').select('id', { count: 'exact', head: true }).ilike('url', '%play.google.com/store/apps/details?id=com.Mai Troll.twa%'),
         supabase.from('outbound_clicks').select('url, created_at').gte('created_at', sevenDaysAgo),
+        supabase.from('outbound_clicks').select('ip_address, url, clicked_at').order('clicked_at', { ascending: false }).limit(25),
       ]);
 
       const counts: Record<string, number> = {};
@@ -653,11 +656,31 @@ return {
         counts[String(click.url || 'unknown')] = (counts[String(click.url || 'unknown')] || 0) + 1;
       });
 
+      // Assign stable "Random User #N" labels per IP, deterministic by IP so the
+      // same visitor keeps the same label between refreshes. IPs are never shown.
+      const ipToLabel = new Map<string, string>();
+      const seenIps = new Set<string>();
+      (recentData || []).forEach((row: any) => {
+        const ip = String(row?.ip_address || 'unknown');
+        if (!seenIps.has(ip)) seenIps.add(ip);
+      });
+      let n = 1;
+      seenIps.forEach((ip) => {
+        ipToLabel.set(ip, `Random User #${n++}`);
+      });
+
+      const recentClicks = (recentData || []).map((row: any) => ({
+        url: String(row?.url || 'unknown'),
+        clickedAt: String(row?.clicked_at || ''),
+        label: ipToLabel.get(String(row?.ip_address || 'unknown')) || 'Random User #1',
+      }));
+
       setClickStats({
         total: total || 0,
         MaiTroll: MaiTroll || 0,
         googlePlay: googlePlay || 0,
         topUrls: Object.entries(counts).map(([url, count]) => ({ url, count })).sort((a, b) => b.count - a.count).slice(0, 5),
+        recentClicks,
       });
     } catch (err) {
       console.error('[RTC Monitor] Error fetching click stats:', err);
@@ -1332,7 +1355,15 @@ const openAction = useCallback((user: UserListItem, action: string) => {
 
     if (activeMainTab === 'rtc') {
       fetchRTCStats();
-      const interval = window.setInterval(visCheck(fetchRTCStats), 30000);
+      fetchStreamAnalytics();
+      fetchClickStats();
+      const interval = window.setInterval(() => {
+        if (document.visibilityState === 'visible') {
+          fetchRTCStats();
+          fetchStreamAnalytics();
+          fetchClickStats();
+        }
+      }, 30000);
       return () => window.clearInterval(interval);
     }
 
@@ -1381,6 +1412,40 @@ const openAction = useCallback((user: UserListItem, action: string) => {
       return () => window.clearInterval(interval);
     }
   }, [activeMainTab, fetchCashoutBonusData, fetchClickStats, fetchRTCStats, fetchSignupData, fetchStreamAnalytics, isStaff]);
+
+  // Live website-click monitor: subscribe to outbound_clicks INSERTs so the
+  // admin Analytics tab shows clicks in real time (no polling delay).
+  // On each new row we re-fetch from the DB so counts, top URLs and the
+  // recent-click list always reconcile exactly (no drift from incremental
+  // updates). The fetch is cheap and capped at 25 recent rows.
+  useEffect(() => {
+    if (!isStaff) return;
+
+    const channel = supabase
+      .channel('admin-website-click-monitor')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'outbound_clicks',
+        },
+        () => {
+          setClickFlash(true);
+          window.setTimeout(() => setClickFlash(false), 1500);
+          void fetchClickStats();
+        },
+      )
+      .subscribe((status) => {
+        if (status === 'CHANNEL_ERROR') {
+          console.warn('[RTCAdminMonitor] Website-click realtime subscription error — will retry');
+        }
+      });
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [isStaff, fetchClickStats]);
 
   // Monitor for new user signups via realtime instead of polling
   useEffect(() => {
@@ -2316,11 +2381,57 @@ return (
                  </button>
                );
              })
-           )}
+)}
+          </div>
+        </div>
+
+        {/* Analytics summary + live website-click monitor — kept here so admins
+            see site traffic alongside the live RTC board, not buried in a
+            separate tab. */}
+        <div className="border-t border-white/10 pt-2">
+         <div className="mb-2 flex items-center justify-between">
+           <span className="text-xs text-gray-500">Analytics</span>
+           <div className="flex items-center gap-1">
+             {[1, 7, 30].map((days) => (
+               <button key={days} type="button" onClick={() => setAnalyticsRange(days as 1 | 7 | 30)} className={`rounded-md px-1.5 py-0.5 text-[10px] font-medium ${analyticsRange === days ? 'bg-purple-600 text-white' : 'bg-white/5 text-gray-300 hover:bg-white/10'}`}>
+                 {days === 1 ? 'Today' : `${days}d`}
+               </button>
+             ))}
+             <button type="button" onClick={() => { fetchStreamAnalytics(); fetchClickStats(); }} disabled={analyticsLoading || clickLoading} className="ml-1 rounded-md bg-purple-600/20 p-1 text-purple-400 hover:bg-purple-600/30 disabled:opacity-50">
+               <RefreshCw className={`h-3 w-3 ${analyticsLoading || clickLoading ? 'animate-spin' : ''}`} />
+             </button>
+           </div>
          </div>
-      </div>
-    </div>
-  );
+         <div className="grid grid-cols-2 gap-2">
+           <StatCard label="Viewer Min" value={analyticsSummary.totalViewerMinutes.toLocaleString()} tone="border-purple-500/20 bg-purple-500/10 text-purple-400" icon={<BarChart3 className="h-3 w-3" />} />
+           <StatCard label="Avg Watch" value={`${analyticsSummary.avgWatchTimePerUser.toFixed(1)}m`} tone="border-purple-500/20 bg-purple-500/10 text-purple-400" icon={<Clock className="h-3 w-3" />} />
+           <StatCard label="Gift Coins" value={analyticsSummary.totalGiftCoins.toLocaleString()} tone="border-yellow-500/20 bg-yellow-500/10 text-yellow-400" icon={<Coins className="h-3 w-3" />} />
+           <StatCard label="Clicks" value={clickStats.total.toLocaleString()} tone="border-cyan-500/20 bg-cyan-500/10 text-cyan-400" icon={<TrendingUp className="h-3 w-3" />} />
+         </div>
+         <div className="mt-2 rounded-lg border border-cyan-500/20 bg-cyan-500/5 p-3">
+           <div className="mb-2 flex items-center justify-between">
+             <span className="text-xs font-semibold text-cyan-300">Website Clicks (Live)</span>
+             <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${clickFlash ? 'bg-cyan-400 text-black' : 'bg-cyan-500/20 text-cyan-300'}`}>{clickFlash ? 'NEW!' : 'LIVE'}</span>
+           </div>
+           {clickLoading && clickStats.recentClicks.length === 0 ? (
+             <div className="py-3 text-center text-xs text-gray-500">Loading recent clicks...</div>
+           ) : clickStats.recentClicks.length === 0 ? (
+             <div className="py-3 text-center text-xs text-gray-500">No clicks yet</div>
+           ) : (
+             <div className="max-h-44 space-y-1 overflow-y-auto">
+               {clickStats.recentClicks.map((click, idx) => (
+                 <div key={`${click.url}-${click.clickedAt}-${idx}`} className="flex items-center justify-between gap-2 rounded bg-white/5 px-2 py-1.5 text-xs">
+                   <span className="truncate text-gray-300">{click.url}</span>
+                   <span className="ml-2 shrink-0 text-cyan-300">{click.label}</span>
+                 </div>
+               ))}
+             </div>
+           )}
+           <div className="mt-2 text-[10px] text-gray-500">Visitors are masked as Random User #N for admin visibility. Raw IPs are never shown.</div>
+         </div>
+       </div>
+     </div>
+   );
 
   const renderModActionsTab = () => {
     const filteredUsers = userSearch.trim()
@@ -2613,6 +2724,7 @@ return (
           ))}
         </div>
       </div>
+      <div className="text-[10px] text-gray-500">Live recent clicks now appear on the RTC Monitor tab (next to online users).</div>
     </div>
   );
 

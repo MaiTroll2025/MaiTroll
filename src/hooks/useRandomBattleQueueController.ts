@@ -11,13 +11,14 @@ interface Options {
   userId?: string;
   isBroadcaster: boolean;
   isBattleUnlocked?: boolean;
-  isBattlePotReady?: boolean;
+
   onStreamUpdate?: (patch: Partial<Stream>) => void;
 }
 
 const QUEUE_DELAY_MS = 3_000;
 const POLL_INTERVAL_MS = 3_000;
 const MIN_PRE_BATTLE_DELAY_MS = 3_000;
+const RECONCILE_INTERVAL_MS = 15_000;
 
 const BATTLE_STREAM_FIELDS = [
   'id',
@@ -44,7 +45,7 @@ export function useRandomBattleQueueController({
   userId,
   isBroadcaster,
   isBattleUnlocked = false,
-  isBattlePotReady,
+
   onStreamUpdate,
 }: Options) {
   const [isBusy, setIsBusy] = useState(false);
@@ -61,6 +62,10 @@ export function useRandomBattleQueueController({
   const lastActivationBattleIdRef = useRef<string | null>(null);
   const matchingRef = useRef(false);
   const mountedRef = useRef(true);
+  const streamRef = useRef(stream);
+  streamRef.current = stream;
+  const onStreamUpdateRef = useRef(onStreamUpdate);
+  onStreamUpdateRef.current = onStreamUpdate;
 
   const realtimeChannelRef =
     useRef<ReturnType<typeof supabase.channel> | null>(null);
@@ -172,6 +177,9 @@ export function useRandomBattleQueueController({
     clearAutoQueueTimer();
   }, [clearAutoQueueTimer]);
 
+  const clearTimersRef = useRef(clearTimers);
+  clearTimersRef.current = clearTimers;
+
   const clearActivationTimer = useCallback(() => {
     if (activationTimerRef.current !== null) {
       window.clearTimeout(activationTimerRef.current);
@@ -181,6 +189,105 @@ export function useRandomBattleQueueController({
     setBattleStartsAt(null);
     activationInFlightRef.current = false;
   }, []);
+
+  const clearActivationTimerRef = useRef(clearActivationTimer);
+  clearActivationTimerRef.current = clearActivationTimer;
+
+  const reconcileFromDatabase = useCallback(async () => {
+    const currentStream = streamRef.current;
+
+    if (!currentStream?.id || !userId) {
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('streams')
+        .select(BATTLE_STREAM_FIELDS)
+        .eq('id', currentStream.id)
+        .maybeSingle();
+
+      if (error || !data) {
+        if (import.meta.env.DEV) {
+          console.error(
+            '[RandomBattleReconcile] failed',
+            { streamId: currentStream.id, error }
+          );
+        }
+        return;
+      }
+
+      const row = data as Partial<Stream>;
+
+      const changed =
+        currentStream.battle_id !== row.battle_id ||
+        currentStream.is_battle !== row.is_battle ||
+        currentStream.battle_status !== row.battle_status ||
+        currentStream.battle_start_time !== row.battle_start_time ||
+        currentStream.battle_end_time !== row.battle_end_time ||
+        currentStream.battle_mode !== row.battle_mode ||
+        currentStream.random_battle_queue_enabled !==
+          row.random_battle_queue_enabled;
+
+      if (import.meta.env.DEV) {
+        console.log(
+          '[RandomBattleReconcile] database row',
+          {
+            streamId: currentStream.id,
+            battleId: row.battle_id,
+            isBattle: row.is_battle,
+            status: row.battle_status,
+            start: row.battle_start_time,
+            changed,
+          }
+        );
+      }
+
+      if (changed) {
+        onStreamUpdateRef.current?.({
+          is_battle: row.is_battle,
+          battle_id: row.battle_id,
+          battle_mode: row.battle_mode,
+          battle_enabled: row.battle_enabled,
+          battle_status: row.battle_status,
+          battle_start_time: row.battle_start_time,
+          battle_end_time: row.battle_end_time,
+          battle_end_reason: row.battle_end_reason,
+          battle_winner_id: row.battle_winner_id,
+          battle_forfeited_by: row.battle_forfeited_by,
+          random_battle_queue_enabled:
+            row.random_battle_queue_enabled,
+          random_battle_queued_at:
+            row.random_battle_queued_at,
+          random_battle_cooldown_until:
+            row.random_battle_cooldown_until,
+        } as Partial<Stream>);
+      }
+
+      if (
+        row.battle_mode === 'random_queue' &&
+        row.battle_id &&
+        row.battle_start_time &&
+        (row.battle_status === 'starting' ||
+          row.battle_status === 'waiting')
+      ) {
+        const startMs = new Date(row.battle_start_time).getTime();
+
+        if (!Number.isNaN(startMs)) {
+          setBattleStartsAt(startMs);
+
+          if (startMs <= Date.now()) {
+            void triggerActivationRef.current(
+              row.battle_id,
+              row.battle_start_time
+            );
+          }
+        }
+      }
+    } catch (error) {
+      console.error('[RandomBattleReconcile] exception', error);
+    }
+  }, [userId]);
 
   /*
    * -------------------------------------------------------------
@@ -266,7 +373,7 @@ export function useRandomBattleQueueController({
           );
         }
 
-        onStreamUpdate?.(patch);
+        onStreamUpdateRef.current?.(patch);
 
         /*
          * If another process/user caused the battle to end,
@@ -280,13 +387,14 @@ export function useRandomBattleQueueController({
             new Date(next.battle_end_time).getTime() <= Date.now()
           )
         ) {
-          clearActivationTimer();
-          clearTimers();
+          clearActivationTimerRef.current?.();
+          clearTimersRef.current?.();
         }
 
         /*
-         * If a battle appeared remotely, make sure the local
-         * activation recovery logic sees it immediately.
+         * If a battle appeared remotely, reconcile against the database
+         * so both broadcasters share the same confirmed battle information
+         * even if a Realtime event was delayed or dropped.
          */
         if (
           next.battle_id &&
@@ -308,6 +416,8 @@ export function useRandomBattleQueueController({
                 next.battle_start_time
               );
             }
+
+            void reconcileFromDatabase();
           }
         }
       }
@@ -321,6 +431,10 @@ export function useRandomBattleQueueController({
           streamId
         );
       }
+
+      if (status === 'SUBSCRIBED') {
+        void reconcileFromDatabase();
+      }
     });
 
     realtimeChannelRef.current = channel;
@@ -332,7 +446,7 @@ export function useRandomBattleQueueController({
 
       void supabase.removeChannel(channel);
     };
-  }, [canUseRandomBattles, isBattleUnlocked, clearActivationTimer, clearTimers, onStreamUpdate, stream?.id]);
+  }, [canUseRandomBattles, stream?.id, reconcileFromDatabase]);
 
   /*
    * -------------------------------------------------------------
@@ -531,6 +645,14 @@ export function useRandomBattleQueueController({
         return;
       }
 
+      // Do not re-run matchmaking once a battle row exists on this stream.
+      // The database is authoritative: a non-null battle_id means a match is
+      // already confirmed, so we must not start a duplicate search that could
+      // overwrite or conflict with the established battle.
+      if (stream?.battle_id && stream?.battle_mode === 'random_queue') {
+        return;
+      }
+
       if (!isQueueEnabled && !force) {
         return;
       }
@@ -591,29 +713,15 @@ export function useRandomBattleQueueController({
           );
         }
 
-        let battleStartTime =
+        const battleStartTime =
           data?.battle_started_at ??
           data?.started_at ??
           stream.battle_start_time;
 
-        /*
-         * Ensure there is always a small pre-battle window.
-         */
-        if (battleStartTime) {
-          const startMs =
-            new Date(battleStartTime).getTime();
-
-          if (
-            !Number.isNaN(startMs) &&
-            startMs - Date.now() <
-              MIN_PRE_BATTLE_DELAY_MS
-          ) {
-            battleStartTime =
-              new Date(
-                Date.now() +
-                  MIN_PRE_BATTLE_DELAY_MS
-              ).toISOString();
-          }
+        if (!battleStartTime) {
+          throw new Error(
+            'Match found but no battle start time was returned.'
+          );
         }
 
         const battleEndTime =
@@ -624,9 +732,10 @@ export function useRandomBattleQueueController({
         /*
          * Update THIS browser immediately.
          *
-         * The database RPC should update both stream rows.
-         * The realtime subscription above will update the
-         * other broadcaster automatically.
+         * The database RPC updates both stream rows. The realtime
+         * subscription above updates the other broadcaster, and the
+         * periodic reconciliation / on-reconnect fallback covers any
+         * Realtime event that was missed or dropped.
          */
         onStreamUpdate?.({
           is_battle: true,
@@ -651,14 +760,23 @@ export function useRandomBattleQueueController({
 
         toast.success('Match found');
 
-        if (
-          battleStartTime
-        ) {
-          void scheduleBattleActivation(
-            battleId,
-            battleStartTime
+        if (import.meta.env.DEV) {
+          console.log(
+            '[RandomBattleQueue] match confirmed',
+            {
+              streamId: stream.id,
+              userId,
+              battleId,
+              battleStartTime,
+              battleEndTime,
+            }
           );
         }
+
+        void scheduleBattleActivation(
+          battleId,
+          battleStartTime
+        );
       } catch (error: any) {
         console.error(
           '[RandomBattleQueue] Matchmaking failed:',
@@ -693,6 +811,7 @@ export function useRandomBattleQueueController({
       scheduleBattleActivation,
       stream?.battle_end_time,
       stream?.battle_id,
+      stream?.battle_mode,
       stream?.battle_start_time,
       stream?.id,
       stream?.status,
@@ -780,63 +899,11 @@ export function useRandomBattleQueueController({
       toast.error('Random battles are only available for General Chat streams.');
       return;
     }
-    if (isBattlePotReady === false) {
-      toast.info('Fill the current Battle Pot target before starting the Random Battle queue.');
-      return;
-    }
+
 
     setIsBusy(true);
 
     try {
-      if (isBattlePotReady !== undefined) {
-        const { data: battlePotState, error: battlePotError } =
-          await supabase.rpc('get_battle_pot_state', {
-            p_broadcaster_id: userId,
-          });
-
-        if (battlePotError) throw battlePotError;
-        if (battlePotState?.unlocked !== true) {
-          toast.info('Complete the broadcaster’s initial Battle Pot target to unlock Random Battles.');
-          return;
-        }
-        let isBattlePotFull =
-          battlePotState?.round_type === 'subsequent_battle' &&
-          battlePotState?.status === 'reached' &&
-          battlePotState?.collected_coins >= battlePotState?.target_coins;
-        if (!isBattlePotFull && !battlePotState?.round_id) {
-          const { data: reachedRound, error: reachedRoundError } = await supabase
-            .from('battle_pot_rounds')
-            .select('id')
-            .eq('broadcaster_id', userId)
-            .eq('round_type', 'subsequent_battle')
-            .eq('status', 'reached')
-            .limit(1)
-            .maybeSingle();
-
-          if (reachedRoundError) throw reachedRoundError;
-          isBattlePotFull = Boolean(reachedRound);
-        }
-        if (!isBattlePotFull) {
-          toast.info('Fill the current Battle Pot target before starting the Random Battle queue.');
-          return;
-        }
-
-        setBattleUnlockConfirmed(true);
-      } else if (!battleUnlockConfirmed) {
-        const { data: battlePotState, error: battlePotError } =
-          await supabase.rpc('get_battle_pot_state', {
-            p_broadcaster_id: userId,
-          });
-
-        if (battlePotError) throw battlePotError;
-        if (battlePotState?.unlocked !== true) {
-          toast.info('Complete the broadcaster’s initial Battle Pot target to unlock Random Battles.');
-          return;
-        }
-
-        setBattleUnlockConfirmed(true);
-      }
-
       const queuedAt =
         new Date().toISOString();
 
@@ -896,7 +963,7 @@ export function useRandomBattleQueueController({
   }, [
     battleUnlockConfirmed,
     findMatch,
-    isBattlePotReady,
+
     isBroadcaster,
     isBattleActive,
     isGeneralChat,
@@ -1088,6 +1155,39 @@ export function useRandomBattleQueueController({
     stream?.battle_mode,
     stream?.is_battle,
   ]);
+
+  /*
+   * -------------------------------------------------------------
+   * PERIODIC DATABASE RECONCILIATION
+   *
+   * Fallback safety net: if a Realtime match event was missed or dropped,
+   * the local stream row can fall out of sync with the database and leave
+   * a broadcaster stuck on the regular broadcast screen. Periodically
+   * reconcile against the database whenever we are not already in a local
+   * active battle and not mid-matchmaking.
+   * -------------------------------------------------------------
+   */
+
+  useEffect(() => {
+    if (
+      !canUseRandomBattles ||
+      stream?.status !== 'live' ||
+      isBattleActive ||
+      matchingRef.current
+    ) {
+      return;
+    }
+
+    const interval = window.setInterval(() => {
+      void reconcileFromDatabase();
+    }, RECONCILE_INTERVAL_MS);
+
+    void reconcileFromDatabase();
+
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, [canUseRandomBattles, isBattleActive, reconcileFromDatabase, stream?.status]);
 
   /*
    * -------------------------------------------------------------

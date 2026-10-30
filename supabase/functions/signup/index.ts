@@ -276,28 +276,35 @@ Deno.serve(async (req: Request) => {
           },
         )
 
-        if (!notificationResponse.ok) {
+        let notificationResult: Record<string, unknown> | null = null
+        try {
+          notificationResult = await notificationResponse.json()
+        } catch (parseError) {
           console.error(
-            `[Signup ${requestId}] Admin signup notification failed with status ${notificationResponse.status}`,
+            `[Signup ${requestId}] Admin signup notification returned invalid JSON`,
+            parseError instanceof Error ? parseError.message : parseError,
+          )
+        }
+        if (!notificationResponse.ok || notificationResult?.success !== true) {
+          console.error(
+            `[Signup ${requestId}] Admin signup notification was not created`,
+            {
+              status: notificationResponse.status,
+              success: notificationResult?.success,
+              notificationsCreated: notificationResult?.notificationsCreated,
+              inAppFailures: notificationResult?.inAppFailures,
+              message: notificationResult?.message,
+              error: notificationResult?.error,
+            },
           )
         } else {
-          const notificationResult = await notificationResponse.json().catch(() => null)
-          if (
-            notificationResult?.androidConfigured === false
-            || notificationResult?.androidFailed > 0
-            || notificationResult?.androidSent === 0
-          ) {
-            console.error(
-              `[Signup ${requestId}] Android signup push was not delivered`,
-              {
-                androidConfigured: notificationResult.androidConfigured,
-                androidSent: notificationResult.androidSent,
-                androidFailed: notificationResult.androidFailed,
-                androidTokensFound: notificationResult.androidTokensFound,
-                androidTokensEligible: notificationResult.androidTokensEligible,
-              },
-            )
-          }
+          console.info(
+            `[Signup ${requestId}] Admin signup notification processed`,
+            {
+              notificationsCreated: notificationResult.notificationsCreated,
+              message: notificationResult.message,
+            },
+          )
         }
       } catch (notificationError) {
         console.error(

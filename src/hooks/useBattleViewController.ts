@@ -59,8 +59,11 @@ export interface BattleViewProps {
   remoteUsers?: RemoteParticipant[];
   userIdToLiveKitIdentity?: Record<string, string>;
   onReturnToStream?: () => void;
+  onSuspendOriginalRoom?: () => Promise<void> | void;
+  onResumeOriginalRoom?: () => Promise<void> | void;
   onToggleCamera?: () => void;
   onToggleMic?: () => void;
+  onOpenBroadcasterControls?: () => void;
   returnPathTemplate?: string;
 }
 
@@ -71,8 +74,11 @@ export function useBattleViewController({
   localTracks: passedLocalTracks,
   userIdToLiveKitIdentity,
   onReturnToStream,
+  onSuspendOriginalRoom,
+  onResumeOriginalRoom,
   onToggleCamera: onToggleCameraProp,
   onToggleMic: onToggleMicProp,
+  onOpenBroadcasterControls,
   returnPathTemplate,
 }: BattleViewProps) {
   // Provide safe defaults to prevent ReferenceError if props are undefined
@@ -180,6 +186,7 @@ export function useBattleViewController({
   const publishingTracksRef = useRef<Set<LocalAudioTrack | LocalVideoTrack>>(new Set());
   const battleReturnInFlightRef = useRef(false);
   const originalBroadcastRef = useRef<{ streamId: string; roomName: string; userId: string } | null>(null);
+  const originalRoomSuspendedRef = useRef(false);
   const [isMobileViewport, setIsMobileViewport] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
     return window.innerWidth < 768;
@@ -215,7 +222,9 @@ export function useBattleViewController({
     return 'viewer';
   }, [effectiveUserId, challengerStream?.user_id, opponentStream?.user_id, participantInfo?.role]);
 
-  const isBroadcaster = resolvedBattleRole === 'host' || resolvedBattleRole === 'stage';
+  const isBroadcaster = resolvedBattleRole === 'host';
+  const isBattleStage = resolvedBattleRole === 'stage';
+  const canPublishBattleMedia = isBroadcaster || isBattleStage;
   // Broadcasters use LiveKit. All viewers use LiveKit only.
   const isRandomBattle = challengerStream?.battle_mode === 'random_queue' || opponentStream?.battle_mode === 'random_queue';
 
@@ -342,7 +351,7 @@ export function useBattleViewController({
   // ==========================================================================
 
   const connectBattleRoom = useCallback(
-    async (roomName: string, role: "publisher" | "viewer"): Promise<Room | null> => {
+    async (roomName: string, role: "publisher" | "seat" | "viewer"): Promise<Room | null> => {
       if (battleJoinInFlightRef.current) {
         if (import.meta.env.DEV)
           console.log("[BattleView] Battle join already in flight, skipping");
@@ -359,12 +368,12 @@ export function useBattleViewController({
           roomName,
           userId: effectiveUserId,
           identity: effectiveUserId,
-          name: role === "publisher" ? "Broadcaster" : "Viewer",
+          name: role === "publisher" ? "Broadcaster" : role === "seat" ? "Stage participant" : "Viewer",
           role,
           isHost: role === "publisher",
-          canPublish: role === "publisher",
+          canPublish: role !== "viewer",
           canSubscribe: true,
-          mode: role === "publisher" ? "broadcaster" : "audience",
+          mode: role === "publisher" ? "broadcaster" : role === "seat" ? "seat-publisher" : "audience",
         };
 
         const { data, error } = await supabase.functions.invoke("livekit-token", {
@@ -373,7 +382,7 @@ export function useBattleViewController({
 
         if (error) throw error;
 
-        if (role === "publisher" && !validatePublisherToken(data, roomName, battleId)) {
+        if (role !== "viewer" && !validatePublisherToken(data, roomName, battleId)) {
           throw new Error("Invalid publisher token permissions");
         }
 
@@ -456,12 +465,12 @@ export function useBattleViewController({
         const tracks = Array.from(localParticipant.trackPublications.values());
         for (const pub of tracks) {
           try {
-            if (pub.track) await localParticipant.unpublishTrack(pub.track);
+            if (pub.track) await localParticipant.unpublishTrack(pub.track, false);
           } catch (_e) {
             // ignore
           }
         }
-        room.disconnect();
+        await room.disconnect(false);
       } catch (e) {
         console.warn("[BattleView] Cleanup disconnect error:", e);
       }
@@ -502,7 +511,12 @@ export function useBattleViewController({
     battlePhaseRef.current = "CONNECTING_ARENA";
 
     try {
-      const role = isBroadcaster ? "publisher" : "viewer";
+      if (!originalRoomSuspendedRef.current && onSuspendOriginalRoom) {
+        await onSuspendOriginalRoom();
+        originalRoomSuspendedRef.current = true;
+      }
+
+      const role = isBroadcaster ? "publisher" : isBattleStage ? "seat" : "viewer";
       const room = await connectBattleRoom(roomName, role);
 
       if (!room) return;
@@ -561,7 +575,7 @@ export function useBattleViewController({
       }
 
       const localTracks = battleViewStateRef.current.effectiveLocalTracks;
-      if (isBroadcaster && localTracks) {
+      if (canPublishBattleMedia && localTracks) {
         const publishResult = await publishBattleMedia(room, localTracks);
 
         if (publishResult.audioPublished) {
@@ -586,6 +600,16 @@ export function useBattleViewController({
     } catch (err: any) {
       console.error("[BattleView] Failed to join battle arena:", err);
       toast.error("Couldn't connect to the battle.");
+      await disconnectBattleRoom();
+      if (originalRoomSuspendedRef.current) {
+        try {
+          await onResumeOriginalRoom?.();
+          originalRoomSuspendedRef.current = false;
+        } catch (resumeError) {
+          console.error("[BattleView] Failed to restore original room after battle connection error:", resumeError);
+          toast.error("The original stream could not reconnect.");
+        }
+      }
       setBattlePhase("IDLE");
       battlePhaseRef.current = "IDLE";
     } finally {
@@ -594,26 +618,44 @@ export function useBattleViewController({
   }, [
     effectiveUserId,
     isBroadcaster,
+    isBattleStage,
+    canPublishBattleMedia,
     currentStreamId,
     recordBattleJoined,
     connectBattleRoom,
     publishBattleMedia,
     bumpTrackRevision,
+    onSuspendOriginalRoom,
+    onResumeOriginalRoom,
+    disconnectBattleRoom,
   ]);
 
   // ==========================================================================
   // RETURN TO ORIGINAL BROADCAST
   // ==========================================================================
 
+  const resumeOriginalBroadcastRoom = useCallback(async () => {
+    if (!originalRoomSuspendedRef.current) return;
+    await onResumeOriginalRoom?.();
+    originalRoomSuspendedRef.current = false;
+  }, [onResumeOriginalRoom]);
+
   const returnToOriginalBroadcast = useCallback(async () => {
     if (battleReturnInFlightRef.current) return;
     battleReturnInFlightRef.current = true;
+    hasHandledReturnRef.current = true;
     setShowResults(false);
     setShowRematchOption(false);
 
     const original = originalBroadcastRef.current;
 
     await disconnectBattleRoom();
+    try {
+      await resumeOriginalBroadcastRoom();
+    } catch (resumeError) {
+      console.error("[BattleView] Failed to resume original broadcast room:", resumeError);
+      toast.error("Returned from battle, but the original stream could not reconnect.");
+    }
 
     try {
       const returnChannel = getBattleBroadcastChannel();
@@ -648,6 +690,7 @@ export function useBattleViewController({
       navigate("/");
     }
 
+    onReturnToStream?.();
     battleReturnInFlightRef.current = false;
   }, [
     challengerStream?.id,
@@ -658,6 +701,7 @@ export function useBattleViewController({
     navigate,
     onReturnToStream,
     disconnectBattleRoom,
+    resumeOriginalBroadcastRoom,
     returnPathTemplate,
     getBattleBroadcastChannel,
   ]);
@@ -729,7 +773,7 @@ export function useBattleViewController({
   const [retryTracks, setRetryTracks] = useState<[LocalAudioTrack | undefined, LocalVideoTrack | undefined] | null>(null);
   useEffect(() => {
     if (localTracksFromPreflight) return;
-    if (!isBroadcaster) return;
+    if (!canPublishBattleMedia) return;
     let attempts = 0;
     const interval = setInterval(() => {
       attempts += 1;
@@ -745,7 +789,7 @@ export function useBattleViewController({
       }
     }, 500);
     return () => clearInterval(interval);
-  }, [localTracksFromPreflight, isBroadcaster]);
+  }, [localTracksFromPreflight, canPublishBattleMedia]);
 
   const effectiveLocalTracks = localTracksFromPreflight || retryTracks;
   // REMOVED useBattleRoom hook - using legacy connection only to avoid conflicts
@@ -776,7 +820,7 @@ export function useBattleViewController({
 
   useEffect(() => {
     const room = battleRoomRef.current;
-    if (!isBroadcaster || !effectiveLocalTracks || room?.state !== "connected") return;
+    if (!canPublishBattleMedia || !effectiveLocalTracks || room?.state !== "connected") return;
 
     let cancelled = false;
     void publishBattleMedia(room, effectiveLocalTracks).then((result) => {
@@ -798,7 +842,7 @@ export function useBattleViewController({
       cancelled = true;
     };
   }, [
-    isBroadcaster,
+    canPublishBattleMedia,
     effectiveLocalTracks,
     audioTrackId,
     videoTrackId,
@@ -868,7 +912,7 @@ export function useBattleViewController({
     }
 
     joinBattleArena();
-  }, [battleId, effectiveUserId, battle?.id, battle?.status, isBroadcaster, resolvedBattleRole, joinBattleArena]);
+  },   [battleId, effectiveUserId, battle?.id, battle?.status, isBroadcaster, isBattleStage, resolvedBattleRole, joinBattleArena]);
 
   const [showMobileChat, setShowMobileChat] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
@@ -883,12 +927,28 @@ export function useBattleViewController({
   const handleGiftSelect = useCallback((uid: string, sourceStreamId: string) => {
     if (isBroadcaster) return;
     if (effectiveUserId && uid === effectiveUserId) return;
+
+    // Only allow gifting participants of the current battle so a viewer from
+    // another battle cannot gift a seat user/broadcaster in this battle.
+    const isBattleParticipant = battleParticipantsRef.current.some(
+      (p: any) => p && String(p.user_id || p.id || p.identity) === String(uid),
+    );
+    if (!isBattleParticipant) {
+      if (import.meta.env.DEV) {
+        console.warn('[BattleGift] Recipient is not a battle participant, blocking gift', {
+          recipientId: uid,
+          battleId,
+        });
+      }
+      return;
+    }
+
     setGiftRecipientId(uid);
     setGiftStreamId(sourceStreamId);
     if (isMobileViewport) {
       setShowMobileGiftTray(true);
     }
-  }, [isBroadcaster, effectiveUserId, isMobileViewport]);
+  }, [isBroadcaster, effectiveUserId, isMobileViewport, battleId]);
 
   const _myStream = useMemo(() => {
     if (!participantInfo?.team) return null;
@@ -1606,12 +1666,17 @@ export function useBattleViewController({
   const [isSuddenDeath, setIsSuddenDeath] = useState(false);
   const [_hasEnded, setHasEnded] = useState(false);
   const [showRematchOption, setShowRematchOption] = useState(false);
+  const hasEndedRef = useRef(false);
 
   const handleRematch = useCallback(async () => {
-    if (!battle || !user) return;
+    if (!battle || !user || !isBroadcaster) return;
     
     try {
-      const myStreamId = participantInfo?.team === 'opponent' ? opponentStream?.id : challengerStream?.id;
+      const myStreamId =
+        participantInfo?.team === 'opponent' || effectiveUserId === opponentStream?.user_id
+          ? opponentStream?.id
+          : challengerStream?.id;
+      if (!myStreamId) throw new Error('Your battle stream could not be resolved.');
       const { data, error: updateError } = await supabase.rpc('request_random_battle_rematch', {
         p_battle_id: battle.id,
         p_stream_id: myStreamId,
@@ -1624,6 +1689,10 @@ export function useBattleViewController({
       setTimeLeft(180);
       setIsSuddenDeath(false);
       setHasEnded(false);
+      hasEndedRef.current = false;
+      hasHandledReturnRef.current = false;
+      battleReturnInFlightRef.current = false;
+      setShowResults(false);
       setShowRematchOption(false);
       setArenaReady(true);
       setArenaReadyAtMs(Date.now());
@@ -1633,7 +1702,7 @@ export function useBattleViewController({
       console.error('Rematch error:', e);
       toast.error('Failed to start rematch');
     }
-  }, [battle, challengerStream?.id, opponentStream?.id, participantInfo?.team, user]);
+  }, [battle, challengerStream?.id, challengerStream?.user_id, opponentStream?.id, opponentStream?.user_id, participantInfo?.team, user, isBroadcaster, effectiveUserId]);
 
   const endBattle = useCallback(async (skipConfirmation = false, endReason: BattleEndReason = "manual") => {
     if (!battle || !user) return;
@@ -1735,7 +1804,7 @@ export function useBattleViewController({
   const [leaveLoading, setLeaveLoading] = useState(false);
 
   const handleLeaveBattle = useCallback(async () => {
-    if (!battle || !user) return;
+    if (!battle || !user || !isBroadcaster) return;
 
     if (!confirm('Leave this battle and forfeit?')) {
       return;
@@ -1743,16 +1812,13 @@ export function useBattleViewController({
 
     setLeaveLoading(true);
     try {
-      setBattle((prev: any) => prev ? { ...prev, status: 'ended' } : prev);
-      setShowResults(true);
-
       const { data: leaveResult, error: leaveError } = await supabase.rpc('leave_battle', {
         p_battle_id: battle.id,
         p_user_id: user.id
       });
 
       if (leaveError || leaveResult?.success === false) {
-        toast.error(leaveResult?.message || leaveError?.message || 'Failed to leave battle');
+        throw new Error(leaveResult?.message || leaveError?.message || 'Failed to leave battle');
       } else {
         // CRITICAL: Only clear battle state from the forfeiting user's stream
         // The other broadcaster should remain in their broadcast
@@ -1814,6 +1880,27 @@ export function useBattleViewController({
         const isChallenger = participantInfo?.team === 'challenger';
         toast.success(isChallenger ? 'You forfeited. Opponent wins!' : 'You forfeited. Challenger wins!');
       }
+
+      hasHandledReturnRef.current = true;
+      await disconnectBattleRoom();
+      try {
+        await resumeOriginalBroadcastRoom();
+      } catch (resumeError) {
+        console.error("[BattleView] Failed to resume original broadcast after forfeit:", resumeError);
+        toast.error("Forfeit completed, but the original stream could not reconnect.");
+      }
+
+      const returnChannel = getBattleBroadcastChannel();
+      await returnChannel.send({
+        type: 'broadcast',
+        event: 'return_to_broadcast',
+        payload: {
+          challengerStreamId: challengerStream?.id,
+          opponentStreamId: opponentStream?.id,
+          challengerHostId: challengerStream?.user_id,
+          opponentHostId: opponentStream?.user_id,
+        },
+      });
       
       // FIX: Forfeiting broadcaster should return to their own stream, not the winner's stream
       // Navigate back to the forfeiting broadcaster's own stream so they can continue their broadcast
@@ -1830,42 +1917,14 @@ export function useBattleViewController({
         navigate('/');
       }
       
-      // Do NOT stop local tracks - they belong to the broadcaster's main stream
-      // The tracks should continue working when they return to their stream
-      // But DO disconnect the battle room and unpublish battle tracks before navigating
-      if (battleRoomRef.current && battleRoomRef.current.state === 'connected') {
-        try {
-          const localParticipant = battleRoomRef.current.localParticipant;
-          const tracks = Array.from(localParticipant.trackPublications.values());
-          for (const pub of tracks) {
-            try {
-              if (pub.track) await localParticipant.unpublishTrack(pub.track);
-            } catch (_e) {
-              // ignore unpublish errors during cleanup
-            }
-          }
-          battleRoomRef.current.disconnect();
-        } catch (e) {
-          console.warn('[BattleView] Cleanup disconnect error:', e);
-        }
-        battleRoomRef.current = null;
-        connectedBattleIdRef.current = null;
-        hasPublishedTracksRef.current = false;
-      }
-      
-      // Just navigate back to the stream without stopping tracks
+      onReturnToStream?.();
     } catch (e) {
       console.error(e);
-      toast.error('Failed to leave battle');
-      if (onReturnToStream) {
-        onReturnToStream();
-      } else {
-        navigate('/');
-      }
+      toast.error(e instanceof Error ? e.message : 'Failed to leave battle');
     } finally {
       setLeaveLoading(false);
     }
-  }, [battle, user, onReturnToStream, navigate, participantInfo?.team, challengerStream?.id, opponentStream?.id, currentStreamId, returnPathTemplate]);
+  }, [battle, user, isBroadcaster, onReturnToStream, navigate, participantInfo?.team, challengerStream?.id, challengerStream?.user_id, opponentStream?.id, opponentStream?.user_id, currentStreamId, returnPathTemplate, disconnectBattleRoom, resumeOriginalBroadcastRoom, getBattleBroadcastChannel]);
 
   // ==========================================================================
   // STATE MACHINE: Drive phase transitions from authoritative battle state
@@ -1894,7 +1953,6 @@ export function useBattleViewController({
   // ==========================================================================
   // TIMER REFS
   // ==========================================================================
-  const hasEndedRef = useRef(false);
   const endBattleRef = useRef(endBattle);
   const participantRoleRef = useRef(participantInfo?.role);
   endBattleRef.current = endBattle;
@@ -1924,12 +1982,13 @@ export function useBattleViewController({
       setTimeLeft(displayTimeLeft);
       setIsSuddenDeath(displaySuddenDeath);
 
+      if (newTimeLeft <= 1 && participantRoleRef.current === 'host') {
+        setShowRematchOption(true);
+      }
+
       if (newTimeLeft <= 0 && !hasEndedRef.current) {
         hasEndedRef.current = true;
         setHasEnded(true);
-        if (participantRoleRef.current === 'host') {
-          setShowRematchOption(true);
-        }
         void endBattleRef.current(true, displaySuddenDeath ? 'sudden_death' : 'timer_expired');
       }
     }, 1000);
@@ -2055,51 +2114,8 @@ export function useBattleViewController({
   // Return to stream handler - returns each broadcaster to their own stream
   // Also broadcasts to all participants to return to their respective broadcasts
   const handleReturnToStream = useCallback(async () => {
-    if (hasHandledReturnRef.current) return;
-    hasHandledReturnRef.current = true;
-    setShowResults(false);
-    setShowRematchOption(false);
-
-    // Only disconnect the battle LiveKit room and unpublish tracks
-    // Do NOT stop/close local tracks - they belong to the broadcaster's main stream
-    // and are shared with BroadcastPage. Closing them here would kill the camera.
-    if (livekitRoom) {
-      try {
-        const localParticipant = livekitRoom.localParticipant;
-        const tracks = Array.from(localParticipant.trackPublications.values());
-        for (const pub of tracks) {
-          try {
-            if (pub.track) await localParticipant.unpublishTrack(pub.track);
-          } catch (_e) {
-            // ignore unpublish errors during cleanup
-          }
-        }
-        livekitRoom.disconnect();
-      } catch (e) {
-        console.warn('[BattleView] Cleanup disconnect error:', e);
-      }
-    }
-    
-    // Broadcast to all participants to return to their broadcasts
-    try {
-      const returnChannel = getBattleBroadcastChannel();
-      await returnChannel.send({
-        type: 'broadcast',
-        event: 'return_to_broadcast',
-        payload: {
-          challengerStreamId: challengerStream?.id,
-          opponentStreamId: opponentStream?.id,
-          challengerHostId: challengerStream?.user_id,
-          opponentHostId: opponentStream?.user_id
-        }
-      });
-    } catch (e) {
-      console.warn('[BattleView] Failed to broadcast return event:', e);
-    }
-
-    navigateBackToOwnBroadcast();
-    onReturnToStream?.();
-  }, [challengerStream?.id, challengerStream?.user_id, opponentStream?.id, opponentStream?.user_id, livekitRoom, navigateBackToOwnBroadcast, onReturnToStream, getBattleBroadcastChannel]);
+    await returnToOriginalBroadcast();
+  }, [returnToOriginalBroadcast]);
 
   // React to battle-level "return_to_broadcast" broadcast from either broadcaster.
   // When streamEnded is true, the user on the ended stream goes home, winner goes to broadcast
@@ -2114,54 +2130,57 @@ export function useBattleViewController({
         
         const data = payload.payload;
         const winnerStreamId = data?.winnerStreamId;
-        
-        if (data?.streamEnded) {
-          const currentUserOnChallenger = participantInfo?.team === 'challenger';
-          const currentUserOnOpponent = participantInfo?.team === 'opponent';
-          
-          if ((currentUserOnChallenger && winnerStreamId === opponentStream?.id) ||
-              (currentUserOnOpponent && winnerStreamId === challengerStream?.id)) {
+        void (async () => {
+          await disconnectBattleRoom();
+          if (!data?.streamEnded) {
+            try {
+              await resumeOriginalBroadcastRoom();
+            } catch (resumeError) {
+              console.error("[BattleView] Failed to resume original broadcast room:", resumeError);
+              toast.error("Returned from battle, but the original stream could not reconnect.");
+            }
+          }
+
+          if (data?.streamEnded) {
+            const currentUserOnChallenger = participantInfo?.team === 'challenger';
+            const currentUserOnOpponent = participantInfo?.team === 'opponent';
+
+            if ((currentUserOnChallenger && winnerStreamId === opponentStream?.id) ||
+                (currentUserOnOpponent && winnerStreamId === challengerStream?.id)) {
+              navigate('/');
+              onReturnToStream?.();
+              return;
+            }
+            if (winnerStreamId) {
+              navigate(returnPathTemplate ? returnPathTemplate.replace(':id', winnerStreamId) : `/stream/${winnerStreamId}`);
+              onReturnToStream?.();
+              return;
+            }
             navigate('/');
             onReturnToStream?.();
-            return;
-          }
-          if (winnerStreamId) {
-            navigate(returnPathTemplate ? returnPathTemplate.replace(':id', winnerStreamId) : `/stream/${winnerStreamId}`);
+          } else {
+            navigateBackToOwnBroadcast();
             onReturnToStream?.();
-            return;
           }
-          navigate('/');
-          onReturnToStream?.();
-        } else {
-          navigateBackToOwnBroadcast();
-          onReturnToStream?.();
-        }
+        })().catch((returnError) => {
+          console.error("[BattleView] Failed to complete battle return:", returnError);
+          toast.error("Could not finish returning from battle.");
+        });
       })
       .subscribe();
     return () => {
       // Don't remove shared channel here; it may be reused by other code paths.
       // Supabase deduplicates by topic, so unsubscribing this listener is sufficient.
     };
-  }, [battleId, navigateBackToOwnBroadcast, onReturnToStream, participantInfo?.team, opponentStream?.id, challengerStream?.id, navigate, getBattleBroadcastChannel, returnPathTemplate]);
+  }, [battleId, navigateBackToOwnBroadcast, onReturnToStream, participantInfo?.team, opponentStream?.id, challengerStream?.id, navigate, getBattleBroadcastChannel, returnPathTemplate, disconnectBattleRoom, resumeOriginalBroadcastRoom]);
 
   // Guarantee end screen appears whenever server battle row is ended.
   useEffect(() => {
     if (battle?.status === 'ended') {
       setShowResults(true);
+      setShowRematchOption(true);
     }
   }, [battle?.status]);
-
-  // Auto-return after battle ends - show results briefly then return everyone
-  // to their original broadcast. Broadcasters go to THEIR OWN original room,
-  // not the opponent's room.
-  useEffect(() => {
-    if (showResults && battle?.status === 'ended') {
-      const timer = setTimeout(() => {
-        returnToOriginalBroadcast();
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [showResults, battle?.status, returnToOriginalBroadcast]);
 
   // ── DEBUG: User lookup logging (throttled, in useEffect to avoid render body side effects) ──
   const lastUserLookupLogRef = useRef(0);
@@ -2177,9 +2196,13 @@ export function useBattleViewController({
   }, [challengerLiveKitIdentity, opponentLiveKitIdentity, remoteUsers.length, battleLocalVideoTrack, challengerStream?.user_id, opponentStream?.user_id]);
 
   // Diagnostic logging: room participants and their video track SIDs
+  const lastTrackSidsLogRef = useRef(0);
   useEffect(() => {
     if (!import.meta.env.DEV) return;
     if (remoteUsers.length === 0) return;
+    const now = Date.now();
+    if (now - lastTrackSidsLogRef.current < 2000) return;
+    lastTrackSidsLogRef.current = now;
     const trackMap: Record<string, string[]> = {};
     for (const u of remoteUsers) {
       const videoPubs = getTrackPublications(u, 'video');
@@ -2507,6 +2530,7 @@ export function useBattleViewController({
     onReturnToStream,
     onToggleCamera,
     onToggleMic,
+    onOpenBroadcasterControls,
   };
 }
 

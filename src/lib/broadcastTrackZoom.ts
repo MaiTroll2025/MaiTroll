@@ -2,6 +2,7 @@ export type TrackZoomOptions = {
   track?: MediaStreamTrack | { mediaStreamTrack?: MediaStreamTrack | null } | null | undefined
   facingMode?: 'user' | 'environment'
   isLocal: boolean
+  mirror?: boolean
 }
 
 let broadcastZoomLevel = 0.8
@@ -24,7 +25,7 @@ export function subscribeToBroadcastZoom(listener: (level: number) => void): () 
 
 export function applyBroadcastTrackZoom(video: HTMLVideoElement, options: TrackZoomOptions): void {
   const facingMode = options.facingMode || 'user'
-  const shouldMirror = options.isLocal && facingMode === 'user'
+  const shouldMirror = options.mirror ?? (options.isLocal && facingMode === 'user')
 
   const mirrorPart = shouldMirror ? 'scaleX(-1) ' : ''
   const transform = `${mirrorPart}scale(${broadcastZoomLevel})`
