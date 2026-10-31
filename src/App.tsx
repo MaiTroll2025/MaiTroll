@@ -3112,6 +3112,7 @@ function UsernameRedirect() {
 
 // Mini Podcast Player wrapper component
 function MiniPodcastPlayerWrapper() {
+  const { isMobileWidth } = useIsMobile();
   const navigate = useNavigate()
   const activePodcast = usePodcastStore(state => state.activePodcast)
   const showMiniPlayer = usePodcastStore(state => state.showMiniPlayer)
