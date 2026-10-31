@@ -3,6 +3,7 @@
  * Handles fetching, displaying, and rotating multiple ads
  */
 import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { CityAd, AdPlacement } from '../../types/cityAds';
 import { supabase } from '../../lib/supabase';
 import { APP_DATA_REFETCH_EVENT_NAME } from '../../lib/appEvents';
@@ -16,6 +17,7 @@ interface PromoSlotProps {
 
 export default function PromoSlot({ placement, variant = 'sidebar' }: PromoSlotProps) {
   const [ads, setAds] = useState<CityAd[]>([]);
+  const navigate = useNavigate()
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
@@ -160,7 +162,7 @@ export default function PromoSlot({ placement, variant = 'sidebar' }: PromoSlotP
   if (loading) {
     const loadingHeight = variant === 'horizontal' ? 'h-[100px]' : variant === 'sidebar' ? 'h-[180px]' : variant === 'rail' ? 'h-[300px]' : 'h-[400px]';
     return (
-      <div className={`w-full ${loadingHeight} 
+      <div className={`w-full ${loadingHeight}
         bg-slate-900/50 rounded-xl animate-pulse border border-slate-800`}>
         <div className="flex items-center justify-center h-full">
           <div className="text-slate-500 text-sm">Loading promo...</div>
@@ -172,7 +174,7 @@ export default function PromoSlot({ placement, variant = 'sidebar' }: PromoSlotP
   // Empty state - show advertise prompt when no ads
   if (ads.length === 0) {
     return (
-      <div className={`w-full ${variant === 'horizontal' ? 'h-[100px]' : variant === 'sidebar' ? 'h-[180px]' : variant === 'rail' ? 'h-[300px]' : 'h-[400px]'} 
+      <div className={`w-full ${variant === 'horizontal' ? 'h-[100px]' : variant === 'sidebar' ? 'h-[180px]' : variant === 'rail' ? 'h-[300px]' : 'h-[400px]'}
         bg-slate-900/50 rounded-xl border border-slate-800 flex flex-col items-center justify-center gap-2 p-4`}>
         <div className="text-purple-400 text-lg font-semibold">Want to Advertise?</div>
         <p className="text-slate-400 text-xs text-center">
@@ -180,7 +182,7 @@ export default function PromoSlot({ placement, variant = 'sidebar' }: PromoSlotP
         </p>
         <button 
           className="mt-2 px-4 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-medium transition-colors"
-          onClick={() => window.location.href = '/city-registry/advertise'}
+          onClick={() => navigate('/city-registry/advertise')}
         >
           Submit Your Ad
         </button>

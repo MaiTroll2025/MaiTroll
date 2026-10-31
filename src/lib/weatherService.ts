@@ -4,7 +4,60 @@ export interface WeatherData {
   temperature: number;
   windSpeed: number;
   time: 'day' | 'night' | 'sunrise' | 'sunset';
+  phaseProgress?: number;
+  sunriseAt?: number;
+  sunsetAt?: number;
   location: string;
+}
+
+const TWILIGHT_DURATION_MS = 60 * 60 * 1000;
+const SOLAR_DAY_MS = 24 * 60 * 60 * 1000;
+
+function parseLocalDateTime(value: string, utcOffsetSeconds: number): number | undefined {
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/);
+  if (!match) return undefined;
+
+  const [, year, month, day, hour, minute] = match;
+  return Date.UTC(+year, +month - 1, +day, +hour, +minute) - utcOffsetSeconds * 1000;
+}
+
+export function getSolarPhase(
+  now: number,
+  sunriseAt?: number,
+  sunsetAt?: number,
+): Pick<WeatherData, 'time' | 'phaseProgress'> {
+  if (sunriseAt === undefined || sunsetAt === undefined) {
+    const date = new Date(now);
+    const sunrise = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 6).getTime();
+    const sunset = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 18).getTime();
+    return getSolarPhase(now, sunrise, sunset);
+  }
+
+  let sunrise = sunriseAt;
+  let sunset = sunsetAt;
+  while (now < sunrise - SOLAR_DAY_MS / 2) {
+    sunrise -= SOLAR_DAY_MS;
+    sunset -= SOLAR_DAY_MS;
+  }
+  while (now > sunset + SOLAR_DAY_MS / 2) {
+    sunrise += SOLAR_DAY_MS;
+    sunset += SOLAR_DAY_MS;
+  }
+
+  const sunriseStart = sunrise - TWILIGHT_DURATION_MS / 2;
+  const sunriseEnd = sunrise + TWILIGHT_DURATION_MS / 2;
+  const sunsetStart = sunset - TWILIGHT_DURATION_MS / 2;
+  const sunsetEnd = sunset + TWILIGHT_DURATION_MS / 2;
+
+  if (now >= sunriseStart && now <= sunriseEnd) {
+    return { time: 'sunrise', phaseProgress: (now - sunriseStart) / TWILIGHT_DURATION_MS };
+  }
+  if (now >= sunsetStart && now <= sunsetEnd) {
+    return { time: 'sunset', phaseProgress: (now - sunsetStart) / TWILIGHT_DURATION_MS };
+  }
+  return {
+    time: now > sunriseEnd && now < sunsetStart ? 'day' : 'night',
+  };
 }
 
 export async function fetchUserWeather(latitude?: number, longitude?: number): Promise<WeatherData> {
@@ -13,7 +66,7 @@ export async function fetchUserWeather(latitude?: number, longitude?: number): P
     let lat = latitude;
     let lon = longitude;
 
-    if (!lat || !lon) {
+    if (lat == null || lon == null) {
       // Try to get from geolocation. A denied/blocked geolocation is not an
       // error -- fall back to the default weather below.
       let geoError: GeolocationPositionError | null = null;
@@ -40,7 +93,7 @@ export async function fetchUserWeather(latitude?: number, longitude?: number): P
     }
     // Use Open-Meteo (free, no API key needed)
     const response = await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,windspeed_10m,weathercode,is_day&timezone=auto`
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,windspeed_10m,weathercode&daily=sunrise,sunset&timezone=auto`
     );
     
     if (!response.ok) throw new Error('Weather fetch failed');
@@ -57,18 +110,23 @@ export async function fetchUserWeather(latitude?: number, longitude?: number): P
     else if ([95, 96, 99].includes(weatherCode)) condition = 'storm';
     else if ([71, 73, 75, 77, 85, 86].includes(weatherCode)) condition = 'snow';
     
-    // Determine time of day
-    const hour = new Date().getHours();
-    let time: WeatherData['time'] = 'day';
-    if (data.current.is_day === 0) time = 'night';
-    else if (hour >= 5 && hour < 7) time = 'sunrise';
-    else if (hour >= 18 && hour < 20) time = 'sunset';
-    
+    const utcOffsetSeconds = data.utc_offset_seconds ?? 0;
+    const sunriseAt = data.daily?.sunrise?.[0]
+      ? parseLocalDateTime(data.daily.sunrise[0], utcOffsetSeconds)
+      : undefined;
+    const sunsetAt = data.daily?.sunset?.[0]
+      ? parseLocalDateTime(data.daily.sunset[0], utcOffsetSeconds)
+      : undefined;
+    const currentAt = parseLocalDateTime(data.current.time, utcOffsetSeconds) ?? Date.now();
+    const solarPhase = getSolarPhase(currentAt, sunriseAt, sunsetAt);
+
     return {
       condition,
       temperature: data.current.temperature_2m,
       windSpeed: data.current.windspeed_10m,
-      time,
+      ...solarPhase,
+      sunriseAt,
+      sunsetAt,
       location: 'Current Location'
     };
     
@@ -76,17 +134,17 @@ export async function fetchUserWeather(latitude?: number, longitude?: number): P
     console.error('Weather fetch error:', error);
     
     // Fallback: determine based on time of day
-    const hour = new Date().getHours();
-    let time: WeatherData['time'] = 'day';
-    if (hour >= 20 || hour < 6) time = 'night';
-    else if (hour >= 6 && hour < 8) time = 'sunrise';
-    else if (hour >= 18 && hour < 20) time = 'sunset';
-    
+    const date = new Date();
+    const sunriseAt = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 6).getTime();
+    const sunsetAt = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 18).getTime();
+
     return {
       condition: 'clear',
       temperature: 72,
       windSpeed: 5,
-      time,
+      ...getSolarPhase(date.getTime(), sunriseAt, sunsetAt),
+      sunriseAt,
+      sunsetAt,
       location: 'Default Location'
     };
   }
@@ -130,5 +188,28 @@ export function getSkyColors(weather: WeatherData) {
     }
   };
   
+  if ((time === 'sunrise' || time === 'sunset') && weather.phaseProgress !== undefined) {
+    const twilight = skyColors[condition][time];
+    const first = skyColors[condition][time === 'sunrise' ? 'night' : 'day'];
+    const last = skyColors[condition][time === 'sunrise' ? 'day' : 'night'];
+    const progress = Math.max(0, Math.min(1, weather.phaseProgress));
+    const blend = (from: string, to: string, amount: number) => {
+      const start = Number.parseInt(from.slice(1), 16);
+      const end = Number.parseInt(to.slice(1), 16);
+      const channel = (shift: number) =>
+        Math.round(((start >> shift) & 0xff) + (((end >> shift) & 0xff) - ((start >> shift) & 0xff)) * amount);
+      return `#${[16, 8, 0].map((shift) => channel(shift).toString(16).padStart(2, '0')).join('')}`;
+    };
+    const from = progress < 0.5 ? first : twilight;
+    const to = progress < 0.5 ? twilight : last;
+    const blendProgress = progress < 0.5 ? progress * 2 : (progress - 0.5) * 2;
+
+    return {
+      top: blend(from.top, to.top, blendProgress),
+      bottom: blend(from.bottom, to.bottom, blendProgress),
+      ambient: blend(from.ambient, to.ambient, blendProgress),
+    };
+  }
+
   return skyColors[condition][time];
 }

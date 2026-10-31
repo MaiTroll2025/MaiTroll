@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { Coins, Gift, Mic, MicOff, User, Video, VideoOff } from "lucide-react";
+import { applyCameraVideoPresentation } from "../../../lib/cameraVideoPresentation";
 
 export interface MobileParticipantVM {
   userId: string;
@@ -10,6 +11,7 @@ export interface MobileParticipantVM {
   seatIndex?: number | null;
   points: number;
   videoTrack?: any;
+  isLocal?: boolean;
   hasAudio?: boolean;
   hasVideo?: boolean;
   audioMuted?: boolean;
@@ -66,7 +68,7 @@ export default function MobileBattleParticipant({
       trackIdRef.current = trackId;
       videoElement.style.width = "100%";
       videoElement.style.height = "100%";
-      videoElement.style.objectFit = "contain";
+      videoElement.style.objectFit = "cover";
       videoElement.style.display = "block";
       videoElement.style.backgroundColor = "black";
       videoElement.autoplay = true;
@@ -76,11 +78,15 @@ export default function MobileBattleParticipant({
       videoElement.controls = false;
       (videoElement as any).disablePictureInPicture = true;
       videoElement.muted = true;
+      applyCameraVideoPresentation(videoElement, {
+        track: track.mediaStreamTrack,
+        isLocal: vm.isLocal ?? false,
+      });
       container.appendChild(videoElement);
     } catch (err) {
       console.error("[MobileBattleParticipant] attach() threw error:", err);
     }
-  }, [vm.videoTrack]);
+  }, [vm.videoTrack, vm.isLocal]);
 
   useEffect(() => {
     const video = videoRef.current;

@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import { useAuthStore } from '@/lib/store';
 import { supabase } from '@/lib/supabase';
 import { usePresenceStore } from '@/lib/presenceStore';
+import { canAccessRtcAdminMonitor } from '@/lib/rtcAdminAccess';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { useStaffWalkieTalkieContext } from '@/hooks/useStaffWalkieTalkieContext';
 import { toast } from 'sonner';
@@ -120,7 +121,7 @@ interface ModerationActionLog {
   status: string | null;
   created_at: string;
   target?: {
-    user_id: void; username?: string | null 
+    id?: string; username?: string | null 
 } | null;
   actor?: { username?: string | null; role?: string | null; is_admin?: boolean | null } | null;
 }
@@ -155,9 +156,30 @@ interface TromailInboxItem {
   created_at: string;
 }
 type UserListType = 'online' | 'all' | null;
+const RTC_MONITOR_OPEN_EVENT = 'rtc-admin-monitor:open'
+
+function getVisibleViewportSize() {
+  const viewport = window.visualViewport
+  return {
+    width: viewport?.width ?? window.innerWidth,
+    height: viewport?.height ?? window.innerHeight,
+  }
+}
+
+function clampFloatingPosition(
+  position: { top: number; left: number },
+  width: number,
+  height: number,
+) {
+  const viewport = getVisibleViewportSize()
+  return {
+    top: Math.max(0, Math.min(Math.max(0, viewport.height - height), position.top)),
+    left: Math.max(0, Math.min(Math.max(0, viewport.width - width), position.left)),
+  }
+}
 
 function formatDuration(seconds: number): string {
-  const safe = Math.max(0, Number(seconds || 0));
+  const safe = Math.floor(Math.max(0, Number(seconds) || 0));
   const hrs = Math.floor(safe / 3600);
   const mins = Math.floor((safe % 3600) / 60);
   const secs = safe % 60;
@@ -178,9 +200,11 @@ function StatCard({ label, value, tone, icon }: { label: string; value: React.Re
 
 export default function RTCAdminMonitor({
   fullPage = false,
+  headerDropdown = false,
   onClose,
   canViewClickAnalytics = false,
-}: { fullPage?: boolean; onClose?: () => void; canViewClickAnalytics?: boolean } = {}) {
+  isAuthorized,
+}: { fullPage?: boolean; headerDropdown?: boolean; onClose?: () => void; canViewClickAnalytics?: boolean; isAuthorized?: boolean | null } = {}) {
   const { profile } = useAuthStore();
   const navigate = useNavigate();
   const onlineUserIds = usePresenceStore((state) => state.onlineUserIds);
@@ -197,17 +221,21 @@ export default function RTCAdminMonitor({
     canAccessWalkieTalkie: contextCanAccessWalkieTalkie,
   } = useStaffWalkieTalkieContext();
 
-const staffRoles = ['admin', 'moderator', 'troll_officer', 'lead_troll_officer', 'secretary', 'officer', 'hr_admin', 'agency_hr_manager', 'ceo', 'superadmin', 'empire_partner', 'auctioneer', 'attorney', 'prosecutor', 'pastor', 'journalist', 'tcnn_news_caster', 'tcnn_chief_news_caster', 'agency_hr', 'agency_leader', 'ceo_assistant', 'noah_assistant'];
-   const isStaff = profile?.is_admin === true || staffRoles.includes(profile?.role || '');
-  const isFullAdmin = profile?.is_admin === true || ['admin', 'ceo', 'superadmin'].includes(profile?.role || '');
+  // When rendered as a full page by RtcAdminMonitorGate, the gate already
+  // performed the authoritative server-side authorization (RPC
+  // can_access_rtc_admin_monitor). Trust that over the client-side role check,
+  // which can diverge (e.g. a user with an explicit grant whose role is not in
+  // the local staff list) and previously produced a blank page.
+  const isStaff = canAccessRtcAdminMonitor(profile) || (fullPage && isAuthorized === true);
+  const isFullAdmin = isStaff && (profile?.is_admin === true || ['admin', 'ceo', 'superadmin'].includes(profile?.role || ''));
   const canReviewMaiPiksReports = isFullAdmin
     || profile?.is_lead_officer === true
     || [profile?.role, profile?.troll_role].some((role) => String(role || '').toLowerCase() === 'lead_troll_officer');
   const canUseWalkieTalkie = contextCanAccessWalkieTalkie;
   const canFetchClickStats = isStaff || canViewClickAnalytics;
 
-  const isTargetAdmin = useCallback((target: UserListItem | StreamViewer | any): boolean => {
-    return target.role === 'admin' || target.role === 'superadmin' || target.role === 'ceo' || target.is_admin === true;
+  const isTargetAdmin = useCallback((target: Pick<UserListItem, 'role' | 'is_admin'>): boolean => {
+    return ['admin', 'superadmin', 'ceo'].includes(String(target.role || '').toLowerCase()) || target.is_admin === true;
   }, []);
 
   const [isOpen, setIsOpen] = useState(fullPage);
@@ -239,6 +267,19 @@ const staffRoles = ['admin', 'moderator', 'troll_officer', 'lead_troll_officer',
     setIsOpen(false)
     onClose?.()
   }, [onClose])
+
+  useEffect(() => {
+    if (!headerDropdown) return
+
+    const handleOpen = () => {
+      if (!isStaff) return
+      setIsManuallyClosed(false)
+      setIsOpen(true)
+    }
+
+    window.addEventListener(RTC_MONITOR_OPEN_EVENT, handleOpen)
+    return () => window.removeEventListener(RTC_MONITOR_OPEN_EVENT, handleOpen)
+  }, [headerDropdown, isStaff])
 
   // Floating button drag state
   const [floatBtnPos, setFloatBtnPos] = useState<{ top: number; left: number } | null>(null);
@@ -485,7 +526,7 @@ return {
               userId: stream.user_id,
               totalMinutesAllowed: Number(streamData?.total_minutes_allowed) || 360,
               minutesUsed: Number(streamData?.minutes_used) || 0,
-              minutesRemaining: streamData?.minutes_remaining !== null ? Number(streamData?.minutes_remaining) : undefined,
+              minutesRemaining: streamData?.minutes_remaining != null ? Number(streamData.minutes_remaining) : undefined,
               giftExtensionMinutes: Number(streamData?.gift_extension_minutes) || 0,
               rtc_provider: stream.rtc_provider || 'livekit',
             };
@@ -541,7 +582,9 @@ return {
             .select('total_minutes')
             .eq('id', 'global')
             .maybeSingle();
-          totalMinutesFromDB = Number(totalRow?.total_minutes) || null;
+          totalMinutesFromDB = totalRow?.total_minutes != null && Number.isFinite(Number(totalRow.total_minutes))
+             ? Number(totalRow.total_minutes)
+             : null;
         } catch {
           totalMinutesFromDB = null;
         }
@@ -586,8 +629,8 @@ return {
     }, [isStaff]);
 
   const handleSaveTotalMinutes = useCallback(async () => {
-    const parsed = parseInt(editedTotalMinutes, 10);
-    if (Number.isNaN(parsed) || parsed < 0) {
+    const parsed = Number(editedTotalMinutes.trim());
+    if (!Number.isSafeInteger(parsed) || parsed < 0) {
       toast.error('Enter a valid minute count');
       return;
     }
@@ -953,7 +996,8 @@ const openAction = useCallback((user: UserListItem, action: string) => {
          }
 
           if (activeAction === 'mute') {
-              const minutes = actionDuration ? parseInt(actionDuration, 10) : 60;
+              const minutes = actionDuration.trim() ? Number(actionDuration) : 60;
+              if (!Number.isSafeInteger(minutes) || minutes <= 0) throw new Error('Enter a valid mute duration');
               if (!selectedStream) {
                   toast.error('Open the stream first to mute a viewer');
                   return;
@@ -969,7 +1013,11 @@ const openAction = useCallback((user: UserListItem, action: string) => {
           }
 
          if (activeAction === 'kick' || activeAction === 'ban') {
-             const minutes = activeAction === 'kick' ? 10 : actionDuration ? parseInt(actionDuration, 10) * 1440 : 525600;
+             const days = actionDuration.trim() ? Number(actionDuration) : 365;
+             if (activeAction === 'ban' && (!Number.isSafeInteger(days) || days <= 0 || days > 36500)) {
+               throw new Error('Enter a valid ban duration in days');
+             }
+             const minutes = activeAction === 'kick' ? 10 : days * 1440;
              const { error } = await supabase.rpc('ban_user', {
                  target: actionTarget.id,
                  minutes,
@@ -991,8 +1039,8 @@ const openAction = useCallback((user: UserListItem, action: string) => {
          }
 
          if (activeAction === 'grant') {
-             const amount = parseInt(actionAmount, 10);
-             if (!amount || amount <= 0) throw new Error('Enter a valid amount');
+             const amount = Number(actionAmount.trim());
+             if (!Number.isSafeInteger(amount) || amount <= 0) throw new Error('Enter a valid amount');
              const { error } = await supabase.rpc('admin_grant_coins', {
                  p_user_id: actionTarget.id,
                  p_amount: amount,
@@ -1493,9 +1541,6 @@ const openAction = useCallback((user: UserListItem, action: string) => {
       }
     };
 
-    checkNewOnlineUsers();
-    const interval = setInterval(checkNewOnlineUsers, 30000); // Check every 30s
-    return () => clearInterval(interval);
   }, [isStaff]);
 
   // Realtime broadcast-end handling: combine the database (postgres_changes) and
@@ -1693,11 +1738,9 @@ const openAction = useCallback((user: UserListItem, action: string) => {
       return () => window.removeEventListener('keydown', handleEscape);
       }, [isOpen, activeAction, selectedStream, closeAction, closeStreamModal, closeMonitor]);
 
-    // Load saved monitor position from sessionStorage when it first opens.
-    // fullPage always fills the viewport, so a saved floating position would
-    // offset the whole screen — never apply it there.
+    // Load saved monitor position only for the floating monitor.
     useEffect(() => {
-      if (!isOpen || fullPage || monitorPosLoadedRef.current) return
+      if (!isOpen || fullPage || headerDropdown || monitorPosLoadedRef.current) return
       monitorPosLoadedRef.current = true
 
       try {
@@ -1711,7 +1754,7 @@ const openAction = useCallback((user: UserListItem, action: string) => {
       } catch {
         // use default position
       }
-    }, [isOpen, fullPage])
+    }, [isOpen, fullPage, headerDropdown])
 
     // Reset position-loaded flag when monitor closes so we reload next time
     useEffect(() => {
@@ -1858,12 +1901,12 @@ const openAction = useCallback((user: UserListItem, action: string) => {
       floatBtnDragMovedRef.current = true
       const { clientX, clientY } = getEventCoords(e)
       const { dx, dy } = floatBtnDragOffsetRef.current
-      const btnW = floatBtnRef.current?.offsetWidth || 80
-      const btnH = floatBtnRef.current?.offsetHeight || 80
-      setFloatBtnPos({
-        top: Math.max(0, Math.min(window.innerHeight - btnH, clientY - dy)),
-        left: Math.max(0, Math.min(window.innerWidth - btnW, clientX - dx)),
-      })
+      const rect = floatBtnRef.current?.getBoundingClientRect()
+      setFloatBtnPos(clampFloatingPosition(
+        { top: clientY - dy, left: clientX - dx },
+        rect?.width ?? 80,
+        rect?.height ?? 80,
+      ))
     }, [isFloatBtnDragging])
 
     const handleFloatBtnDragEnd = useCallback(() => {
@@ -1903,12 +1946,35 @@ const openAction = useCallback((user: UserListItem, action: string) => {
           if (saved) {
             const parsed = JSON.parse(saved)
             if (parsed && typeof parsed.top === 'number' && typeof parsed.left === 'number') {
-              setFloatBtnPos({ top: parsed.top, left: parsed.left })
+              const rect = floatBtnRef.current?.getBoundingClientRect()
+              setFloatBtnPos(clampFloatingPosition(
+                parsed,
+                rect?.width ?? 80,
+                rect?.height ?? 80,
+              ))
             }
           }
         } catch {
           // use default position
         }
+      }
+    }, [])
+
+    useEffect(() => {
+      const clampToViewport = () => {
+        const rect = floatBtnRef.current?.getBoundingClientRect()
+        if (!rect) return
+        setFloatBtnPos((current) =>
+          current
+            ? clampFloatingPosition(current, rect.width, rect.height)
+            : null,
+        )
+      }
+      window.addEventListener('resize', clampToViewport)
+      window.visualViewport?.addEventListener('resize', clampToViewport)
+      return () => {
+        window.removeEventListener('resize', clampToViewport)
+        window.visualViewport?.removeEventListener('resize', clampToViewport)
       }
     }, [])
 
@@ -1933,10 +1999,10 @@ const openAction = useCallback((user: UserListItem, action: string) => {
     // Auto-open monitor on first security-relevant event (channel/session changes)
     // Does not re-open if user manually closed the panel
     const autoOpenIfNeeded = useCallback(() => {
-      if (isOpen || isManuallyClosed) return
+      if (headerDropdown || isOpen || isManuallyClosed) return
       setIsOpen(true)
       setIsManuallyClosed(false)
-    }, [isOpen, isManuallyClosed])
+    }, [headerDropdown, isOpen, isManuallyClosed])
 
     // Track last auto-open time to prevent spam
     const lastAutoOpenRef = useRef<number>(0)
@@ -2050,7 +2116,7 @@ const openAction = useCallback((user: UserListItem, action: string) => {
     }, [openDropdownUserId]);
 
 const renderFloatingButton = () => {
-      if (isMobileWidth) return null;
+      if (isMobileWidth || headerDropdown) return null;
       
       // Only render on web (not mobile)
       if (isMobileWidth) return null;
@@ -3058,7 +3124,7 @@ return (
           .from('user_profiles')
           .update({ is_jailed: false })
           .eq('id', userId)
-          .then(() => undefined, () => undefined);
+          .then(({ error }) => { if (error) throw error; });
 
         await supabase.from('moderation_actions').insert({
           actor_id: profile?.id,
@@ -3084,6 +3150,7 @@ return (
     const submitCourtSummons = useCallback(async () => {
       if (!profile?.id) { toast.error('Missing auth'); return; }
       if (courtSummonsDefendants.length === 0) { toast.error('Add at least one defendant'); return; }
+      if (courtSummonsDefendants.length > 20) { toast.error('A court docket supports at most 20 defendants'); return; }
       if (!courtSummonsReason.trim()) { toast.error('Enter a reason'); return; }
       setCourtSummonsSubmitting(true);
       try {
@@ -3104,9 +3171,10 @@ return (
         if (docketError) throw docketError;
 
         let docketId: string;
-        if (docket && docket.cases_count < 20) {
+        if (docket && Number(docket.cases_count || 0) + courtSummonsDefendants.length <= 20) {
           docketId = docket.id;
-          await supabase.from('court_dockets').update({ cases_count: (docket.cases_count || 0) + courtSummonsDefendants.length }).eq('id', docketId);
+          const { error: countError } = await supabase.from('court_dockets').update({ cases_count: (docket.cases_count || 0) + courtSummonsDefendants.length }).eq('id', docketId);
+          if (countError) throw countError;
         } else {
           const { data: newDocket, error: insertError } = await supabase
             .from('court_dockets')
@@ -3131,11 +3199,12 @@ return (
         const caseErrors = results.filter((r) => r.error);
         if (caseErrors.length > 0) throw caseErrors[0].error;
 
-        const caseIds = results.map((r) => r.data?.[0]?.id).filter((id): id is string => !!id);
-        const summonsInserts = caseIds.map((caseId) =>
+        const caseIds = results.map((r) => r.data?.[0]?.id);
+        if (caseIds.some((id) => !id)) throw new Error('A court case was created without a returned ID');
+        const summonsInserts = caseIds.map((caseId, index) =>
           supabase.from('court_summons').insert({
-            case_id: caseId,
-            served_to: courtSummonsDefendants[caseIds.indexOf(caseId)]?.id || courtSummonsDefendants[0].id,
+            case_id: caseId!,
+            served_to: courtSummonsDefendants[index].id,
             served_by: profile.id,
             status: 'pending',
             notes: JSON.stringify({
@@ -3145,7 +3214,9 @@ return (
             }),
           })
         );
-        await Promise.all(summonsInserts);
+        const summonsResults = await Promise.all(summonsInserts);
+        const summonsError = summonsResults.find((result) => result.error)?.error;
+        if (summonsError) throw summonsError;
 
         for (const def of courtSummonsDefendants) {
           await supabase.from('moderation_actions').insert({
@@ -3229,16 +3300,18 @@ return (
         });
         if (jailError) throw jailError;
 
-        const { data: docket } = await supabase
+        const { data: docket, error: docketError } = await supabase
           .from('court_dockets')
           .select('id, cases_count')
           .eq('court_date', courtDateStr)
           .maybeSingle();
+        if (docketError) throw docketError;
 
         let docketId: string;
         if (docket && docket.cases_count < 20) {
           docketId = docket.id;
-          await supabase.from('court_dockets').update({ cases_count: (docket.cases_count || 0) + 1 }).eq('id', docketId);
+          const { error: countError } = await supabase.from('court_dockets').update({ cases_count: (docket.cases_count || 0) + 1 }).eq('id', docketId);
+          if (countError) throw countError;
         } else {
           const { data: newDocket, error: insertError } = await supabase.from('court_dockets').insert({
             court_date: courtDateStr, max_cases: 20, cases_count: 1, status: 'open',
@@ -3248,7 +3321,7 @@ return (
           if (!docketId) throw new Error('Failed to create court docket');
         }
 
-        await supabase.from('court_cases').insert({
+        const { error: courtCaseError } = await supabase.from('court_cases').insert({
           docket_id: docketId,
           defendant_id: targetUser.id,
           plaintiff_id: profile.id,
@@ -3256,6 +3329,7 @@ return (
           status: 'pending',
           case_type: 'criminal'
         });
+        if (courtCaseError) throw courtCaseError;
 
         await supabase.from('moderation_actions').insert({
           actor_id: profile.id,
@@ -3796,21 +3870,37 @@ return (
   const renderFullPageModal = () => {
     if (!isOpen) return null;
 
-    const panelStyle: React.CSSProperties = monitorPos
-      ? { top: monitorPos.top, left: monitorPos.left, bottom: 'auto', right: 'auto' }
-      : fullPage
+    const panelStyle: React.CSSProperties = headerDropdown
+      ? { top: '76px', right: '16px', bottom: 'auto', left: 'auto' }
+      : monitorPos
+        ? { top: monitorPos.top, left: monitorPos.left, bottom: 'auto', right: 'auto' }
+        : fullPage
         ? { top: 0, left: 0, bottom: 0, right: 0 }
         : { bottom: '80px', right: '16px', top: 'auto', left: 'auto' }
 
-    // Early return after all hooks — non-staff users see nothing
-    if (!isStaff) return null;
+    // Non-staff users see an access-denied message instead of a blank screen
+    if (!isStaff) {
+      return (
+        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#0A0814] text-white">
+          <div className="text-center">
+            <div className="mb-3 text-4xl">🚫</div>
+            <h2 className="text-lg font-bold">Access Denied</h2>
+            <p className="mt-1 max-w-xs text-sm text-white/60">
+              You do not have permission to view the RTC Admin Monitor. Admin roles and explicitly granted Career roles only.
+            </p>
+          </div>
+        </div>
+      );
+    }
 
     return (
       <div
         className={
           fullPage
             ? 'fixed inset-0 z-[9999] flex flex-col bg-[#0A0814] animate-in fade-in duration-150'
-            : 'fixed inset-0 z-[9999] flex items-end justify-end bg-transparent p-0 animate-in fade-in duration-150'
+            : headerDropdown
+              ? 'fixed inset-0 z-[9999] bg-transparent p-0 animate-in fade-in duration-150'
+              : 'fixed inset-0 z-[9999] flex items-end justify-end bg-transparent p-0 animate-in fade-in duration-150'
         }
         onClick={(e) => {
           if (e.target === e.currentTarget) {
@@ -3925,7 +4015,7 @@ return (
   };
 
   const renderMobileMiniBubble = () => {
-    if (!isMobileWidth || !isStaff) return null;
+    if (!isMobileWidth || !isStaff || headerDropdown) return null;
 
     const bubbleSize = mobileMiniOpen ? 'h-10 w-10' : 'h-12 w-12';
 
@@ -4018,6 +4108,8 @@ return (
       <>
         {fullPage ? (
           renderFullPageModal()
+        ) : headerDropdown ? (
+          isOpen && renderFullPageModal()
         ) : (
           <>
             {renderFloatingButton()}
@@ -4139,7 +4231,7 @@ function WalkieTalkieTab() {
               type="button"
               onClick={isConnected || isJoining ? leaveWalkieTalkie : joinWalkieTalkie}
               disabled={isJoining}
-              className={`w-full rounded bg-${isConnected || isJoining ? 'red-600' : 'cyan-600'}/30 px-3 py-2 text-sm font-medium text-${isConnected || isJoining ? 'red-100' : 'cyan-100'} hover:bg-${isConnected || isJoining ? 'red-600' : 'cyan-600'}/45 disabled:opacity-50`}
+              className={`w-full rounded px-3 py-2 text-sm font-medium disabled:opacity-50 ${isConnected || isJoining ? 'bg-red-600/30 text-red-100 hover:bg-red-600/45' : 'bg-cyan-600/30 text-cyan-100 hover:bg-cyan-600/45'}`}
             >
               {isJoining ? 'Joining...' : isConnected ? 'Leave Walkie' : 'Join Walkie'}
             </button>
@@ -4147,7 +4239,7 @@ function WalkieTalkieTab() {
               type="button"
               onClick={() => toggleSpeaking(!isSpeaking)}
               disabled={!isConnected}
-              className={`w-full rounded bg-${isSpeaking ? 'green-600' : 'white/10'} px-3 py-2 text-sm font-medium text-${isSpeaking ? 'white' : 'gray-300'} hover:bg-${isSpeaking ? 'green-600' : 'white/20'} disabled:opacity-50`}
+              className={`w-full rounded px-3 py-2 text-sm font-medium disabled:opacity-50 ${isSpeaking ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-white/10 text-gray-300 hover:bg-white/20'}`}
             >
               {isSpeaking ? 'Mute Mic' : 'Unmute Mic'}
             </button>
@@ -4158,6 +4250,3 @@ function WalkieTalkieTab() {
   );
 }
 
-function checkNewOnlineUsers() {
-  throw new Error('Function not implemented.');
-}

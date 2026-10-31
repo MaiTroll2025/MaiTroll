@@ -5,7 +5,7 @@ export type TrackZoomOptions = {
   mirror?: boolean
 }
 
-let broadcastZoomLevel = 0.8
+let broadcastZoomLevel = 1
 const zoomListeners = new Set<(level: number) => void>()
 
 export function getBroadcastZoomLevel(): number {

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase, UserProfile } from '../lib/supabase'
 import { useAuthStore } from '../lib/store'
 import { toast } from 'sonner'
@@ -10,6 +11,7 @@ import { Virtuoso } from 'react-virtuoso'
 
 const FamilyLeaderboard = ({ user: _authUser }: { user?: UserProfile | null }) => {
   const { user } = useAuthStore()
+  const navigate = useNavigate()
   const [leaderboard, setLeaderboard] = useState([])
   const [userFamily, setUserFamily] = useState(null)
   const [activeTab, setActiveTab] = useState('total') // 'total', 'weekly', 'season'
@@ -314,7 +316,7 @@ const FamilyLeaderboard = ({ user: _authUser }: { user?: UserProfile | null }) =
             Join a family or create your own to start earning family tokens and competing for glory!
           </p>
           <button
-            onClick={() => window.location.href = '/family/browse'}
+            onClick={() => navigate('/family/browse')}
             className="px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-semibold transition-colors"
           >
             Explore Families

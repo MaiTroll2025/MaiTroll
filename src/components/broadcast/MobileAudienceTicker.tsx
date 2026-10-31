@@ -3,6 +3,7 @@ import { Users, Heart } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { StreamAudienceMember } from '../../hooks/useStreamAudiencePresence'
 import { formatCoins } from './formatAudienceCoins'
+import MaiBag from '@/components/mai-bag/MaiBag'
 
 interface MobileAudienceTickerProps {
   audience: StreamAudienceMember[]
@@ -14,6 +15,8 @@ interface MobileAudienceTickerProps {
   onModerateUser?: (info: { userId: string; username?: string; role?: string }) => void
   onViewerCountClick?: () => void
   className?: string
+  streamId?: string
+  phone?: boolean
 }
 
 export default function MobileAudienceTicker({
@@ -26,6 +29,8 @@ export default function MobileAudienceTicker({
   onModerateUser,
   onViewerCountClick,
   className = '',
+  streamId,
+  phone = false,
 }: MobileAudienceTickerProps) {
   const isStaff = useMemo(() => {
     return Boolean(
@@ -35,6 +40,10 @@ export default function MobileAudienceTicker({
         ),
     )
   }, [audience, currentUserId])
+
+  const isBroadcaster = useMemo(() => {
+    return Boolean(currentUserId && hostUserId && currentUserId === hostUserId)
+  }, [currentUserId, hostUserId])
 
   const sorted = useMemo(() => {
     const active = audience.filter((m) => m.is_active && !m.left_at)
@@ -67,6 +76,17 @@ export default function MobileAudienceTicker({
         <Users className="h-3 w-3 text-cyan-300" />
         {viewerCount}
       </button>
+
+      {/* Mai Bag integrated into the viewer counter (broadcaster only).
+          Clicking the bag opens Mai Bag gift configuration; clicking the
+          viewer count opens the all-viewers list. */}
+      {isBroadcaster && streamId && (
+        <MaiBag
+          streamId={streamId}
+          phone={phone}
+          className="shrink-0"
+        />
+      )}
 
       {/* Likes chip */}
       {likes > 0 && (

@@ -2,6 +2,8 @@ import React, { Suspense, useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../lib/store'
 
+const RTCAdminMonitor = React.lazy(() => import('./RTCAdminMonitor.tsx'))
+
 /**
  * RtcAdminMonitorGate — server-side authorization gate for the RTC Admin
  * Monitor, shared by BOTH the web route and the phone route.
@@ -69,8 +71,6 @@ export default function RtcAdminMonitorGate({
     )
   }
 
-  const RTCAdminMonitor = React.lazy(() => import('./RTCAdminMonitor.tsx'))
-
   return (
     <Suspense
       fallback={
@@ -82,7 +82,7 @@ export default function RtcAdminMonitorGate({
         </div>
       }
     >
-      <RTCAdminMonitor fullPage={fullPage} onClose={onClose} canViewClickAnalytics />
+      <RTCAdminMonitor fullPage={fullPage} onClose={onClose} canViewClickAnalytics isAuthorized={allowed} />
     </Suspense>
   )
 }

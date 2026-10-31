@@ -1,8 +1,14 @@
+/**
+ * MaiTroll city: architectural realism edition. Original interactive city,
+ * weather animation, route mapping and ambient effects preserved.
+ * Detailed 2.5D facades replace the former generic rectangular storefronts.
+ */
 import { useEffect, useRef, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Video, Users } from 'lucide-react'
+import { Video, Users, ChevronLeft, ChevronRight } from 'lucide-react'
 import {
   fetchUserWeather,
+  getSolarPhase,
   getSkyColors,
   type WeatherData,
 } from '@/lib/weatherService'
@@ -14,22 +20,25 @@ import {
 const SIDEWALK_HEIGHT = 20
 const CURB_HEIGHT = 40
 const CITY_HEIGHT = 420
+const BASE_BUILDING_COUNT = 8
 
 export interface BuildingMeta {
   label: string
   to: string
-  type?: 'home' | 'arcade' | 'bank' | 'court' | 'standard' | 'achievement' | 'broadcast'
+  type?: 'home' | 'arcade' | 'bank' | 'court' | 'townHall' | 'jail' | 'church' | 'standard' | 'achievement' | 'broadcast'
 }
 
 type BuildingMetaExtended = BuildingMeta
 
 const DEFAULT_BUILDINGS: BuildingMetaExtended[] = [
-  { label: 'Apartment Building', to: '/home', type: 'home' },
   { label: 'City Post Office', to: '/utromail', type: 'standard' },
   
   { label: 'Treelz Cinema', to: '/treelz', type: 'standard' },
   { label: 'Broadcast Tower', to: '/broadcast/setup', type: 'broadcast' },
   { label: 'Municipal Court', to: '/troll-court', type: 'court' },
+  { label: 'Town Meeting Hall', to: '/town-meeting', type: 'townHall' },
+  { label: 'City Jail & Inmates', to: '/inmates', type: 'jail' },
+  { label: 'City Church', to: '/church', type: 'church' },
   { label: 'Game Center', to: '/hytrogaming', type: 'arcade' },
   { label: 'City Treasury', to: '/mai-pay', type: 'bank' },
   { label: 'Employment Office', to: '/careers', type: 'standard' },
@@ -156,22 +165,6 @@ function getMaterialColors(
 /* -------------------------------------------------------------------------- */
 /* Helpers                                                                    */
 /* -------------------------------------------------------------------------- */
-
-function lightenColor(hex: string, amount: number): string {
-  const clean = hex.replace('#', '')
-
-  const r0 = parseInt(clean.slice(0, 2), 16)
-  const g0 = parseInt(clean.slice(2, 4), 16)
-  const b0 = parseInt(clean.slice(4, 6), 16)
-
-  const r = Math.min(255, Math.round(r0 + (255 - r0) * amount))
-  const g = Math.min(255, Math.round(g0 + (255 - g0) * amount))
-  const b = Math.min(255, Math.round(b0 + (255 - b0) * amount))
-
-  return `#${r.toString(16).padStart(2, '0')}${g
-    .toString(16)
-    .padStart(2, '0')}${b.toString(16).padStart(2, '0')}`
-}
 
 function getMoonPhase(date: Date): {
   phase: string
@@ -304,7 +297,7 @@ interface Building {
     person: boolean
     flicker: number
   }[]
-  buildingType: 'home' | 'arcade' | 'bank' | 'court' | 'standard' | 'achievement' | 'broadcast'
+  buildingType: 'home' | 'arcade' | 'bank' | 'court' | 'townHall' | 'jail' | 'church' | 'standard' | 'achievement' | 'broadcast'
 }
 
 function generateBuildings(
@@ -334,6 +327,9 @@ function generateBuildings(
     } else if (buildingType === 'broadcast') {
       width = segmentWidth * 0.96
       height = 110
+    } else if (buildingType === 'townHall' || buildingType === 'jail' || buildingType === 'church') {
+      width = segmentWidth * (0.76 + Math.random() * 0.12)
+      height = buildingType === 'church' ? 155 + Math.random() * 45 : 145 + Math.random() * 55
     } else {
       width = segmentWidth * (0.62 + Math.random() * 0.3)
       height = 100 + Math.random() * 220
@@ -349,6 +345,12 @@ function generateBuildings(
       material = 'darkGlass'
     } else if (buildingType === 'home') {
       material = 'brick'
+    } else if (buildingType === 'townHall') {
+      material = 'stone'
+    } else if (buildingType === 'jail') {
+      material = 'concrete'
+    } else if (buildingType === 'church') {
+      material = 'stone'
     } else {
       material = MATERIAL_POOL[i % MATERIAL_POOL.length]
     }
@@ -1609,25 +1611,11 @@ function drawAirplanes(
 function drawCity(
   ctx: CanvasRenderingContext2D,
   _buildings: Building[],
-  trees: Tree[],
   groundY: number,
   _isNight: boolean,
   time: number,
   isDark: boolean,
 ) {
-  /*
-   * Buildings are rendered as real HTML/CSS elements in the React layer.
-   * Keeping them outside the canvas gives each building proper depth,
-   * responsive text, hover states, clickable navigation, and richer
-   * architecture while the canvas continues to handle the animated world.
-   */
-  drawTrees(
-    ctx,
-    trees,
-    groundY,
-    isDark,
-    time,
-  )
 }
 
 /* -------------------------------------------------------------------------- */
@@ -1684,6 +1672,36 @@ function getBuildingFacade(
         shadow: 'rgba(25,25,28,.48)',
         windowFrame: '#3d3e46',
       }
+    case 'townHall':
+      return {
+        background: isDark
+          ? 'linear-gradient(135deg, #77766c 0%, #aaa897 50%, #5b5b54 100%)'
+          : 'linear-gradient(135deg, #c8c4b4 0%, #eee9d9 50%, #aaa696 100%)',
+        border: isDark ? 'rgba(40,40,36,.9)' : 'rgba(95,90,75,.7)',
+        trim: isDark ? '#e5dfc9' : '#fff9e8',
+        shadow: 'rgba(30,28,22,.48)',
+        windowFrame: '#46443d',
+      }
+    case 'jail':
+      return {
+        background: isDark
+          ? 'linear-gradient(135deg, #303843 0%, #4b5663 50%, #252d37 100%)'
+          : 'linear-gradient(135deg, #687381 0%, #909ba7 50%, #515b67 100%)',
+        border: isDark ? 'rgba(12,17,24,.95)' : 'rgba(45,53,62,.8)',
+        trim: isDark ? '#9ba6b2' : '#d7dee5',
+        shadow: 'rgba(10,14,20,.62)',
+        windowFrame: '#1d2630',
+      }
+    case 'church':
+      return {
+        background: isDark
+          ? 'linear-gradient(135deg, #777286 0%, #aaa2b5 50%, #5d586c 100%)'
+          : 'linear-gradient(135deg, #c8c0d0 0%, #eee8f2 50%, #a9a0b6 100%)',
+        border: isDark ? 'rgba(39,34,50,.9)' : 'rgba(92,78,105,.7)',
+        trim: isDark ? '#eee5d2' : '#fffaf0',
+        shadow: 'rgba(25,20,35,.5)',
+        windowFrame: '#393344',
+      }
     case 'arcade':
       return {
         background: isDark
@@ -1717,6 +1735,67 @@ function getBuildingFacade(
   }
 }
 
+/**
+ * Architecture-first street scene. Each landmark uses its own elevations,
+ * trim, roofline, glazing, street-level fittings and lighting.  All buildings
+ * remain real buttons so original routing, keyboard interaction and external
+ * click interception are preserved.
+ */
+function BuildingWindow({
+  lit, night, frame, tall = false, arched = false, bars = false, glass = false,
+}: {
+  lit: boolean; night: boolean; frame: string; tall?: boolean; arched?: boolean;
+  bars?: boolean; glass?: boolean
+}) {
+  const glow = night && lit
+  return (
+    <span className="relative block h-full w-full overflow-hidden" style={{
+      border: `2px solid ${frame}`,
+      borderTopLeftRadius: arched ? '48% 26%' : 2,
+      borderTopRightRadius: arched ? '48% 26%' : 2,
+      background: glow
+        ? 'linear-gradient(125deg,#f5d5a0 0%,#d7a35f 48%,#594735 100%)'
+        : glass
+          ? night ? 'linear-gradient(135deg,#172635,#263d51 45%,#101b28)' : 'linear-gradient(130deg,#7798ac,#b2c6ca 42%,#4c7186 70%,#293e4c)'
+          : night ? 'linear-gradient(135deg,#192733,#101a25 60%,#283744)' : 'linear-gradient(125deg,#506c79,#82939a 50%,#364c59)',
+      boxShadow: glow ? '0 0 12px rgba(241,173,90,.46), inset 0 0 8px rgba(255,231,159,.25)' : 'inset 2px 3px 6px rgba(0,0,0,.35)',
+    }}>
+      <span className="absolute inset-y-0 left-[48%] w-[3%] bg-black/25" />
+      {tall && <span className="absolute inset-x-0 top-[48%] h-[3%] bg-black/25" />}
+      <span className="absolute -left-[12%] top-0 h-full w-[27%] -skew-x-[18deg] bg-white/15" />
+      <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-black/25" />
+      {bars && <span className="absolute inset-0 bg-[repeating-linear-gradient(90deg,transparent_0%,transparent_17%,rgba(15,22,28,.92)_18%,rgba(15,22,28,.92)_21%)]" />}
+    </span>
+  )
+}
+
+function BuildingSign({ children, night, kind = 'stone' }: {
+  children: React.ReactNode; night: boolean; kind?: 'stone' | 'neon' | 'dark'
+}) {
+  return (
+    <div className="absolute left-[7%] right-[7%] top-[8%] z-20 flex min-h-[22px] items-center justify-center overflow-hidden rounded-[2px] border px-1 text-center text-[clamp(7px,.6vw,11px)] font-black uppercase tracking-[.06em]" style={{
+      color: kind === 'neon' ? '#d8f9ff' : kind === 'dark' ? '#e3e7eb' : '#27313c',
+      background: kind === 'neon' ? 'linear-gradient(115deg,#07152a,#182d47,#080e21)' : kind === 'dark' ? 'linear-gradient(#29343d,#151f2b)' : 'linear-gradient(#ebe8df,#bdb9ab)',
+      borderColor: kind === 'neon' ? '#3acbe8' : 'rgba(38,41,45,.45)',
+      textShadow: kind === 'neon' ? '0 0 9px #5ceafa' : '0 1px 1px rgba(255,255,255,.24)',
+      boxShadow: kind === 'neon' && night ? '0 0 17px rgba(25,195,230,.75)' : '0 3px 5px rgba(0,0,0,.25)',
+    }}>{children}</div>
+  )
+}
+
+function ArchitecturalColumn({ left, dark }: { left: number; dark: boolean }) {
+  return (
+    <span className="absolute bottom-[8%] top-[25%] z-10 w-[5.5%]" style={{
+      left: `${left}%`,
+      background: dark ? 'linear-gradient(90deg,#676d70,#d2d0c4 35%,#a9adae 65%,#525a5d)' : 'linear-gradient(90deg,#9e9e92,#f6f1df 35%,#d9d6c9 65%,#9b9b91)',
+      boxShadow: '3px 1px 4px rgba(0,0,0,.28)',
+    }}>
+      <span className="absolute -left-[23%] -right-[23%] -top-[3px] h-[6px] bg-[#d6d3c6] shadow-sm" />
+      <span className="absolute -left-[23%] -right-[23%] -bottom-[4px] h-[7px] bg-[#bab8ad]" />
+    </span>
+  )
+}
+
 function RealisticBuilding({
   building,
   isDark,
@@ -1725,341 +1804,157 @@ function RealisticBuilding({
   onJoinRandomSeat,
   isJoiningRandomSeat,
 }: RealisticBuildingProps) {
-  if (building.buildingType === 'broadcast') {
+  const type = building.buildingType
+  const facade = getBuildingFacade(building, isDark)
+  const civic = type === 'court' || type === 'townHall' || type === 'bank'
+  const house = type === 'home'
+  const church = type === 'church'
+  const prison = type === 'jail'
+  const arcade = type === 'arcade'
+  const postOffice = building.label.toLowerCase().includes('post office')
+  const cinema = building.label.toLowerCase().includes('cinema')
+  const tower = type === 'broadcast'
+  const isGlass = building.material === 'glass' || building.material === 'darkGlass'
+  const upper = church ? 78 : house ? 46 : civic ? 42 : cinema ? 28 : 24
+  const width = building.width
+  const height = building.height
+  // Restrict windows to the available facade; civic buildings reserve their
+  // central elevations for columns, signage and a larger entrance.
+  const cols = house ? 3 : civic ? 4 : prison ? 5 : arcade ? 4 : Math.min(7, Math.max(3, building.cols))
+  const rows = house ? 2 : civic ? 2 : church ? 2 : prison ? 3 : Math.min(8, Math.max(3, Math.floor(height / 38)))
+  const name = building.label
+  const captionStyle: React.CSSProperties = {
+    color: isDark ? '#f8fafc' : '#1d2a34',
+    background: isDark ? 'rgba(10,17,26,.94)' : 'rgba(246,244,237,.96)',
+    border: `1px solid ${isDark ? 'rgba(174,188,200,.42)' : 'rgba(69,78,88,.36)'}`,
+    boxShadow: '0 5px 17px rgba(0,0,0,.34)',
+  }
+
+  // Broadcast tower is the only dual-purpose landmark: retain BOTH original
+  // Go Live and Random Seat destinations and their disabled/loading behavior.
+  if (tower) {
     return (
-      <div
-        className="absolute grid grid-cols-2 gap-1"
-        style={{
-          left: building.x,
-          bottom: 80,
-          width: building.width,
-          height: 100,
-          pointerEvents: 'auto',
-          zIndex: 6,
-        }}
-      >
-        <button
-          type="button"
-          aria-label="Start your broadcast"
-          onClick={() => onClick(building.to)}
-          className="group flex min-w-0 flex-col items-center justify-center gap-1 rounded-xl border border-red-400/50 bg-gradient-to-b from-red-950/95 to-black/95 px-1 text-center text-white shadow-[0_0_24px_rgba(239,68,68,0.4)] transition hover:-translate-y-1 hover:border-red-300"
-        >
-          <Video size={25} className="text-red-400 drop-shadow-[0_0_8px_rgba(248,113,113,0.85)]" />
-          <span className="text-[8px] font-black uppercase tracking-wide">Go Live</span>
-          <span className="text-[6px] font-bold leading-tight text-white/70">Start Broadcast</span>
-        </button>
-        <button
-          type="button"
-          aria-label="Join a random free broadcast seat"
-          onClick={onJoinRandomSeat}
-          disabled={!onJoinRandomSeat || isJoiningRandomSeat}
-          className="flex min-w-0 flex-col items-center justify-center gap-1 rounded-xl border border-cyan-400/35 bg-gradient-to-b from-cyan-950/95 to-black/95 px-1 text-center text-white shadow-[0_0_20px_rgba(34,211,238,0.18)] transition hover:-translate-y-1 hover:border-cyan-300 disabled:cursor-wait disabled:opacity-60"
-        >
-          <Users size={20} className="text-cyan-300" />
-          <span className="text-[7px] font-black uppercase tracking-wide">Random Seat</span>
-          <span className="text-[6px] font-bold leading-tight text-white/70">
-            {isJoiningRandomSeat ? 'Finding...' : 'Join Free'}
-          </span>
-        </button>
+      <div className="absolute" style={{ left: building.x, bottom: 80, width, height: 280, zIndex: 8, pointerEvents: 'none' }}>
+        <div className="absolute bottom-[66px] left-1/2 h-[190px] w-[12%] -translate-x-1/2 border-x-[3px] border-slate-400/80 bg-[repeating-linear-gradient(0deg,transparent_0px,transparent_19px,#647482_20px,#647482_22px)] shadow-[0_0_12px_rgba(50,60,70,.35)]" />
+        <div className="absolute bottom-[245px] left-1/2 h-7 w-[3px] -translate-x-1/2 bg-slate-200" />
+        <div className="absolute bottom-[266px] left-1/2 h-3 w-3 -translate-x-1/2 rounded-full bg-red-500 shadow-[0_0_13px_#ef4444]" />
+        <div className="absolute bottom-[145px] left-[20%] h-[3px] w-[60%] -rotate-[24deg] bg-slate-500/90" />
+        <div className="absolute bottom-[145px] right-[20%] h-[3px] w-[60%] rotate-[24deg] bg-slate-500/90" />
+        <div className="pointer-events-auto absolute bottom-0 z-20 grid h-[85px] w-full grid-cols-2 gap-1 rounded-t-md border-2 border-[#556372] bg-gradient-to-b from-[#5f7387] via-[#38495d] to-[#263342] p-2 shadow-[inset_4px_0_8px_#a9c1d244,0_12px_20px_#0006]">
+          <button type="button" aria-label="Start your broadcast" onClick={() => onClick(building.to)} className="group flex min-w-0 flex-col items-center justify-center rounded border border-red-300/45 bg-[#4b1822] p-1 text-white hover:bg-[#692333] focus-visible:outline focus-visible:outline-2 focus-visible:outline-white">
+            <Video className="h-5 w-5 text-red-200" />
+            <span className="mt-1 text-[9px] font-bold">GO LIVE</span>
+          </button>
+          <button type="button" aria-label="Join a random free broadcast seat" onClick={onJoinRandomSeat} disabled={!onJoinRandomSeat || isJoiningRandomSeat} className="group flex min-w-0 flex-col items-center justify-center rounded border border-sky-300/40 bg-[#132b3c] p-1 text-white hover:bg-[#25475c] disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white">
+            <Users className="h-5 w-5 text-sky-200" />
+            <span className="mt-1 text-[8px] font-bold">{isJoiningRandomSeat ? 'FINDING...' : 'RANDOM SEAT'}</span>
+          </button>
+        </div>
+        <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded px-2 py-1 text-[11px] font-bold" style={captionStyle}>{name}</div>
       </div>
     )
   }
 
-  const facade = getBuildingFacade(building, isDark)
-  const isHome = building.buildingType === 'home'
-  const isBank = building.buildingType === 'bank'
-  const isCourt = building.buildingType === 'court'
-  const isArcade = building.buildingType === 'arcade'
-  const isAchievement = building.buildingType === 'achievement'
-
-  const windows = building.windows.map((win, index) => {
-    const row = Math.floor(index / building.cols)
-    const col = index % building.cols
-    const gapX =
-      (building.width - building.cols * building.winW) /
-      (building.cols + 1)
-    const gapY =
-      (building.height - building.rows * building.winH) /
-      (building.rows + 1)
-
-    return {
-      ...win,
-      left:
-        gapX +
-        col * (building.winW + gapX),
-      top:
-        gapY +
-        row * (building.winH + gapY),
-    }
-  })
-
-  const livePulse =
-    building.label.toLowerCase().includes('live')
-
   return (
-    <button
-      type="button"
-      aria-label={`Open ${building.label}`}
-      onClick={() => onClick(building.to)}
-      className="group absolute block cursor-pointer appearance-none border-0 bg-transparent p-0 text-left"
-      style={{
-        left: building.x,
-        bottom: 80,
-        width: building.width,
-        height: building.height + (isHome ? 48 : isCourt ? 34 : 16),
-        pointerEvents: 'auto',
-        zIndex: 6,
-        filter: `drop-shadow(0 18px 14px ${facade.shadow})`,
-      }}
-    >
-      <div
-        className="absolute inset-x-0 bottom-0 transition-transform duration-200 ease-out group-hover:-translate-y-1"
-        style={{
-          height: building.height,
-        }}
-      >
-        {/* Main facade */}
-        <div
-          className="absolute inset-0 overflow-hidden rounded-t-[3px]"
-          style={{
-            background: facade.background,
-            border: `1px solid ${facade.border}`,
-            boxShadow: `
-              inset 8px 0 16px rgba(255,255,255,.08),
-              inset -10px 0 18px rgba(0,0,0,.18),
-              inset 0 -12px 20px rgba(0,0,0,.16)
-            `,
-          }}
-        >
-          {/* Subtle facade texture */}
-          <div
-            className="pointer-events-none absolute inset-0 opacity-30"
-            style={{
-              backgroundImage:
-                building.material === 'brick'
-                  ? 'repeating-linear-gradient(0deg, transparent 0 13px, rgba(60,30,20,.32) 14px), repeating-linear-gradient(90deg, transparent 0 23px, rgba(70,35,25,.25) 24px)'
-                  : building.material === 'stone'
-                    ? 'repeating-linear-gradient(0deg, transparent 0 21px, rgba(45,45,50,.18) 22px), repeating-linear-gradient(90deg, transparent 0 42px, rgba(255,255,255,.08) 43px)'
-                    : 'linear-gradient(90deg, rgba(255,255,255,.08), transparent 18%, transparent 82%, rgba(0,0,0,.08))',
-            }}
-          />
-
-          {/* Windows */}
-          {windows.map((win, index) => {
-            const lit = isNight && win.lit
-            return (
-              <span
-                key={`${building.label}-window-${index}`}
-                className="absolute overflow-hidden rounded-[2px] transition-all duration-300"
-                style={{
-                  left: win.left,
-                  top: win.top,
-                  width: building.winW,
-                  height: building.winH,
-                  background: lit
-                    ? `linear-gradient(145deg, rgba(${getMaterialColors(building.material, isDark).windowLitRgb},.98), rgba(${getMaterialColors(building.material, isDark).windowLitRgb},.58))`
-                    : isNight
-                      ? getMaterialColors(building.material, isDark).windowUnlitNight
-                      : getMaterialColors(building.material, isDark).windowUnlitDay,
-                  border: `2px solid ${facade.windowFrame}`,
-                  boxShadow: lit
-                    ? `0 0 10px rgba(${getMaterialColors(building.material, isDark).windowLitRgb},.55), inset 0 0 4px rgba(255,255,255,.35)`
-                    : 'inset 0 0 4px rgba(0,0,0,.28)',
-                }}
-              >
-                {lit && win.person && (
-                  <span
-                    className="absolute left-1/2 top-1/2 h-[35%] w-[28%] -translate-x-1/2 -translate-y-1/2 rounded-full"
-                    style={{
-                      background: isDark
-                        ? 'rgba(12,15,24,.9)'
-                        : 'rgba(40,45,55,.55)',
-                    }}
-                  />
-                )}
-              </span>
-            )
-          })}
-
-          {/* Ground-level entrance */}
-          <div
-            className="absolute bottom-0 left-1/2 -translate-x-1/2"
-            style={{
-              width: Math.max(22, building.width * 0.18),
-              height: Math.max(34, building.height * 0.13),
-              background:
-                'linear-gradient(90deg, #34251d, #65432d 45%, #2d211b)',
-              border: '2px solid rgba(20,15,12,.8)',
-              boxShadow: 'inset 0 0 10px rgba(0,0,0,.5)',
-            }}
-          >
-            <span
-              className="absolute right-[18%] top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full"
-              style={{ background: '#f5cf68', boxShadow: '0 0 5px #f5cf68' }}
-            />
+    <button type="button" aria-label={`Open ${name}`} title={name} onClick={() => onClick(building.to)}
+      className="group absolute cursor-pointer appearance-none border-0 bg-transparent p-0 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sky-300"
+      style={{ left: building.x, bottom: 80, width, height: height + upper, pointerEvents: 'auto', zIndex: 7,
+        filter: `drop-shadow(9px 12px 9px ${facade.shadow})` }}>
+      <div className="absolute inset-x-0 bottom-0 transition-transform duration-300 group-hover:-translate-y-[3px]" style={{ height }}>
+        {/* Structural volume, raked side-light and layered stone/brick textures */}
+        <div className="absolute inset-0 overflow-hidden rounded-t-[2px]" style={{
+          background: facade.background, border: `2px solid ${facade.border}`,
+          boxShadow: 'inset 8px 0 13px rgba(255,255,255,.12),inset -12px 0 19px rgba(0,0,0,.33),inset 0 -16px 14px rgba(0,0,0,.24)',
+        }}>
+          <div className="pointer-events-none absolute inset-0" style={{ opacity: house || postOffice ? .38 : civic || church ? .22 : .17,
+            backgroundImage: house || postOffice
+              ? 'repeating-linear-gradient(0deg,transparent 0px,transparent 10px,#30231b66 11px,#30231b66 12px),repeating-linear-gradient(90deg,transparent 0px,transparent 28px,#38271d55 29px,#38271d55 30px)'
+              : civic || church
+                ? 'repeating-linear-gradient(0deg,transparent 0px,transparent 22px,#282c3066 23px,#282c3066 24px),repeating-linear-gradient(90deg,transparent 0px,transparent 41px,#202a3166 42px,#202a3166 43px)'
+                : 'repeating-linear-gradient(0deg,transparent 0px,transparent 30px,#11182744 31px,#11182744 32px)',
+          }} />
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-[8%] bg-gradient-to-r from-black/20 to-transparent" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-[11%] bg-gradient-to-l from-black/30 to-transparent" />
+          {/* Floor bands and limestone sill course */}
+          {!church && !civic && Array.from({ length: rows - 1 }, (_, i) => <span key={`band-${i}`} className="absolute left-0 right-0 h-[2px] bg-white/10 shadow-[0_1px_2px_#0007]" style={{ top: `${(i+1) * (75 / rows) + 11}%` }} />)}
+          <div className="absolute inset-x-0 bottom-0 h-[9%] border-t border-white/20 bg-black/20" />
+          {/* Tall vertical mullions, recessed glass and warm room lighting */}
+          <div className="absolute left-[9%] right-[9%] top-[16%] bottom-[22%] grid gap-x-[7%] gap-y-[9%]" style={{ gridTemplateColumns: `repeat(${cols},minmax(0,1fr))`, gridTemplateRows: `repeat(${rows},minmax(0,1fr))` }}>
+            {Array.from({ length: cols * rows }, (_, i) => {
+              const originalWindow = building.windows[i % building.windows.length]
+              return <BuildingWindow key={i} night={isNight} lit={Boolean(originalWindow?.lit)} frame={facade.windowFrame} tall={civic || isGlass} arched={church} bars={prison} glass={isGlass} />
+            })}
           </div>
+          {/* Recessed central entry with door mullion, lintel and exterior light */}
+          <div className="absolute bottom-0 left-1/2 z-10 h-[19%] w-[23%] -translate-x-1/2 border-x-[3px] border-t-[4px] border-[#242831] bg-[linear-gradient(90deg,#172535,#405567_50%,#152330)] shadow-[0_0_0_2px_#b4b0a755,inset_0_0_10px_#0009]">
+            <span className="absolute bottom-0 left-1/2 h-full w-[2px] bg-[#c2c5c1]/50" />
+            <span className="absolute left-[24%] top-[56%] h-[3px] w-[3px] rounded-full bg-[#dfc68c]" />
+            <span className="absolute right-[24%] top-[56%] h-[3px] w-[3px] rounded-full bg-[#dfc68c]" />
+          </div>
+          <div className="absolute bottom-[19%] left-[31%] right-[31%] z-10 h-[4px] bg-[#c8c2b4] shadow-[0_3px_4px_#0007]" />
+          {/* Entry sconces */}
+          {isNight && [30, 70].map(x => <div key={x} className="absolute bottom-[15%] z-10 h-[6px] w-[4px] rounded-sm bg-[#ffdeb0] shadow-[0_0_12px_5px_#f4c47877]" style={{ left: `${x}%` }} />)}
+          {/* Architecture-specific street fronts */}
+          {cinema && <>
+            <div className="absolute inset-x-[7%] top-[6%] z-20 h-[20%] rounded-t border-2 border-[#8d7974] bg-gradient-to-b from-[#4d1729] to-[#180f20] shadow-[0_6px_8px_#0008]" />
+            <BuildingSign night={isNight} kind="neon">TREELZ CINEMA</BuildingSign>
+            <div className="absolute inset-x-[4%] bottom-[16%] z-20 h-[12%] border-b-[5px] border-[#794235] bg-[repeating-linear-gradient(90deg,#7c2132_0px,#7c2132_16px,#d9c1a3_16px,#d9c1a3_31px)] shadow-[0_8px_12px_#0007]" />
+            <div className="absolute left-[8%] right-[8%] bottom-[33%] h-3 bg-[#dcc5a1] opacity-90" />
+          </>}
+          {arcade && <>
+            <BuildingSign night={isNight} kind="neon">HYTRO GAMING</BuildingSign>
+            <div className="absolute bottom-[5%] left-[6%] right-[6%] h-[14%] border border-sky-300/55 bg-[linear-gradient(90deg,#071629,#22436b,#071629)] shadow-[0_0_13px_#25c6f766]" />
+            <div className="absolute left-[5%] right-[5%] top-[30%] h-[3px] bg-cyan-300/60 shadow-[0_0_8px_#67e8f9]" />
+          </>}
+          {prison && <>
+            <BuildingSign night={isNight} kind="dark">CITY JAIL</BuildingSign>
+            <div className="absolute inset-x-0 bottom-[20%] h-[9%] border-y-[3px] border-[#2b323c] bg-[#5d6873]" />
+          </>}
+          {postOffice && <>
+            <BuildingSign night={isNight}>CITY POST OFFICE</BuildingSign>
+            <div className="absolute inset-x-[6%] bottom-[18%] h-[10%] border-b-[4px] border-[#7b8792] bg-gradient-to-b from-[#d2d9df] to-[#8697a5] shadow-[0_8px_9px_#0007]" />
+          </>}
+          {civic && <>
+            <div className="absolute left-[6%] right-[6%] top-[24%] bottom-[6%] z-10 border-b-[6px] border-[#aaa99d]/60 bg-[#c0bfb0]/10" />
+            {[13,34,57,78].map(x => <ArchitecturalColumn key={x} left={x} dark={isDark} />)}
+            <BuildingSign night={isNight}>{type === 'bank' ? 'CITY TREASURY' : type === 'court' ? 'MUNICIPAL COURT' : 'TOWN HALL'}</BuildingSign>
+            <div className="absolute left-[4%] right-[4%] top-[20%] h-[6px] bg-[#d1ccbb] shadow-[0_2px_5px_#0005]" />
+          </>}
+          {church && <>
+            <div className="absolute left-[8%] right-[8%] top-[43%] h-[28%] rounded-t-full border-[3px] border-[#b7a99b] bg-[linear-gradient(135deg,#314b6b,#8e4365_52%,#d9a36c)] shadow-[inset_0_0_10px_#16152a]" />
+            <span className="absolute left-[48%] top-[44%] h-[26%] w-[4%] bg-[#c7b6a0]" />
+            <span className="absolute left-[23%] right-[23%] top-[55%] h-[4%] bg-[#c7b6a0]" />
+            <div className="absolute bottom-0 left-[33%] right-[33%] h-[26%] rounded-t-full border-[4px] border-[#b2a394] bg-gradient-to-r from-[#36241e] via-[#704a34] to-[#2b1b17]" />
+          </>}
+          {house && <>
+            <div className="absolute left-[26%] right-[26%] bottom-[17%] h-[8%] border-t-[5px] border-[#e7dbc6] bg-[#554239] shadow-[0_6px_4px_#0005]" />
+            {[29,67].map(x => <span key={x} className="absolute bottom-0 z-10 h-[17%] w-[3%] bg-[#e6dbcb]" style={{ left: `${x}%` }} />)}
+            <div className="absolute bottom-0 left-[22%] right-[22%] h-[5%] bg-[#c4b4a0]" />
+          </>}
         </div>
-
-        {/* Home pitched roof */}
-        {isHome && (
-          <>
-            <div
-              className="absolute -left-[5%] -top-10 h-0 w-0"
-              style={{
-                borderLeft: `${building.width * 0.55}px solid transparent`,
-                borderRight: `${building.width * 0.55}px solid transparent`,
-                borderBottom: `52px solid ${isDark ? '#3a2725' : '#5b3830'}`,
-                filter: 'drop-shadow(0 -3px 3px rgba(0,0,0,.3))',
-              }}
-            />
-            <div
-              className="absolute right-[17%] -top-10 w-[9%] min-w-[8px]"
-              style={{
-                height: 30,
-                background: isDark ? '#513832' : '#865547',
-                border: '1px solid rgba(40,25,20,.55)',
-              }}
-            />
-            <div
-              className="absolute left-[26%] right-[26%] bottom-[38%] h-1"
-              style={{ background: facade.trim, opacity: .9 }}
-            />
-          </>
-        )}
-
-        {/* Bank parapet, sign, columns and entrance canopy */}
-        {isBank && (
-          <>
-            <div
-              className="absolute -left-[2%] -right-[2%] -top-2 h-3"
-              style={{
-                background: facade.trim,
-                border: `1px solid ${facade.border}`,
-                boxShadow: '0 3px 5px rgba(0,0,0,.25)',
-              }}
-            />
-            <div
-              className="absolute left-[14%] right-[14%] top-3 flex h-7 items-center justify-center rounded-sm px-1 text-center text-[10px] font-black uppercase tracking-[.08em]"
-              style={{
-                background: isDark
-                  ? 'rgba(235,232,220,.9)'
-                  : 'rgba(255,252,240,.98)',
-                color: '#26384a',
-                boxShadow: '0 2px 5px rgba(0,0,0,.2)',
-              }}
-            >
-              {building.label.includes('Bank') ? building.label : 'MAI Troll Bank'}
-            </div>
-            <div className="absolute inset-x-[8%] bottom-0 top-[16%] flex justify-around">
-              {[0, 1, 2, 3].map((column) => (
-                <span
-                  key={column}
-                  className="h-full w-[3%] min-w-[4px]"
-                  style={{
-                    background: `linear-gradient(90deg, ${isDark ? '#9aa0aa' : '#f4f0e5'}, ${isDark ? '#e0e1dc' : '#ffffff'}, ${isDark ? '#858b95' : '#d0ccc1'})`,
-                    boxShadow: '1px 0 3px rgba(0,0,0,.25)',
-                  }}
-                />
-              ))}
-            </div>
-            <div
-              className="absolute bottom-[13%] left-[30%] right-[30%] h-[3%] rounded-full"
-              style={{
-                background: facade.trim,
-                boxShadow: '0 2px 4px rgba(0,0,0,.25)',
-              }}
-            />
-          </>
-        )}
-
-        {/* Court house portico */}
-        {isCourt && (
-          <>
-            <div
-              className="absolute -left-[2%] -right-[2%] -top-7 h-7"
-              style={{
-                clipPath: 'polygon(50% 0, 100% 100%, 0 100%)',
-                background: facade.trim,
-                boxShadow: '0 -2px 4px rgba(0,0,0,.25)',
-              }}
-            />
-            <div
-              className="absolute left-[12%] right-[12%] top-0 h-3"
-              style={{ background: facade.trim }}
-            />
-            {[0, 1, 2, 3].map((column) => (
-              <span
-                key={column}
-                className="absolute bottom-0 top-0 w-[3%] min-w-[4px]"
-                style={{
-                  left: `${20 + column * 20}%`,
-                  background: `linear-gradient(90deg, ${isDark ? '#85868d' : '#aaa79f'}, ${isDark ? '#eeeae0' : '#f7f3e8'}, ${isDark ? '#777880' : '#9b988f'})`,
-                }}
-              />
-            ))}
-          </>
-        )}
-
-        {/* Arcade neon marquee */}
-        {isArcade && (
-          <div
-            className="absolute left-[5%] right-[5%] top-4 rounded-md border px-2 py-1 text-center text-[10px] font-black tracking-[.18em]"
-            style={{
-              color: '#fff',
-              borderColor: 'rgba(98,230,255,.85)',
-              background: 'linear-gradient(90deg, rgba(255,0,120,.7), rgba(80,80,255,.75), rgba(0,220,255,.7))',
-              boxShadow: '0 0 14px rgba(98,230,255,.6), inset 0 0 10px rgba(255,255,255,.15)',
-              textShadow: '0 0 8px rgba(255,255,255,.9)',
-            }}
-          >
-            HYTRO ARCADE
-          </div>
-        )}
-
-        {/* Leaders / achievement crown */}
-        {isAchievement && (
-          <div
-            className="absolute left-1/2 top-2 -translate-x-1/2 rounded-full px-3 py-1 text-[9px] font-black uppercase tracking-wider"
-            style={{
-              color: '#fff4b0',
-              background: 'linear-gradient(180deg, #8c6b1d, #4e3b13)',
-              border: '1px solid rgba(255,225,110,.7)',
-              boxShadow: '0 0 12px rgba(255,210,60,.25)',
-            }}
-          >
-            LEADERS
-          </div>
-        )}
-
-        {/* Building label plaque */}
-        <div
-          className="absolute left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md px-2 py-1 text-center text-[11px] font-bold shadow-lg transition-all duration-200 group-hover:-translate-y-1 group-hover:scale-105"
-          style={{
-            bottom: -34,
-            maxWidth: Math.max(90, building.width * .92),
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            color: isDark ? '#f8fafc' : '#0f172a',
-            background: isDark
-              ? 'rgba(5,10,18,.86)'
-              : 'rgba(255,255,255,.92)',
-            border: `1px solid ${livePulse ? 'rgba(255,65,65,.8)' : facade.border}`,
-            boxShadow: livePulse
-              ? '0 0 16px rgba(255,45,45,.4)'
-              : '0 5px 12px rgba(0,0,0,.22)',
-          }}
-        >
-          {building.label}
-        </div>
-
-        {/* Foundation / sidewalk contact */}
-        <div
-          className="absolute -bottom-[1px] left-0 right-0 h-2"
-          style={{
-            background: `linear-gradient(to bottom, ${facade.trim}, rgba(0,0,0,.25))`,
-            borderTop: `1px solid ${facade.border}`,
-          }}
-        />
+        {/* Roofline and silhouette extending beyond the structural facade */}
+        {house && <>
+          <div className="absolute -left-[6%] -right-[6%] -top-[38px] h-[44px] bg-[linear-gradient(135deg,#3b3434,#756058_50%,#302b2b)] shadow-[0_5px_9px_#0008]" style={{ clipPath: 'polygon(50% 0%,100% 100%,0% 100%)' }} />
+          <div className="absolute right-[20%] -top-[30px] h-[21px] w-[10%] border-x border-[#392c29] bg-[#8c5c4b] shadow-[2px_1px_3px_#0006]" />
+          <div className="absolute inset-x-[-4%] top-0 h-[4px] bg-[#b4a69a]" />
+        </>}
+        {civic && <>
+          <div className="absolute -left-[3%] -right-[3%] -top-[31px] h-[34px] bg-gradient-to-b from-[#eee9dc] to-[#aaa99c] shadow-[0_4px_6px_#0008]" style={{ clipPath: 'polygon(50% 0%,100% 96%,100% 100%,0 100%,0 96%)' }} />
+          <div className="absolute -left-[4%] -right-[4%] top-0 h-[7px] border-b-2 border-[#867f70] bg-[#d2cfc4] shadow-md" />
+        </>}
+        {church && <>
+          <div className="absolute left-[25%] right-[25%] -top-[48px] h-[52px] bg-gradient-to-r from-[#514d56] via-[#a89fa7] to-[#57505f]" style={{ clipPath: 'polygon(50% 0%,100% 100%,0 100%)' }} />
+          <div className="absolute left-1/2 -top-[64px] h-[25px] w-[3px] -translate-x-1/2 bg-[#e5d3a1] shadow-[0_0_5px_#f5e3b8]" />
+          <div className="absolute left-1/2 -top-[56px] h-[3px] w-[25px] -translate-x-1/2 bg-[#e5d3a1]" />
+          <div className="absolute -left-[3%] -right-[3%] top-0 h-[5px] bg-[#e1d8c7]" />
+        </>}
+        {!house && !church && !civic && <>
+          <div className="absolute -left-[1%] -right-[1%] -top-[7px] h-[9px] border-b-[3px] border-[#222b37]/60 bg-gradient-to-b from-[#bfc7cc] to-[#6b7884] shadow-[0_3px_6px_#0005]" />
+          <div className="absolute -top-[17px] right-[12%] h-[12px] w-[19%] rounded-t border-x-2 border-[#525f69] bg-[#84909a]" />
+        </>}
+        {/* Building name is a stable readable street-level plaque. */}
+        <div className="absolute -bottom-[34px] left-1/2 max-w-[160px] -translate-x-1/2 overflow-hidden text-ellipsis whitespace-nowrap rounded px-2 py-1 text-center text-[11px] font-bold shadow-lg transition-transform group-hover:scale-105" style={captionStyle}>{name}</div>
+        <div className="absolute -bottom-[2px] left-0 right-0 h-[5px] bg-gradient-to-b from-[#d4d1c8] to-[#59616c] shadow-[0_4px_4px_#0006]" />
       </div>
     </button>
   )
@@ -2683,6 +2578,8 @@ export default function DynamicWeatherBackground({
   onBuildingClick,
   onJoinRandomSeat,
   isJoiningRandomSeat = false,
+  showBuildings = true,
+  showBuildingScrollButtons = false,
 }: {
   isDark?: boolean
   showWalker?: boolean
@@ -2693,6 +2590,8 @@ export default function DynamicWeatherBackground({
   ) => void
   onJoinRandomSeat?: () => void
   isJoiningRandomSeat?: boolean
+  showBuildings?: boolean
+  showBuildingScrollButtons?: boolean
 }) {
   const cityCanvasRef =
     useRef<HTMLCanvasElement>(null)
@@ -2703,6 +2602,9 @@ export default function DynamicWeatherBackground({
   const backgroundRef =
     useRef<HTMLDivElement>(null)
 
+  const buildingsScrollRef =
+    useRef<HTMLDivElement>(null)
+
   const navigate =
     useNavigate()
 
@@ -2710,18 +2612,18 @@ export default function DynamicWeatherBackground({
     useState<WeatherData | null>(
       null,
     )
+  const [solarClock, setSolarClock] = useState(() => Date.now())
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => setSolarClock(Date.now()), 60_000)
+    return () => window.clearInterval(intervalId)
+  }, [])
 
   const buildingsRef =
     useRef<Building[]>([])
 
   const [renderedBuildings, setRenderedBuildings] =
     useState<Building[]>([])
-
-  const treesRef =
-    useRef<Tree[]>([])
-
-  const cloudsRef =
-    useRef<Cloud[]>([])
 
   const birdsRef =
     useRef<Bird[]>([])
@@ -2758,9 +2660,6 @@ export default function DynamicWeatherBackground({
   const walkerCountRef =
     useRef(walkerCount)
 
-  const flyingLeavesRef =
-    useRef<FlyingLeaf[]>([])
-
   /* Keep refs current */
 
   useEffect(() => {
@@ -2785,24 +2684,13 @@ export default function DynamicWeatherBackground({
 
   /* Weather */
 
-  const displayWeather =
-    useMemo(() => {
-      if (!weather) return null
-
-      if (isDark) {
-        return {
-          ...weather,
-          time:
-            'night' as const,
-        }
-      }
-
-      return {
-        ...weather,
-        time:
-          'day' as const,
-      }
-    }, [weather, isDark])
+  const displayWeather = useMemo(() => {
+    if (!weather) return null
+    return {
+      ...weather,
+      ...getSolarPhase(solarClock, weather.sunriseAt, weather.sunsetAt),
+    }
+  }, [weather, solarClock])
 
   useEffect(() => {
     let cancelled = false
@@ -2816,36 +2704,18 @@ export default function DynamicWeatherBackground({
           setWeather(data)
         }
       } catch {
-        const hour =
-          new Date().getHours()
-
-        let time:
-          WeatherData['time'] =
-          'day'
-
-        if (
-          hour >= 20 ||
-          hour < 6
-        ) {
-          time = 'night'
-        } else if (
-          hour >= 6 &&
-          hour < 8
-        ) {
-          time = 'sunrise'
-        } else if (
-          hour >= 18 &&
-          hour < 20
-        ) {
-          time = 'sunset'
-        }
+        const now = new Date()
+        const sunriseAt = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 6).getTime()
+        const sunsetAt = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 18).getTime()
 
         if (!cancelled) {
           setWeather({
             condition: 'clear',
             temperature: 72,
             windSpeed: 5,
-            time,
+            ...getSolarPhase(now.getTime(), sunriseAt, sunsetAt),
+            sunriseAt,
+            sunsetAt,
             location:
               'Default Location',
           })
@@ -2869,32 +2739,7 @@ export default function DynamicWeatherBackground({
       [displayWeather],
     )
 
-  const adjustedSky =
-    useMemo(() => {
-      if (!skyColors) return null
-
-      if (isDark) {
-        return skyColors
-      }
-
-      return {
-        top: lightenColor(
-          skyColors.top,
-          0.35,
-        ),
-        bottom: lightenColor(
-          skyColors.bottom,
-          0.35,
-        ),
-        ambient: lightenColor(
-          skyColors.ambient,
-          0.35,
-        ),
-      }
-    }, [
-      skyColors,
-      isDark,
-    ])
+  const adjustedSky = skyColors
 
   const moonInfo =
     useMemo(
@@ -2952,11 +2797,12 @@ export default function DynamicWeatherBackground({
     }
 
     const resize = () => {
-      const width =
-        window.innerWidth
-
       const cityWrapper =
         cityCanvas.parentElement
+
+      const width =
+        cityWrapper?.clientWidth ??
+        window.innerWidth
 
       const rect =
         cityWrapper?.getBoundingClientRect()
@@ -2989,32 +2835,6 @@ export default function DynamicWeatherBackground({
 
       buildingsRef.current = nextBuildings
       setRenderedBuildings(nextBuildings)
-
-      /*
-       * Tall trees are generated relative to
-       * the city ground but extend far upward.
-       */
-      treesRef.current =
-        generateTrees(
-          cityCanvas.width,
-          groundY,
-        )
-
-      flyingLeavesRef.current =
-        generateFlyingLeaves(
-          cityCanvas.width,
-          cityCanvas.height,
-          treesRef.current,
-        )
-
-      /*
-       * Clouds stay high.
-       */
-      cloudsRef.current =
-        generateClouds(
-          cityCanvas.width,
-          cityCanvas.height,
-        )
 
       /*
        * Birds occupy the high/middle sky.
@@ -3150,17 +2970,6 @@ export default function DynamicWeatherBackground({
       )
 
       /* -------------------------------------------------------------- */
-      /* Clouds                                                          */
-      /* -------------------------------------------------------------- */
-
-      drawClouds(
-        cityCtx,
-        cloudsRef.current,
-        cityCanvas.width,
-        isDark,
-      )
-
-      /* -------------------------------------------------------------- */
       /* Birds                                                           */
       /* -------------------------------------------------------------- */
 
@@ -3293,7 +3102,6 @@ export default function DynamicWeatherBackground({
       drawCity(
         cityCtx,
         buildingsRef.current,
-        treesRef.current,
         groundY,
         isNight,
         time,
@@ -3304,28 +3112,6 @@ export default function DynamicWeatherBackground({
         cityCtx,
         groundY,
         isDark,
-      )
-
-      /* -------------------------------------------------------------- */
-      /* Flying leaves                                                   */
-      /* -------------------------------------------------------------- */
-
-      const newLeaf = spawnLeaf(
-        treesRef.current,
-        groundY,
-      )
-
-      if (newLeaf) {
-        flyingLeavesRef.current.push(newLeaf)
-      }
-
-      drawFlyingLeaves(
-        cityCtx,
-        flyingLeavesRef.current,
-        cityCanvas.width,
-        cityCanvas.height,
-        time,
-        0.016,
       )
 
       /* -------------------------------------------------------------- */
@@ -3482,16 +3268,15 @@ export default function DynamicWeatherBackground({
   /* Sky                                                                       */
   /* ------------------------------------------------------------------------ */
 
-  const skyStyle =
-    adjustedSky
-      ? {
-          background:
-            `linear-gradient(to bottom, ${adjustedSky.top} 0%, ${adjustedSky.bottom} 100%)`,
-        }
-      : {
-          background:
-            'linear-gradient(to bottom, #12071f 0%, #261034 48%, #3a1828 100%)',
-        }
+  const skyStyle = adjustedSky
+    ? {
+        background: `linear-gradient(to bottom, ${adjustedSky.top} 0%, ${adjustedSky.bottom} 100%)`,
+        transition: 'background 60s linear',
+      }
+    : {
+        background: 'linear-gradient(to bottom, #12071f 0%, #261034 48%, #3a1828 100%)',
+        transition: 'background 60s linear',
+      }
 
   const isNight =
     displayWeather?.time ===
@@ -3502,17 +3287,14 @@ export default function DynamicWeatherBackground({
   /* ------------------------------------------------------------------------ */
 
   return (
-    <div
-      ref={backgroundRef}
-      className="pointer-events-none fixed inset-0 overflow-hidden"
-      style={skyStyle}
-    >
-      {/* -------------------------------------------------------------- */}
-      {/* Stars                                                           */}
-      {/* -------------------------------------------------------------- */}
+    <>
+      {/* Sky layer — decorative background painted behind main content */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden" style={skyStyle}>
+        {/* -------------------------------------------------------------- */}
+        {/* Stars                                                           */}
+        {/* -------------------------------------------------------------- */}
 
-      {isNight &&
-        isDark && (
+      {isNight && (
           <div
             className="absolute inset-0 opacity-50"
             style={{
@@ -3594,45 +3376,85 @@ export default function DynamicWeatherBackground({
       {/* -------------------------------------------------------------- */}
       {/* City                                                             */}
       {/* -------------------------------------------------------------- */}
+    </div>
 
-      <div className="absolute inset-x-0 bottom-0 z-[2] h-[840px]">
-        {/* Animated canvas world: trees, street, sky objects, weather, walkers */}
-        <canvas
-          ref={cityCanvasRef}
-          className="absolute inset-0 h-full w-full"
-          style={{
-            pointerEvents: 'none',
-          }}
-        />
-
-        {/* Realistic buildings sit above the canvas so they can be true interactive UI */}
+    {/* Interactive city layer — clickable buildings stacked above main content (z-10) */}
+    <div
+      ref={backgroundRef}
+      className="pointer-events-none fixed inset-0 overflow-hidden z-[20]"
+    >
+      <div
+        ref={buildingsScrollRef}
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-[840px] overflow-x-auto overflow-y-hidden"
+        role="region"
+        aria-label="Scrollable city buildings"
+        tabIndex={0}
+      >
+        {showBuildingScrollButtons && (
+          <>
+            <button
+              onClick={() => {
+                const el = buildingsScrollRef.current
+                if (el) el.scrollBy({ left: -el.clientWidth * 0.75, behavior: 'smooth' })
+              }}
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-20 flex h-12 w-12 items-center justify-center rounded-r-xl border border-white/20 bg-black/60 text-white pointer-events-auto active:scale-95"
+              aria-label="Scroll buildings left"
+            >
+              <ChevronLeft size={24} />
+            </button>
+            <button
+              onClick={() => {
+                const el = buildingsScrollRef.current
+                if (el) el.scrollBy({ left: el.clientWidth * 0.75, behavior: 'smooth' })
+              }}
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-20 flex h-12 w-12 items-center justify-center rounded-l-xl border border-white/20 bg-black/60 text-white pointer-events-auto active:scale-95"
+              aria-label="Scroll buildings right"
+            >
+              <ChevronRight size={24} />
+            </button>
+          </>
+        )}
         <div
-          className="absolute inset-0 overflow-visible"
-          style={{
-            pointerEvents: 'none',
-          }}
+          className="absolute bottom-0 h-full lg:left-[248px]"
+          style={{ width: `max(100vw, ${(buildingMetas.length / BASE_BUILDING_COUNT) * 100}vw)` }}
         >
-          {renderedBuildings.map((building) => (
-            <RealisticBuilding
-              key={`${building.label}-${building.to}`}
-              building={building}
-              isDark={isDark}
-              isNight={isNight}
-              onClick={handleBuildingClick}
-              onJoinRandomSeat={onJoinRandomSeat}
-              isJoiningRandomSeat={isJoiningRandomSeat}
-            />
-          ))}
-        </div>
+          {/* Animated canvas world: trees, street, sky objects, weather, walkers */}
+          <canvas
+            ref={cityCanvasRef}
+            className="absolute inset-0 h-full w-full z-[0]"
+            style={{
+              pointerEvents: 'none',
+            }}
+          />
 
-        <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-6"
-          style={{
-            background: isDark
-              ? 'linear-gradient(to top, rgba(10,15,30,0.9), transparent)'
-              : 'linear-gradient(to top, rgba(200,210,220,0.4), transparent)',
-          }}
-        />
+          {/* Realistic buildings sit above the canvas so they can be true interactive UI */}
+          {showBuildings && (
+            <div
+              className="pointer-events-none absolute inset-0 overflow-visible"
+            >
+              {renderedBuildings.map((building) => (
+                <RealisticBuilding
+                  key={`${building.label}-${building.to}`}
+                  building={building}
+                  isDark={isDark}
+                  isNight={isNight}
+                  onClick={handleBuildingClick}
+                  onJoinRandomSeat={onJoinRandomSeat}
+                  isJoiningRandomSeat={isJoiningRandomSeat}
+                />
+              ))}
+            </div>
+          )}
+
+          <div
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-6"
+            style={{
+              background: isDark
+                ? 'linear-gradient(to top, rgba(10,15,30,0.9), transparent)'
+                : 'linear-gradient(to top, rgba(200,210,220,0.4), transparent)',
+            }}
+          />
+        </div>
       </div>
 
       {/* -------------------------------------------------------------- */}
@@ -3650,5 +3472,6 @@ export default function DynamicWeatherBackground({
         }}
       />
     </div>
+    </>
   )
 }

@@ -720,7 +720,6 @@ During cleanup, be extremely careful not to accidentally delete or break:
 * Treelz
 * UTroMail
 * MaiPiks
-* Mai Network
 * current advertising/promotion system
 * current moderation system
 * current officer system
@@ -1064,7 +1063,6 @@ Do not use it as an excuse to rewrite:
 * current Coin Store
 * current cashout architecture
 * MaiPiks
-* Mai Network
 * MAI Bag
 * battle architecture
 * UTroMail

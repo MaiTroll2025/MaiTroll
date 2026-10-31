@@ -5,7 +5,7 @@
  * Validates user has appropriate TCNN role before rendering children
  */
 import { ReactNode } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/lib/store';
 import { useTCNNRoles } from '@/hooks/useTCNNRoles';
 import { Loader2, Lock } from 'lucide-react';
@@ -25,6 +25,7 @@ export default function ProtectedTCNNRoute({
 }: ProtectedTCNNRouteProps) {
   const { user, isLoading: authLoading } = useAuthStore();
   const location = useLocation();
+  const navigate = useNavigate();
   const { 
     isJournalist, 
     isNewsCaster, 
@@ -87,7 +88,7 @@ export default function ProtectedTCNNRoute({
               Go Back
             </Button>
             <Button
-              onClick={() => window.location.href = '/tcnn'}
+              onClick={() => navigate('/tcnn')}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white"
             >
               Visit TCNN Main Page

@@ -1,167 +1,97 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Link } from 'react-router-dom'
-import { ArrowRight, ChevronRight, Coins, Crown, Gavel, MessageCircle, FileText, HelpCircle, Home, Mail, Play, Radio, Search, Sparkles, Trophy, Users, Shield, Gamepad2, Download, Heart } from 'lucide-react';
+import { ArrowRight, Building2, ChevronLeft, ChevronRight, Coins, Gavel, Mail, Play, Radio, Sparkles, Trophy, Users, Shield, Gamepad2, Mic, BriefcaseBusiness, Landmark, Church, RefreshCw } from 'lucide-react';
 
 import PhoneHeader from '../PhoneHeader'
+import DynamicWeatherBackground from '@/components/home/DynamicWeatherBackground'
 import { useAuthStore } from '@/lib/store'
+import { supabase } from '@/lib/supabase'
 import { useLiveContent } from '@/hooks/useLiveContent'
 import type { LiveItem } from '@/contexts/LiveContentContext'
-import { usePresenceStore } from '@/lib/presenceStore'
-import { supabase } from '@/lib/supabase'
-import { useWallNotifications } from '@/hooks/useWallNotifications'
 import { useRandomFreeSeat } from '@/hooks/useRandomFreeSeat'
 import { PhoneButton } from '../components/PhoneButton'
 import TreelzHomeRow from '@/components/home/TreelzHomeRow'
 
 const glass =
-  'border border-[#FF7A00]/10 bg-[#0D0814]/85 backdrop-blur-2xl shadow-[0_15px_50px_rgba(0,0,0,0.40)]'
+  'border border-[#39FF14]/10 bg-[#0D0814]/85 backdrop-blur-2xl shadow-[0_15px_50px_rgba(0,0,0,0.40)]'
 
 const _neonGradient =
-  'bg-gradient-to-br from-[#FF7A00] via-[#F97316] to-[#A855F7]'
+  'bg-gradient-to-br from-[#39FF14] via-[#a855f7] to-[#A855F7]'
 
 const neonBorder =
-  'border border-[#FF7A00]/30 shadow-[0_0_25px_rgba(0,191,255,0.10),0_0_35px_rgba(191,0,255,0.08)]'
+  'border border-[#39FF14]/30 shadow-[0_0_25px_rgba(0,191,255,0.10),0_0_35px_rgba(191,0,255,0.08)]'
 
-function PhoneSpaceBackground() {
-  const stars = Array.from({ length: 48 }, (_, index) => ({
-    left: `${(index * 47) % 100}%`,
-    top: `${(index * 71) % 100}%`,
-    depth: `${(index % 5) * 0.12 + 0.4}s`,
-    size: `${index % 13 === 0 ? 2 : 1}px`,
-    opacity: `${0.35 + (index % 6) * 0.1}`,
-  }))
-  const shootingStars = [
-    { top: '18%', left: '8%', delay: '0s', duration: '5.5s' },
-    { top: '34%', left: '56%', delay: '2.2s', duration: '6.5s' },
-    { top: '62%', left: '18%', delay: '4s', duration: '7s' },
-  ]
+const PHONE_CITY_BUILDINGS = [
+  { title: 'City Post Office', path: '/tromail/office', icon: Mail },
+  { title: 'Treelz Cinema', path: '/treelz', icon: Play },
+  { title: 'Broadcast Tower', path: '/broadcast/setup', icon: Radio },
+  { title: 'Municipal Court', path: '/court', icon: Gavel },
+  { title: 'Town Hall', path: '/town-meeting', icon: Landmark },
+  { title: 'City Jail', path: '/jail', icon: Shield },
+  { title: 'City Church', path: '/church', icon: Church },
+  { title: 'Game Center', path: '/games', icon: Gamepad2 },
+  { title: 'City Treasury', path: '/president/treasury', icon: Coins },
+  { title: 'Employment Office', path: '/jobs/opportunities', icon: BriefcaseBusiness },
+] as const
 
-  const planetTexture = useMemo(() => {
-    const canvas = document.createElement('canvas')
-    canvas.width = 256
-    canvas.height = 128
+function PhoneCityBuildings({ onOpen }: { onOpen: (path: string) => void }) {
+  const stripRef = useRef<HTMLDivElement>(null)
+  const [index, setIndex] = useState(0)
 
-    const context = canvas.getContext('2d')
-    if (!context) return ''
-
-    const image = context.createImageData(canvas.width, canvas.height)
-    const data = image.data
-
-    const hash = (x: number, y: number, seed = 0) => {
-      const value = Math.sin(
-        x * 127.1 + y * 311.7 + seed * 74.7,
-      ) * 43758.5453123
-
-      return value - Math.floor(value)
-    }
-
-    const fade = (t: number) => t * t * (3 - 2 * t)
-
-    const noise = (x: number, y: number, scale: number, seed = 0) => {
-      const sx = x / scale
-      const sy = y / scale
-      const x0 = Math.floor(sx)
-      const y0 = Math.floor(sy)
-      const fx = fade(sx - x0)
-      const fy = fade(sy - y0)
-
-      const n00 = hash(x0, y0, seed)
-      const n10 = hash(x0 + 1, y0, seed)
-      const n01 = hash(x0, y0 + 1, seed)
-      const n11 = hash(x0 + 1, y0 + 1, seed)
-      const nx0 = n00 + (n10 - n00) * fx
-      const nx1 = n01 + (n11 - n01) * fx
-
-      return nx0 + (nx1 - nx0) * fy
-    }
-
-    const fbm = (x: number, y: number) => {
-      let value = 0
-      let total = 0
-      const layers = [
-        [180, 1],
-        [90, 0.5],
-        [45, 0.25],
-        [20, 0.12],
-        [8, 0.06],
-      ]
-
-      for (const [scale, amplitude] of layers) {
-        value += noise(x, y, scale, scale) * amplitude
-        total += amplitude
-      }
-
-      return value / total
-    }
-
-    for (let y = 0; y < canvas.height; y += 1) {
-      for (let x = 0; x < canvas.width; x += 1) {
-        const terrain = fbm(x, y)
-        const mariaNoise = noise(x + 400, y + 100, 230, 12)
-        const maria = mariaNoise > 0.56
-          ? Math.min(1, (mariaNoise - 0.56) * 4)
-          : 0
-
-        let brightness = 132 + terrain * 58 - maria * 48
-        brightness += (hash(x, y, 99) - 0.5) * 13
-        brightness = Math.max(48, Math.min(205, brightness))
-
-        const index = (y * canvas.width + x) * 4
-        data[index] = brightness
-        data[index + 1] = brightness * 0.99
-        data[index + 2] = brightness * 0.96
-        data[index + 3] = 255
-      }
-    }
-
-    context.putImageData(image, 0, 0)
-
-    return canvas.toDataURL('image/jpeg', 0.9)
-  }, [])
+  const scroll = (direction: number) => {
+    const strip = stripRef.current
+    if (!strip) return
+    const visible = 4
+    strip.scrollBy({ left: direction * (strip.clientWidth / visible), behavior: 'smooth' })
+  }
 
   return (
-    <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 overflow-hidden bg-[#050208] [perspective:900px]">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_20%,rgba(38,20,116,0.35),transparent_42%),radial-gradient(ellipse_at_10%_65%,rgba(0,136,214,0.18),transparent_38%),linear-gradient(160deg,#02030d_0%,#07152a_48%,#090219_100%)]" />
-      <div className="absolute left-[-20%] top-[18%] h-[34%] w-[140%] rotate-[-18deg] rounded-[50%] bg-[radial-gradient(ellipse,rgba(54,210,255,0.2),rgba(116,31,255,0.1)_28%,transparent_67%)] blur-2xl [transform:translateZ(-80px)]" />
-      <div className="absolute -left-[30%] top-[8%] h-[32%] w-[95%] rotate-[28deg] rounded-[50%] bg-[radial-gradient(ellipse,rgba(103,41,255,0.2),rgba(27,143,255,0.08)_38%,transparent_70%)] blur-3xl animate-[nebulaDrift_28s_ease-in-out_infinite]" />
-      <div className="absolute -right-[26%] top-[62%] h-[38%] w-[90%] rotate-[-24deg] rounded-[50%] bg-[radial-gradient(ellipse,rgba(32,178,255,0.15),rgba(153,27,255,0.12)_34%,transparent_70%)] blur-3xl animate-[nebulaDrift_34s_ease-in-out_infinite_reverse]" />
-      <div className="absolute inset-0 [transform-style:preserve-3d]">
-        {stars.map((star, index) => (
-          <span
-            key={index}
-            className="absolute rounded-full bg-white shadow-[0_0_7px_rgba(139,225,255,0.9)] animate-[spaceTwinkle_3.8s_ease-in-out_infinite]"
-            style={{ left: star.left, top: star.top, width: star.size, height: star.size, opacity: star.opacity, animationDelay: star.depth }}
-          />
-        ))}
-        {shootingStars.map((star, index) => (
-          <span
-            key={index}
-            className="absolute h-px w-20 origin-left rotate-[25deg] bg-gradient-to-r from-transparent via-cyan-100 to-white opacity-0 shadow-[0_0_8px_#38d9ff] animate-[shootingStar_6s_linear_infinite]"
-            style={{ top: star.top, left: star.left, animationDelay: star.delay, animationDuration: star.duration }}
-          />
-        ))}
-      </div>
-
-      <div className="absolute left-[8%] top-[23%] h-10 w-10 overflow-hidden rounded-full bg-[#3b3148] shadow-[-7px_-5px_12px_rgba(187,219,255,0.5),inset_-7px_-5px_12px_rgba(20,38,90,0.85)] [background-image:radial-gradient(ellipse_at_28%_28%,rgba(104,220,255,0.65),transparent_24%),radial-gradient(ellipse_at_68%_42%,#4f9d38 0%,#27782f 38%,transparent 40%),radial-gradient(ellipse_at_32%_76%,#69a844 0%,#287735 34%,transparent 36%),radial-gradient(ellipse_at_78%_78%,#367f35 0%,transparent_26%)] [transform:translateZ(18px)] sm:left-[14%] sm:top-[20%] sm:h-14 sm:w-14">
-        <span className="absolute left-[62%] top-[34%] h-1.5 w-1.5 rounded-full bg-[#174f2a] shadow-[3px_1px_0_#2f7c37,-2px_2px_0_#2f7c37] sm:h-2 sm:w-2" />
-        <span className="absolute left-[29%] top-[65%] h-1 w-1 rounded-full bg-[#174f2a] shadow-[3px_0_0_#3d8536] sm:h-1.5 sm:w-1.5" />
-        <div className="absolute left-1/2 top-1/2 h-[170%] w-[42%] -translate-x-1/2 -translate-y-1/2 rotate-[28deg] rounded-[50%] border border-white/30 opacity-40 [transform:rotateX(70deg)]" />
-      </div>
-
-      <div className="absolute right-[3%] top-[38%] h-[230px] w-[230px] [transform:translateZ(30px)_rotateX(12deg)_rotateY(-18deg)] sm:right-[12%] sm:h-[280px] sm:w-[280px]">
-        <div className="absolute inset-0 overflow-hidden rounded-full bg-[#777] shadow-[-18px_-12px_30px_rgba(190,190,190,0.22),18px_25px_42px_rgba(0,0,0,0.9),inset_-25px_-8px_35px_#080808] [transform:rotateY(-14deg)]">
-          <div className="absolute inset-[-4%] bg-cover bg-[position:0%_50%] opacity-95 mix-blend-normal animate-[planetSurfaceDrift_24s_linear_infinite]" style={{ backgroundImage: `url(${planetTexture})` }} />
-          <div className="absolute inset-[-8%] rounded-full bg-[radial-gradient(ellipse_at_24%_18%,rgba(255,255,255,0.38),transparent_18%),radial-gradient(circle_at_18%_50%,transparent_35%,rgba(0,0,0,0.86)_84%)]" />
-          <div className="absolute inset-0 rounded-full border border-white/20 opacity-60 [box-shadow:inset_12px_8px_22px_rgba(255,255,255,0.24),inset_-18px_-10px_30px_rgba(0,0,0,0.92)]" />
-          <div className="absolute inset-0 flex items-center justify-center px-4 [transform:translateZ(20px)_rotateY(14deg)]">
-            <span className="whitespace-nowrap text-[clamp(1.1rem,6vw,2rem)] font-black uppercase tracking-[0.18em] text-white/80 [text-shadow:1px_1px_2px_rgba(0,0,0,0.85),-1px_-1px_1px_rgba(255,255,255,0.3)]">Mai Troll • HAUNTED CITY</span>
-          </div>
+    <section className="overflow-hidden rounded-[23px] border border-[#BF00FF]/55 bg-[#0B0711]/95 shadow-[0_0_22px_rgba(191,0,255,.16),0_22px_70px_rgba(0,0,0,.28)]">
+      <div className="flex items-center justify-between gap-2 px-2.5 pt-2 pb-1">
+        <div className="min-w-0">
+          <h2 className="flex items-center gap-1.5 text-[13px] font-black uppercase tracking-wide text-white"><Building2 className="h-[18px] w-[18px] text-[#39FF14]"/> MAITROLL <span className="text-[#39FF14]">CITY</span></h2>
+          <p className="mt-0.5 text-[9px] text-slate-400">Explore your city • Swipe to visit more buildings</p>
+        </div>
+        <div className="flex shrink-0 items-center gap-1">
+          <button aria-label="Previous city buildings" onClick={() => scroll(-1)} disabled={index === 0} className={`grid h-8 w-8 place-items-center rounded-full border border-[#00BFFF]/50 bg-[#00BFFF]/10 text-[#00BFFF] ${index === 0 ? 'opacity-30 pointer-events-none' : ''}`}><ChevronLeft size={16}/></button>
+          <button aria-label="Next city buildings" onClick={() => scroll(1)} disabled={index >= Math.ceil(PHONE_CITY_BUILDINGS.length / 4) - 1} className={`grid h-8 w-8 place-items-center rounded-full border border-[#39FF14]/60 bg-[#39FF14]/10 text-[#39FF14] ${index >= Math.ceil(PHONE_CITY_BUILDINGS.length / 4) - 1 ? 'opacity-30 pointer-events-none' : ''}`}><ChevronRight size={16}/></button>
         </div>
       </div>
-
-      <style>{`@keyframes spaceTwinkle { 0%, 100% { opacity: .28; transform: translateZ(0) scale(.8); } 50% { opacity: 1; transform: translateZ(28px) scale(1.5); } } @keyframes shootingStar { 0%, 12% { opacity: 0; transform: translate3d(-30px, -20px, 0) rotate(25deg) scaleX(.4); } 18% { opacity: 1; } 42% { opacity: .8; transform: translate3d(170px, 120px, 45px) rotate(25deg) scaleX(1); } 58%, 100% { opacity: 0; transform: translate3d(280px, 195px, 70px) rotate(25deg) scaleX(.2); } } @keyframes planetSurfaceDrift { from { background-position: 0% 50%; transform: scale(1.12); } to { background-position: 100% 50%; transform: scale(1.12); } } @keyframes nebulaDrift { 0%, 100% { transform: translate3d(-2%, 0, -80px) rotate(28deg) scale(1); opacity: .65; } 50% { transform: translate3d(5%, 4%, -60px) rotate(34deg) scale(1.08); opacity: .9; } }`}</style>
-    </div>
+      <div className="relative overflow-hidden bg-[linear-gradient(180deg,#100719_0%,#190B22_47%,#0C1713_68%,#090711_100%)]">
+        <div ref={stripRef} onScroll={(event) => { const el = event.currentTarget; setIndex(Math.min(Math.ceil(PHONE_CITY_BUILDINGS.length / 4) - 1, Math.round(el.scrollLeft / Math.max(el.clientWidth, 1)))) }} className="relative flex snap-x snap-mandatory overflow-x-auto overscroll-x-contain scroll-smooth px-2 pt-2 pb-0 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
+          {PHONE_CITY_BUILDINGS.map((building) => {
+            const Icon = building.icon
+            return (
+              <button key={building.title} onClick={() => onOpen(building.path)} title={building.title} className="group flex min-w-0 shrink-0 basis-1/4 snap-start flex-col items-center justify-end px-[2px] text-center active:scale-[.98]">
+                <div className="relative flex h-[75px] w-full max-w-[95px] items-end justify-center">
+                  {building.title === 'Broadcast Tower' ? (
+                    <div className="relative mb-0 flex h-[70px] w-[45px] flex-col items-center justify-end">
+                      <span className="absolute -top-1 h-2 w-2 rounded-full bg-red-400 shadow-[0_0_12px_#ff5353]"/>
+                      <div className="absolute top-3 h-[53px] w-[2px] bg-slate-300/80"/>
+                      <div className="relative mb-[9px] h-[35px] w-[38px] bg-[#27153A] [clip-path:polygon(50%_0,100%_100%,0_100%)]"/>
+                      <div className="absolute bottom-0 flex h-[20px] w-[52px] items-center justify-around rounded-t-md border border-lime-300/30 bg-[#110F20] text-[#39FF14]"><Radio size={13}/><Users size={13}/></div>
+                    </div>
+                  ) : (
+                    <div className={`relative flex w-[91%] flex-col items-center justify-end overflow-visible border border-[#00BFFF]/60 bg-gradient-to-b from-[#25133A] via-[#171123] to-[#0B1515] shadow-[3px_5px_0_#090610,0_0_16px_rgba(0,191,255,.23)] ${['Municipal Court','Town Hall','City Treasury'].includes(building.title) ? 'h-[64px]' : building.title === 'City Church' ? 'h-[61px] rounded-t-3xl' : 'h-[55px]'}`}>
+                      {['Municipal Court','Town Hall','City Treasury'].includes(building.title) && <div className="absolute -top-[9px] left-[-6%] h-3 w-[112%] bg-[#b9b6b2] [clip-path:polygon(50%_0,100%_100%,0_100%)]"/>}
+                      {building.title === 'City Church' && <div className="absolute -top-5 text-xl text-amber-200">✝</div>}
+                      <div className="absolute top-1 w-[92%] truncate bg-[#11091A]/90 px-[1px] py-1 text-[6px] font-black uppercase tracking-[-.02em] text-white">{building.title}</div>
+                      <div className="mb-[10px] grid w-[85%] flex-1 grid-cols-3 gap-[3px] pt-5 pb-1">{Array.from({length:9}, (_,i)=><span key={i} className="rounded-[1px] border border-black/20 bg-[#00BFFF]/35 shadow-[inset_1px_1px_0_rgba(255,255,255,.13)]"/>)}</div>
+                      <span className="absolute bottom-0 h-[12px] w-[15px] border border-[#39FF14]/50 bg-[#071009]"/>
+                    </div>
+                  )}
+                </div>
+                <span className="flex h-[25px] w-full items-center justify-center rounded-sm border-t border-white/10 bg-[#090710] px-[2px] text-center text-[7px] font-extrabold leading-[10px] text-white group-active:text-[#39FF14]">{building.title}</span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+      <div className="flex items-center justify-center gap-1.5 py-1">{[0,1,2].map(n=>(
+        <span key={n} className={`h-1 rounded-full transition-all ${index===n ? 'w-6 bg-[#39FF14]' : 'w-2 bg-white/20'}`}/>
+      ))}</div>
+    </section>
   )
 }
 
@@ -184,12 +114,12 @@ const PhoneLiveTile = React.memo(function PhoneLiveTile({
     <button
       type="button"
       onClick={onClick}
-      className="group relative h-[190px] w-[145px] shrink-0 overflow-hidden rounded-2xl border border-[#FF7A00]/40 bg-[#100914] text-left shadow-[0_8px_30px_rgba(0,0,0,0.40)] transition-all duration-200 active:scale-[0.97] hover:border-[#FF7A00]/40 hover:shadow-[0_0_25px_rgba(0,191,255,0.15)]"
+      className="group relative h-[105px] w-[108px] shrink-0 overflow-hidden rounded-xl border border-[#BF00FF]/65 bg-[#0C0612] text-left shadow-[0_8px_30px_rgba(0,0,0,0.40)] transition-all duration-200 active:scale-[0.97] hover:border-[#00BFFF]/80 hover:shadow-[0_0_25px_rgba(0,191,255,0.35)]"
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-[#A855F7]/30 via-[#0D0814] to-[#FF7A00]/30" />
+      <div className="absolute inset-0 bg-gradient-to-br from-[#00BFFF]/30 via-[#0A0610] to-[#BF00FF]/30" />
       <div className="absolute -right-2 -top-2 z-10 text-xl drop-shadow-[0_0_8px_rgba(255,122,0,.7)]">🎃</div>
       <div className="absolute -left-1 bottom-14 z-10 text-sm opacity-80">🕷️</div>
-      <div className="absolute inset-0 z-[1] pointer-events-none opacity-25 [background-image:radial-gradient(circle_at_20%_20%,#FF7A00_1px,transparent_1px),radial-gradient(circle_at_80%_70%,#A855F7_1px,transparent_1px)] [background-size:18px_18px]" />
+      <div className="absolute inset-0 z-[1] pointer-events-none opacity-25 [background-image:radial-gradient(circle_at_20%_20%,#a3f529_1px,transparent_1px),radial-gradient(circle_at_80%_70%,#A855F7_1px,transparent_1px)] [background-size:18px_18px]" />
 
       {item.streamerAvatar ? (
         <img
@@ -200,8 +130,8 @@ const PhoneLiveTile = React.memo(function PhoneLiveTile({
         />
       ) : (
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[#FF7A00]/20 bg-[#FF7A00]/10">
-            <Play className="h-7 w-7 text-[#FF7A00]/50" />
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[#39FF14]/50 bg-[#39FF14]/10">
+            <Play className="h-7 w-7 text-[#39FF14]/50" />
           </div>
         </div>
       )}
@@ -209,8 +139,8 @@ const PhoneLiveTile = React.memo(function PhoneLiveTile({
       <div className="absolute inset-0 bg-gradient-to-b from-[#09050F]/10 via-transparent to-[#09050F]" />
 
       {/* Neon LIVE badge */}
-      <div className="absolute left-2 top-2 flex items-center gap-1 rounded-lg border border-[#FF7A00]/30 bg-[#05050c]/75 px-2 py-1 text-[8px] font-black tracking-wider text-white backdrop-blur-md">
-        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#FF7A00] shadow-[0_0_8px_#FF7A00]" />
+      <div className="absolute left-2 top-2 flex items-center gap-1 rounded-lg border border-[#39FF14]/60 bg-[#05050c]/75 px-2 py-1 text-[8px] font-black tracking-wider text-white backdrop-blur-md">
+        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#39FF14] shadow-[0_0_8px_#a3f529]" />
         LIVE
       </div>
 
@@ -219,11 +149,11 @@ const PhoneLiveTile = React.memo(function PhoneLiveTile({
       </div>
 
       <div className="absolute inset-x-0 bottom-0 p-2.5">
-        <p className="truncate text-[11px] font-black text-white">
+        <p className="truncate text-[10px] font-black text-white">
           {item.title || 'Live Broadcast'}
         </p>
 
-        <p className="mt-0.5 truncate text-[9px] font-bold text-[#FF7A00]/70">
+        <p className="mt-0.5 truncate text-[9px] font-bold text-[#39FF14]/70">
           {item.streamerName || 'Unknown'}
         </p>
       </div>
@@ -249,22 +179,22 @@ function PhoneSection({
   onViewAll?: () => void
 }) {
   return (
-    <section className="space-y-2.5">
+    <section className="space-y-1.5">
       <div className="flex items-center justify-between px-1">
         <div className="flex min-w-0 items-center gap-2.5">
-          <div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#FF7A00]/20 bg-[#FF7A00]/10">
-            <div className="absolute inset-0 bg-gradient-to-br from-[#FF7A00]/25 to-[#A855F7]/25" />
+          <div className="relative flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#39FF14]/50 bg-[#39FF14]/10">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#39FF14]/25 to-[#A855F7]/25" />
             <span className="absolute -right-1 -top-1 text-[10px]">🕷️</span>
-            <Icon size={15} className="relative text-[#FF7A00]" />
+            <Icon size={15} className="relative text-[#39FF14]" />
           </div>
 
           <div className="min-w-0">
-            <h2 className="truncate text-sm font-black tracking-tight text-white">
+            <h2 className="truncate text-[12px] font-black tracking-tight text-white">
               {title}
             </h2>
 
             {count !== undefined && (
-              <p className="text-[9px] font-bold text-[#FF7A00]/55">
+              <p className="text-[9px] font-bold text-[#39FF14]/55">
                 {count} {count === 1 ? 'active stream' : 'active streams'}
               </p>
             )}
@@ -275,7 +205,7 @@ function PhoneSection({
           <button
             type="button"
             onClick={onViewAll}
-            className="group flex shrink-0 items-center gap-0.5 rounded-lg px-2 py-1 text-[9px] font-black uppercase tracking-wider text-[#FF7A00] transition hover:bg-[#FF7A00]/10"
+            className="group flex shrink-0 items-center gap-0.5 rounded-lg px-2 py-1 text-[9px] font-black uppercase tracking-wider text-[#39FF14] transition hover:bg-[#39FF14]/10"
           >
             Explore
             <ChevronRight
@@ -286,7 +216,7 @@ function PhoneSection({
         )}
       </div>
 
-      <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide">
+      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
         {children}
       </div>
     </section>
@@ -314,7 +244,7 @@ function PhoneLiveNow({
         {Array.from({ length: 3 }).map((_, index) => (
           <div
             key={index}
-            className="h-[190px] w-[145px] shrink-0 animate-pulse rounded-2xl border border-[#FF7A00]/10 bg-gradient-to-br from-[#FF7A00]/5 to-[#A855F7]/5"
+            className="h-[105px] w-[108px] shrink-0 animate-pulse rounded-xl border border-[#00BFFF]/45 bg-gradient-to-br from-[#00BFFF]/10 to-[#BF00FF]/10"
           />
         ))}
       </PhoneSection>
@@ -332,13 +262,13 @@ function PhoneLiveNow({
         <button
           type="button"
           onClick={onViewAll}
-          className={`flex h-[150px] w-full min-w-[280px] flex-col items-center justify-center rounded-2xl ${neonBorder} bg-gradient-to-br from-[#FF7A00]/5 via-[#0D0814] to-[#A855F7]/5 px-5 text-center transition active:scale-[0.98]`}
+          className={`flex h-[86px] w-full min-w-[260px] flex-col items-center justify-center rounded-2xl ${neonBorder} bg-gradient-to-br from-[#39FF14]/5 via-[#0D0814] to-[#A855F7]/5 px-5 text-center transition active:scale-[0.98]`}
         >
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[#FF7A00]/20 bg-[#FF7A00]/10">
-            <Radio className="h-6 w-6 text-[#FF7A00]/60" />
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[#39FF14]/50 bg-[#39FF14]/10">
+            <Radio className="h-6 w-6 text-[#39FF14]/60" />
           </div>
 
-          <p className="mt-3 text-xs font-black text-zinc-300">
+          <p className="mt-1 text-xs font-black text-zinc-300">
             The network is quiet
           </p>
 
@@ -356,200 +286,6 @@ function PhoneLiveNow({
         ))
       )}
     </PhoneSection>
-  )
-}
-
-/* -------------------------------------------------------------------------- */
-/* Online Users                                                                */
-/* -------------------------------------------------------------------------- */
-
-function PhoneOnlineUsers({
-  onlineUsers,
-  currentUserId,
-}: {
-  onlineUsers: number
-  currentUserId?: string
-}) {
-  const [open, setOpen] = useState(false)
-  const [users, setUsers] = useState<any[]>([])
-  const [loading, setLoading] = useState(false)
-
-  const onlineUserIds = usePresenceStore((state) => state.onlineUserIds)
-
-  useEffect(() => {
-    if (!open) return
-
-    let cancelled = false
-
-    const fetchUsers = async () => {
-      setLoading(true)
-
-      try {
-        const ids = Array.from(onlineUserIds).slice(0, 100)
-
-        if (!ids.length) {
-          if (!cancelled) setUsers([])
-          return
-        }
-
-        const { data, error } = await supabase
-          .from('user_profiles')
-          .select(
-            'id, username, display_name, avatar_url, role, is_admin',
-          )
-          .in('id', ids)
-
-        if (error) throw error
-
-        if (!cancelled) {
-          setUsers(data || [])
-        }
-      } catch {
-        if (!cancelled) setUsers([])
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    }
-
-    void fetchUsers()
-
-    return () => {
-      cancelled = true
-    }
-  }, [open, onlineUserIds])
-
-  return (
-    <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className={`group flex w-full items-center justify-between rounded-2xl ${neonBorder} bg-gradient-to-r from-[#FF7A00]/5 via-[#0D0814] to-[#A855F7]/5 px-4 py-3 transition active:scale-[0.99]`}
-      >
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#FF7A00]/20 bg-[#FF7A00]/10">
-            <Users size={17} className="text-[#FF7A00]" />
-          </div>
-
-          <div className="text-left">
-            <p className="text-xs font-black text-white">
-              Online Community
-            </p>
-
-            <p className="text-[9px] font-bold text-[#FF7A00]/60">
-              {onlineUsers.toLocaleString()} people are online
-            </p>
-          </div>
-        </div>
-
-        <ChevronRight
-          size={16}
-          className="text-[#FF7A00]/50 transition-transform group-hover:translate-x-0.5"
-        />
-      </button>
-
-      {open && (
-        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md">
-          <div className="absolute inset-x-0 bottom-0 max-h-[80vh] overflow-hidden rounded-t-3xl border-t border-[#FF7A00]/25 bg-[#0D0814] shadow-[0_-10px_60px_rgba(0,191,255,0.10)]">
-            <div className="flex items-center justify-between border-b border-white/10 px-4 py-4">
-              <div>
-                <h3 className="text-sm font-black text-white">
-                  Online Community
-                </h3>
-
-                <p className="text-[9px] text-[#FF7A00]/55">
-                  {onlineUsers.toLocaleString()} people online
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-zinc-400"
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="max-h-[65vh] overflow-y-auto p-3">
-              {loading ? (
-                <div className="space-y-2">
-                  {Array.from({ length: 6 }).map((_, i) => (
-                    <div
-                      key={i}
-                      className="h-14 animate-pulse rounded-xl bg-gradient-to-r from-[#FF7A00]/5 to-[#A855F7]/5"
-                    />
-                  ))}
-                </div>
-              ) : users.length === 0 ? (
-                <div className="py-10 text-center text-xs text-zinc-500">
-                  No users online.
-                </div>
-              ) : (
-                <div className="space-y-1">
-                  {users.map((u) => {
-                    const admin =
-                      u.is_admin ||
-                      ['admin', 'ceo', 'superadmin'].includes(
-                        u.role || '',
-                      )
-
-                    return (
-                      <button
-                        key={u.id}
-                        type="button"
-                        onClick={() => {
-                          setOpen(false)
-                          window.location.href = `/profile/id/${u.id}`
-                        }}
-                        className="flex w-full items-center gap-3 rounded-xl p-3 text-left transition hover:bg-[#FF7A00]/5 active:bg-white/5"
-                      >
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[#FF7A00] to-[#A855F7] text-xs font-black text-white shadow-[0_0_15px_rgba(0,191,255,0.15)]">
-                          {u.avatar_url ? (
-                            <img
-                              src={u.avatar_url}
-                              alt=""
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            (
-                              u.display_name ||
-                              u.username ||
-                              '?'
-                            )[0]?.toUpperCase()
-                          )}
-                        </div>
-
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-xs font-black text-white">
-                            {u.display_name || u.username}
-
-                            {u.id === currentUserId && (
-                              <span className="ml-1 text-[8px] text-[#FF7A00]">
-                                YOU
-                              </span>
-                            )}
-
-                            {admin && (
-                              <Crown className="ml-1 inline h-3 w-3 text-[#A855F7]" />
-                            )}
-                          </p>
-
-                          <p className="truncate text-[9px] text-zinc-500">
-                            @{u.username}
-                          </p>
-                        </div>
-
-                        <span className="h-2 w-2 rounded-full bg-[#FF7A00] shadow-[0_0_8px_#FF7A00]" />
-                      </button>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-    </>
   )
 }
 
@@ -577,11 +313,11 @@ function PhoneQuickLinks() {
     <section>
       <div className="mb-2.5 flex items-center justify-between px-1">
         <div>
-          <h2 className="text-sm font-black tracking-tight text-white">
+          <h2 className="text-[12px] font-black tracking-tight text-white">
             Explore MaiTroll
           </h2>
 
-          <p className="text-[9px] font-bold text-[#FF7A00]/45">
+          <p className="text-[9px] font-bold text-[#39FF14]/45">
             More ways to connect, compete and create
           </p>
         </div>
@@ -596,23 +332,23 @@ function PhoneQuickLinks() {
               key={link.label}
               type="button"
               onClick={() => navigate(link.path)}
-              className="group relative flex min-h-[78px] flex-col items-center justify-center gap-2 overflow-hidden rounded-2xl border border-[#FF7A00]/35 bg-[#100914] px-1 text-center transition-all active:scale-95 hover:border-[#FF7A00]/25"
+              className="group relative flex min-h-[78px] flex-col items-center justify-center gap-2 overflow-hidden rounded-2xl border border-[#00BFFF]/65 bg-[#0B0711] px-1 text-center transition-all active:scale-95 hover:border-[#39FF14]/25"
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-[#FF7A00]/15 to-[#A855F7]/15 opacity-70 transition-opacity group-hover:opacity-100" />
+              <div className="absolute inset-0 bg-gradient-to-br from-[#00BFFF]/20 via-[#39FF14]/10 to-[#BF00FF]/20 opacity-70 transition-opacity group-hover:opacity-100" />
               <span className="absolute right-1 top-1 text-[9px] opacity-70">{index % 2 === 0 ? '🦇' : '🕸️'}</span>
 
               <div
-                className={`relative flex h-9 w-9 items-center justify-center rounded-xl border border-[#FF7A00]/15 bg-gradient-to-br ${
+                className={`relative flex h-9 w-9 items-center justify-center rounded-xl border border-[#39FF14]/15 bg-gradient-to-br ${
                   index % 2 === 0
-                    ? 'from-[#FF7A00]/15 to-[#A855F7]/10'
-                    : 'from-[#A855F7]/15 to-[#FF7A00]/10'
+                    ? 'from-[#39FF14]/15 to-[#A855F7]/10'
+                    : 'from-[#A855F7]/15 to-[#39FF14]/10'
                 }`}
               >
                 <Icon
                   size={16}
                   className={
                     index % 2 === 0
-                      ? 'text-[#FF7A00]'
+                      ? 'text-[#39FF14]'
                       : 'text-[#A855F7]'
                   }
                 />
@@ -639,6 +375,7 @@ export default function PhoneHomepage({
   const navigate = useNavigate()
 
   const user = useAuthStore((state) => state.user)
+  const profile = useAuthStore((state) => state.profile) as any
   const isLoading = useAuthStore((state) => state.isLoading)
 
   const {
@@ -648,9 +385,34 @@ export default function PhoneHomepage({
     refresh,
   } = useLiveContent()
 
-  const { newPostCount } = useWallNotifications(false)
 
   const [refreshing, setRefreshing] = useState(false)
+
+  const [podcasts, setPodcasts] = useState<any[]>([])
+  const [podcastsLoading, setPodcastsLoading] = useState(false)
+
+  const loadPodcasts = useCallback(async () => {
+    if (!user?.id) return
+    setPodcastsLoading(true)
+    try {
+      const { data, error } = await supabase
+        .from('podcasts')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(24)
+      if (error) throw error
+      setPodcasts(data || [])
+    } catch (err) {
+      console.error('Failed to load podcasts:', err)
+      setPodcasts([])
+    } finally {
+      setPodcastsLoading(false)
+    }
+  }, [user?.id])
+
+  useEffect(() => {
+    loadPodcasts()
+  }, [loadPodcasts])
 
   const battleItems = useMemo(
     () => liveItems.filter((item) => item.isBattle),
@@ -659,11 +421,6 @@ export default function PhoneHomepage({
 
   const courtItems = useMemo(
     () => liveItems.filter((item) => item.category === 'court'),
-    [liveItems],
-  )
-
-  const tcnnItems = useMemo(
-    () => liveItems.filter((item) => item.category === 'tcnn'),
     [liveItems],
   )
 
@@ -749,495 +506,100 @@ export default function PhoneHomepage({
   }, [refresh])
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-[#09050F]">
-        <PhoneHeader showTickerLinks={false} />
-
-        <div className="flex min-h-[70vh] items-center justify-center">
-          <div className="text-center">
-            <div className="relative mx-auto h-12 w-12">
-              <div className="absolute inset-0 animate-pulse rounded-full bg-gradient-to-br from-[#FF7A00] to-[#A855F7] opacity-30 blur-xl" />
-
-              <div className="relative h-12 w-12 animate-spin rounded-full border-2 border-[#A855F7]/20 border-t-[#FF7A00]" />
-            </div>
-
-            <p className="mt-4 text-xs font-black text-[#FF7A00]/50">
-              Entering Haunted MaiTroll...
-            </p>
-          </div>
-        </div>
-      </div>
-    )
+    return <div className="flex min-h-screen items-center justify-center bg-[#09070E] text-sm font-semibold text-[#BF00FF]"><span className="animate-pulse">Entering MaiTroll City...</span></div>
   }
 
+  const displayName = profile?.display_name || profile?.username || 'MaiTroll Citizen'
+  const citizenAvatar = profile?.avatar_url || ''
+  const open = (path: string) => go(path)
+  const socialLinks = [
+    { label: 'Live', icon: Radio, path: '/live' },
+    { label: 'People', icon: Users, path: '/explore' },
+    { label: 'Treelz', icon: Play, path: '/treelz' },
+    { label: 'Battles', icon: Trophy, path: '/battles' },
+    { label: 'Podcasts', icon: Mic, path: '/podcast' },
+    { label: 'Coins', icon: Coins, path: '/coins' },
+  ]
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-[#09050F] text-white">
-      <PhoneSpaceBackground />
+    <div className="relative min-h-[100dvh] overflow-x-hidden bg-[#09070E] text-white">
+      <DynamicWeatherBackground
+        isDark={true}
+        showWalker={!!user}
+        showBuildings={false}
+        onBuildingClick={open}
+        onJoinRandomSeat={joinRandomFreeSeat}
+        isJoiningRandomSeat={joiningRandomSeat}
+      />
       <PhoneHeader showTickerLinks={false} />
+      <main className="relative z-10 mx-auto flex w-full max-w-[800px] flex-col gap-2 px-2.5 pb-20 pt-2">
+        <section className="flex items-center justify-between gap-2 rounded-xl border border-[#BF00FF]/55 bg-[#100818]/95 shadow-[0_0_18px_rgba(191,0,255,.11)] px-2.5 py-1.5">
+          <button onClick={() => user ? go(`/profile/id/${user.id}`) : go('/auth')} className="flex min-w-0 items-center gap-2 text-left">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[#BF00FF]/80 bg-[#BF00FF]/15 text-sm font-black">{citizenAvatar ? <img src={citizenAvatar} alt="" className="h-full w-full object-cover"/> : displayName[0]?.toUpperCase()}</div>
+            <div className="min-w-0"><p className="text-[8px] text-slate-400">{user ? 'Welcome back, citizen' : 'Welcome to the city'}</p><p className="truncate text-[12px] font-black">{displayName}</p></div>
+          </button>
+          <button onClick={() => go('/coins')} className="flex shrink-0 items-center gap-1.5 rounded-lg border border-[#39FF14]/65 bg-[#39FF14]/10 px-2 py-1.5"><Coins className="h-4 w-4 text-[#39FF14]"/><span className="text-[9px] font-bold">Troll Coins</span><ArrowRight size={12} className="text-[#39FF14]"/></button>
+        </section>
 
-      <main className="relative z-10 px-3 pb-24 pt-3">
-        {/* ---------------------------------------------------------------- */}
-        {/* Welcome                                                           */}
-        {/* ---------------------------------------------------------------- */}
+        <section className="grid grid-cols-4 gap-1.5">
+          {socialLinks.map(({label,icon:Icon,path},i)=><button key={label} onClick={()=>go(path)} className={`flex h-[43px] flex-col items-center justify-center gap-0.5 rounded-lg px-0.5 active:scale-95 ${i % 3 === 0 ? 'border border-[#00BFFF]/65 bg-[#07121B] shadow-[0_0_12px_rgba(0,191,255,.20)]' : i % 3 === 1 ? 'border border-[#39FF14]/65 bg-[#0A170A] shadow-[0_0_12px_rgba(57,255,20,.18)]' : 'border border-[#BF00FF]/65 bg-[#16091C] shadow-[0_0_12px_rgba(191,0,255,.20)]'}`}><Icon size={16} className={i%3===0 ? 'text-[#00BFFF]' : i%3===1 ? 'text-[#39FF14]' : 'text-[#BF00FF]'}/><span className="text-[9px] font-semibold text-slate-200">{label}{label === 'Battles' && battleItems.length > 0 ? ` (${battleItems.length})` : ''}</span></button>)}
+        </section>
 
-        {!user && (
-          <section className="relative mb-4 overflow-hidden rounded-3xl border border-[#FF7A00]/45 shadow-[0_0_30px_rgba(255,122,0,.10)] bg-gradient-to-br from-[#A855F7]/15 via-[#0D0814] to-[#FF7A00]/15 p-4 shadow-[0_0_40px_rgba(0,191,255,0.06)]">
-            <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-[#FF7A00]/15 blur-3xl" />
+        <div className="grid grid-cols-2 gap-1.5">
+          <button onClick={()=>go('/broadcast/setup')} className="flex h-9 items-center justify-center gap-1.5 rounded-lg border border-[#39FF14]/70 bg-[#0B1709]/90 shadow-[0_0_14px_rgba(57,255,20,.18)] text-[10px] font-black text-[#39FF14]"><Radio size={14}/> GO LIVE</button>
+          <button disabled={joiningRandomSeat} onClick={joinRandomFreeSeat} className="flex h-9 items-center justify-center gap-1.5 rounded-lg border border-[#BF00FF]/60 bg-[#BF00FF]/10 text-[10px] font-black text-[#BF00FF] disabled:opacity-50"><Users size={14}/>{joiningRandomSeat ? 'FINDING...' : 'RANDOM SEAT'}</button>
+        </div>
 
-            <div className="absolute -bottom-10 -left-10 h-28 w-28 rounded-full bg-[#A855F7]/10 blur-3xl" />
-
-            <span className="absolute right-3 top-2 text-2xl opacity-80">🎃</span>
-            <span className="absolute left-2 bottom-1 text-lg opacity-50">🕸️</span>
-            <div className="relative flex items-center gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#FF7A00] to-[#A855F7] shadow-[0_0_25px_rgba(0,191,255,0.25)]">
-                <Sparkles size={20} className="text-white" />
-              </div>
-
-              <div className="min-w-0 flex-1">
-                <h2 className="text-sm font-black text-white">
-                  Welcome to MaiTroll
-                </h2>
-
-                <p className="mt-0.5 text-[9px] font-bold text-zinc-400">
-                  Watch. Battle. Troll. Gift. Cashout.
-                </p>
-              </div>
-
-              <PhoneButton
-                variant="primary"
-                size="sm"
-                onClick={() => go('/auth?mode=signup')}
-              >
-                Join
-              </PhoneButton>
-            </div>
-          </section>
-        )}
-
-        {/* ---------------------------------------------------------------- */}
-        {/* What is MaiTroll                                                   */}
-        {/* ---------------------------------------------------------------- */}
-
-        <PhoneButton
-          variant="outline"
-          size="lg"
-          icon={<Sparkles size={15} />}
-          onClick={() => go('/insights')}
-          className="w-full justify-start gap-2.5 px-4 py-3"
-        >
-          <span className="flex-1 text-xs font-bold text-zinc-500">What is MaiTroll?</span>
-        </PhoneButton>
-
-        {/* Placeholder: add your file/button content below */}
-        {/* <PhoneButton variant="outline" size="lg" onClick={handlePlaceholder} className="w-full justify-start gap-2.5 px-4 py-3">Placeholder</PhoneButton> */}
-
-        {/* ---------------------------------------------------------------- */}
-        {/* Stats + Go Live                                                   */}
-        {/* ---------------------------------------------------------------- */}
-
-        <section className="mb-5 grid grid-cols-3 gap-2 relative">
-          <span className="absolute -top-4 right-1 z-20 text-sm">🦇</span>
-          <div className={`${glass} rounded-2xl border border-[#FF7A00]/30 bg-gradient-to-br from-[#FF7A00]/10 via-[#100914]/90 to-[#A855F7]/10 rounded-2xl p-3 shadow-[inset_0_0_18px_rgba(255,122,0,.06)]`}>
-            <Radio size={14} className="text-[#FF7A00]" />
-
-            <p className="mt-2 text-base font-black text-white">
-              {totalLive}
-            </p>
-
-            <p className="text-[8px] font-black uppercase tracking-wider text-[#FF7A00]/45">
-              Live Now
-            </p>
-          </div>
-
-          {/* MAIN CTA */}
-          <div className="group relative grid grid-cols-2 gap-1 overflow-hidden rounded-2xl border border-[#FF7A00]/50 bg-gradient-to-br from-[#FF7A00] via-[#F97316] to-[#A855F7] p-1 text-white shadow-[0_0_25px_rgba(0,191,255,0.30),0_0_35px_rgba(191,0,255,0.20)]">
-            <div className="absolute -right-5 -top-5 h-16 w-16 rounded-full bg-white/20 blur-2xl transition-transform duration-500 group-hover:scale-150" />
-            <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/10" />
-            <button
-              type="button"
-              onClick={() => go('/broadcast/setup')}
-              className="relative flex min-h-[88px] flex-col items-center justify-center rounded-xl border border-white/20 bg-red-950/35 px-1 text-center transition hover:bg-red-950/55 active:scale-[0.97]"
-            >
-              <Radio size={18} className="text-white" />
-              <p className="mt-1.5 text-[9px] font-black uppercase tracking-wide text-white">GO LIVE</p>
-              <p className="mt-0.5 text-[6px] font-black uppercase tracking-wider text-white/80">Start Your Broadcast</p>
-            </button>
-            <button
-              type="button"
-              onClick={joinRandomFreeSeat}
-              disabled={joiningRandomSeat}
-              className="relative flex min-h-[88px] flex-col items-center justify-center rounded-xl border border-white/20 bg-black/25 px-1 text-center transition hover:bg-black/40 active:scale-[0.97] disabled:cursor-wait disabled:opacity-60"
-            >
-              <Users size={18} className="text-white" />
-              <p className="mt-1.5 text-[8px] font-black uppercase tracking-wide text-white">RANDOM SEAT</p>
-              <p className="mt-0.5 text-[6px] font-black uppercase tracking-wider text-white/80">
-                {joiningRandomSeat ? 'Finding...' : 'Join Free'}
-              </p>
-            </button>
-          </div>
-
-          <div className={`${glass} rounded-2xl border border-[#A855F7]/30 bg-gradient-to-br from-[#A855F7]/10 via-[#100914]/90 to-[#FF7A00]/10 rounded-2xl p-3 shadow-[inset_0_0_18px_rgba(168,85,247,.06)]`}>
-            <Users size={14} className="text-[#A855F7]" />
-
-            <p className="mt-2 text-base font-black text-white">
-              {onlineUsers.toLocaleString()}
-            </p>
-
-            <p className="text-[8px] font-black uppercase tracking-wider text-[#A855F7]/45">
-              Online
-            </p>
+        <section className="relative overflow-hidden rounded-xl border border-[#BF00FF]/55 bg-[#0F0817]/95 shadow-[0_0_18px_rgba(191,0,255,.12)] p-2">
+          <div className="absolute inset-0 opacity-40 [background-image:linear-gradient(180deg,transparent,#080c17),radial-gradient(ellipse_at_85%_20%,rgba(160,67,239,.4),transparent_45%)]"/>
+          <div className="relative flex items-center justify-between gap-2 pb-1.5"><div><h2 className="text-[13px] font-black">Live in MaiTroll City</h2><p className="text-[9px] text-slate-400">{totalLive} broadcasts • {onlineUsers.toLocaleString()} online</p></div><div className="flex gap-1.5"><button onClick={refreshLiveContent} disabled={refreshing} aria-label="Refresh streams" className="rounded-md border border-[#00BFFF]/50 bg-[#00BFFF]/10 p-1 text-[#00BFFF]"><RefreshCw size={13} className={refreshing ? 'animate-spin' : ''}/></button><button onClick={()=>go('/live')} className="text-[9px] font-bold text-[#39FF14]">View All ›</button></div></div>
+          <div className="relative flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-hide">
+            <button onClick={()=>go('/broadcast/setup')} className="flex h-[105px] w-[84px] shrink-0 flex-col items-center justify-center gap-1 rounded-xl border border-[#39FF14]/75 bg-[#0E1B0A]/90 shadow-[0_0_16px_rgba(57,255,20,.19)] text-[#39FF14]"><Radio size={20}/><span className="text-[10px] font-black">GO LIVE</span></button>
+            {loadingLive ? Array.from({length:3},(_,i)=><div key={i} className="h-[105px] w-[108px] shrink-0 animate-pulse rounded-xl bg-white/10"/>) : liveItems.length ? liveItems.slice(0,12).map(item=><PhoneLiveTile key={item.id} item={item} onClick={()=>handleStreamClick(item)}/>) : <div className="flex h-[105px] flex-1 items-center justify-center text-center text-[10px] text-slate-400">No broadcasts live yet. Be the first!</div>}
           </div>
         </section>
 
-        <div className="mb-5 flex justify-start">
-          <button
-            type="button"
-            disabled={refreshing}
-            onClick={refreshLiveContent}
-            className="rounded-xl border border-[#FF7A00]/15 bg-[#FF7A00]/5 px-3 py-2 text-[9px] font-black text-[#FF7A00] transition active:scale-95 disabled:opacity-50"
-          >
-            {refreshing ? 'Updating...' : 'Refresh'}
-          </button>
-        </div>
+        {/* Separate, compact live Hytro Gaming stream carousel. */}
+        <section className="rounded-xl border border-[#BF00FF]/55 bg-[#0F0817]/95 shadow-[0_0_18px_rgba(191,0,255,.12)] p-2">
+          <div className="mb-1.5 flex items-center justify-between gap-2">
+            <h2 className="flex items-center gap-1.5 text-[12px] font-black text-white"><Gamepad2 size={15} className="text-[#39FF14]"/> Hytro Gaming Streams</h2>
+            <button onClick={() => go('/hytro')} className="text-[9px] font-bold text-[#39FF14]">View All ›</button>
+          </div>
+          <div className="flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-hide">
+            {loadingLive ? Array.from({ length: 3 }, (_, i) => <div key={i} className="h-[105px] w-[108px] shrink-0 animate-pulse rounded-xl bg-white/10"/>)
+              : hytroItems.length ? hytroItems.slice(0, 12).map(item => <PhoneLiveTile key={item.id} item={item} onClick={() => handleStreamClick(item)}/>)
+              : <button onClick={() => go('/hytro')} className="flex h-[72px] w-full items-center gap-2 rounded-lg border border-[#00BFFF]/55 bg-[#07131B] shadow-[0_0_12px_rgba(0,191,255,.12)] px-3 text-left"><Gamepad2 size={20} className="text-[#39FF14]"/><span className="text-[10px] text-slate-300">No Hytro gaming streams live. Explore Hytro Gaming ›</span></button>}
+          </div>
+        </section>
 
-        <div className="space-y-6">
-          {/* Live */}
-          <PhoneLiveNow
-            items={liveItems}
-            loading={loadingLive}
-            onItemClick={handleStreamClick}
-            onViewAll={() => go('/live')}
-          />
-
-          <TreelzHomeRow title="Treelz" icon={<Play size={15} className="text-[#FF7A00]" />} />
-
-          {/* Hytro Gaming */}
-          <PhoneSection
-            title="Hytro Gaming"
-            icon={Gamepad2}
-            count={hytroItems.length}
-            onViewAll={() => go('/hytro')}
-          >
-            {hytroItems.length === 0 ? (
-              <div className="flex h-[120px] w-full min-w-[280px] flex-col items-center justify-center rounded-2xl border border-orange-500/15 bg-gradient-to-br from-orange-500/5 to-red-500/5 text-center">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-500/10">
-                  <Gamepad2 className="h-5 w-5 text-orange-400/40" />
-                </div>
-
-                <p className="mt-2 text-[10px] font-black text-zinc-500">
-                  No HytroGaming streams live
-                </p>
-
-                <p className="mt-0.5 text-[8px] font-bold text-zinc-700">
-                  Check back for the next gaming stream.
-                </p>
-              </div>
+        {/* Podcast discovery — grid of all podcasts */}
+        <section className="rounded-xl border border-[#BF00FF]/55 bg-[#0F0817]/95 shadow-[0_0_18px_rgba(191,0,255,.12)] p-2">
+          <div className="mb-1.5 flex items-center justify-between gap-2">
+            <h2 className="flex items-center gap-1.5 text-[12px] font-black text-white"><Mic size={15} className="text-[#BF00FF]"/> Podcasts</h2>
+            <button onClick={() => go('/podcast')} className="text-[9px] font-bold text-[#BF00FF]">View All ›</button>
+          </div>
+          <div className="grid grid-cols-2 gap-1.5">
+            {podcastsLoading ? Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-48 animate-pulse rounded-xl bg-white/5" />
+            )) : podcasts.length === 0 ? (
+              <button onClick={() => go('/podcast')} className="flex h-[72px] flex-col items-center gap-3 rounded-lg border border-[#BF00FF]/60 bg-gradient-to-r from-[#BF00FF]/15 to-[#0C0613] px-3 text-left"><Mic size={23} className="text-[#BF00FF]"/><span className="flex-1"><span className="block text-[11px] font-bold text-white">Discover MaiTroll Podcasts</span><span className="block text-[9px] text-slate-400">Listen to shows from the city</span></span><ChevronRight size={15} className="text-[#BF00FF]"/></button>
             ) : (
-              hytroItems.slice(0, 10).map((item) => (
-                <PhoneLiveTile
-                  key={item.id}
-                  item={item}
-                  onClick={() => handleStreamClick(item)}
-                />
-              ))
-            )}
-          </PhoneSection>
-
-          {/* -------------------------------------------------------------- */}
-          {/* Battles                                                          */}
-          {/* -------------------------------------------------------------- */}
-
-          <PhoneSection
-            title="Universal Battles"
-            icon={Sparkles}
-            count={battleItems.length}
-            onViewAll={() => go('/battles')}
-          >
-            {battleItems.length === 0 ? (
-              <div className="flex h-[125px] w-full min-w-[280px] flex-col items-center justify-center rounded-2xl border border-[#A855F7]/15 bg-gradient-to-br from-[#A855F7]/5 to-[#FF7A00]/5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#A855F7]/10">
-                  <Sparkles className="h-5 w-5 text-[#A855F7]/40" />
-                </div>
-
-                <p className="mt-2 text-[10px] font-black text-zinc-500">
-                  No battles are active
-                </p>
-
-                <p className="mt-0.5 text-[8px] font-bold text-zinc-700">
-                  Check back for the next matchup.
-                </p>
-              </div>
-            ) : (
-              battleItems.slice(0, 10).map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => handleStreamClick(item)}
-                  className="group relative h-[140px] w-[165px] shrink-0 overflow-hidden rounded-2xl border border-[#A855F7]/50 bg-gradient-to-br from-[#A855F7]/25 via-[#100914] to-[#FF7A00]/20 p-3 text-left shadow-[inset_0_0_25px_rgba(168,85,247,.08),0_0_18px_rgba(255,122,0,.08)] transition active:scale-[0.97]"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-br from-[#A855F7]/15 to-[#FF7A00]/15 opacity-100 transition-opacity group-hover:opacity-100" />
-                  <span className="absolute bottom-1 right-2 text-lg opacity-60">💀</span>
-                  <span className="absolute left-1 bottom-1 text-xs opacity-50">🕷️</span>
-
-                  <span className="relative rounded-full border border-[#A855F7]/30 bg-[#A855F7]/15 px-2 py-1 text-[7px] font-black text-[#A855F7]">
-                    {item.battleFormat?.toUpperCase() || 'BATTLE'}
-                  </span>
-
-                  <span className="absolute right-2 top-2 rounded-lg border border-[#FF7A00]/30 bg-black/60 px-1.5 py-1 text-[7px] font-black text-white">
-                    LIVE
-                  </span>
-
-                  <div className="absolute inset-x-3 bottom-3">
-                    <p className="truncate text-xs font-black text-white">
-                      {item.title}
-                    </p>
-
-                    <p className="mt-1 truncate text-[9px] font-bold text-[#FF7A00]/60">
-                      {item.streamerName}
-                    </p>
-                  </div>
+              podcasts.slice(0, 8).map((podcast) => (
+                <button key={podcast.id} onClick={() => go(`/podcast/${podcast.id}`)} className="flex h-40 flex-col items-start justify-center gap-1 rounded-lg border border-[#00BFFF]/55 bg-[#07111A]/90 shadow-[0_0_13px_rgba(0,191,255,.12)] p-2 active:scale-95">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl border border-[#BF00FF]/60 bg-[#BF00FF]/10 text-[#BF00FF]"><Mic size={16}/></div>
+                  <p className="text-[10px] font-black text-white truncate">{podcast.title || 'Untitled Podcast'}</p>
+                  <p className="text-[8px] text-slate-400 truncate">{podcast.host_username || podcast.host_user_id || 'Unknown Host'}</p>
+                  <span className="text-[8px] font-black text-emerald-400">{Number(podcast.listener_count || 0)} listeners</span>
                 </button>
               ))
             )}
-          </PhoneSection>
+          </div>
+        </section>
 
-          {/* -------------------------------------------------------------- */}
-          {/* Troll Court                                                     */}
-          {/* -------------------------------------------------------------- */}
-
-          <PhoneSection
-            title="Troll Court"
-            icon={Gavel}
-            count={courtItems.length}
-            onViewAll={() => go('/court')}
-          >
-            {courtItems.length === 0 ? (
-              <div className="flex h-[120px] w-full min-w-[280px] items-center justify-center rounded-2xl border border-[#FF7A00]/10 bg-[#FF7A00]/[0.02] text-center">
-                <div>
-                  <Gavel className="mx-auto h-7 w-7 text-[#FF7A00]/20" />
-
-                  <p className="mt-2 text-[9px] font-black text-zinc-600">
-                    No court broadcasts live
-                  </p>
-                </div>
-              </div>
-            ) : (
-              courtItems.slice(0, 10).map((item) => (
-                <PhoneLiveTile
-                  key={item.id}
-                  item={item}
-                  onClick={() => {
-                    const sessionId = item.id.startsWith('court-')
-                      ? item.id.slice(6)
-                      : item.id
-
-                    go(`/court/${sessionId}`)
-                  }}
-                />
-              ))
-            )}
-          </PhoneSection>
-
-          {/* -------------------------------------------------------------- */}
-          {/* TCNN                                                             */}
-          {/* -------------------------------------------------------------- */}
-
-          <PhoneSection
-            title="TCNN News"
-            icon={MessageCircle}
-            count={tcnnItems.length}
-            onViewAll={() => go('/tcnn')}
-          >
-            {tcnnItems.length === 0 ? (
-              <div className="flex h-[120px] w-full min-w-[280px] items-center justify-center rounded-2xl border border-[#A855F7]/10 bg-[#A855F7]/[0.02] text-center">
-                <div>
-                  <MessageCircle className="mx-auto h-7 w-7 text-[#A855F7]/20" />
-
-                  <p className="mt-2 text-[9px] font-black text-zinc-600">
-                    No TCNN broadcasts live
-                  </p>
-                </div>
-              </div>
-            ) : (
-              tcnnItems.slice(0, 10).map((item) => (
-                <PhoneLiveTile
-                  key={item.id}
-                  item={item}
-                  onClick={() => go(`/tcnn/viewer/${item.id}`)}
-                />
-              ))
-            )}
-          </PhoneSection>
-
-          {/* Online */}
-          <PhoneOnlineUsers
-            onlineUsers={onlineUsers}
-            currentUserId={user?.id}
-          />
-
-          {/* -------------------------------------------------------------- */}
-          {/* Community Wall                                                   */}
-          {/* -------------------------------------------------------------- */}
-
-          <button
-            type="button"
-            onClick={() => go('/community-wall')}
-            className={`group flex w-full items-center gap-3 rounded-2xl ${neonBorder} bg-gradient-to-r from-[#A855F7]/10 via-[#0D0814] to-[#FF7A00]/10 p-4 text-left transition active:scale-[0.99]`}
-          >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#A855F7]/20 bg-[#A855F7]/10">
-              <MessageCircle size={18} className="text-[#A855F7]" />
-            </div>
-
-            <div className="min-w-0 flex-1">
-              <p className="text-xs font-black text-white">
-                Community Wall
-              </p>
-
-              <p className="text-[9px] font-bold text-zinc-500">
-                See what the MaiTroll community is talking about
-              </p>
-            </div>
-
-            {newPostCount > 0 && (
-              <span className="rounded-full bg-gradient-to-r from-[#A855F7] to-[#FF7A00] px-2 py-1 text-[8px] font-black text-white shadow-[0_0_12px_rgba(191,0,255,0.25)]">
-                {newPostCount}
-              </span>
-            )}
-
-            <ArrowRight
-              size={15}
-              className="text-[#FF7A00]/50 transition-transform group-hover:translate-x-0.5"
-            />
-          </button>
-
-          {/* -------------------------------------------------------------- */}
-          {/* Coins — buy Troll Coins via website with redirect back to app  */}
-          {/* -------------------------------------------------------------- */}
-
-          <button
-            type="button"
-            onClick={() => {
-              const redirect = encodeURIComponent(window.location.origin + '/coins')
-              window.open(`https://www.maitroll.com/coins?redirect=${redirect}`, '_blank')
-            }}
-            className={`group flex w-full items-center gap-3 rounded-2xl ${neonBorder} bg-gradient-to-r from-[#FF7A00]/10 via-[#0D0814] to-[#A855F7]/10 p-4 text-left transition active:scale-[0.99]`}
-          >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#FF7A00]/20 bg-[#FF7A00]/10">
-              <Coins size={18} className="text-[#FF7A00]" />
-            </div>
-
-            <div className="min-w-0 flex-1">
-              <p className="text-xs font-black text-white">
-                Buy Troll Coins
-              </p>
-
-              <p className="text-[9px] font-bold text-zinc-500">
-                Purchase coins on the website, then return to the app
-              </p>
-            </div>
-
-            <ArrowRight
-              size={15}
-              className="text-[#FF7A00]/50 transition-transform group-hover:translate-x-0.5"
-            />
-          </button>
-
-          {/* -------------------------------------------------------------- */}
-          {/* Creator CTA                                                     */}
-          {/* -------------------------------------------------------------- */}
-
-          {user && (
-            <div className="grid grid-cols-2 gap-2">
-              <PhoneButton
-                variant="primary"
-                size="lg"
-                icon={<Radio size={20} />}
-                onClick={() => go('/broadcast/setup')}
-                className="w-full justify-start gap-2 px-3 py-3 text-left shadow-[0_0_35px_rgba(0,191,255,0.08)]"
-              >
-                <div className="min-w-0">
-                  <p className="text-[10px] font-black normal-case text-white">Start Your Broadcast</p>
-                </div>
-              </PhoneButton>
-              <PhoneButton
-                variant="secondary"
-                size="lg"
-                icon={<Users size={20} />}
-                onClick={joinRandomFreeSeat}
-                disabled={joiningRandomSeat}
-                className="w-full justify-start gap-2 px-3 py-3 text-left"
-              >
-                <div className="min-w-0">
-                  <p className="text-[10px] font-black normal-case text-white">
-                    {joiningRandomSeat ? 'Finding Seat...' : 'Join Free Seat'}
-                  </p>
-                </div>
-              </PhoneButton>
-            </div>
-          )}
-        </div>
-
-        {/* Quick Links */}
-        <div className="mt-7">
-          <PhoneQuickLinks />
-        </div>
-
-        {/* Search entry point — hands off to the phone explorer */}
-        <PhoneButton
-          variant="outline"
-          size="lg"
-          icon={<Search size={15} />}
-          onClick={() => navigate('/explore')}
-          aria-label="Search MaiTroll"
-          className="w-full justify-start gap-2.5 px-4 py-3"
-        >
-          <span className="flex-1 text-xs font-bold text-zinc-500">Search</span>
-          <span className="shrink-0 rounded-lg border border-white/10 bg-white/5 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider text-zinc-600">Explore</span>
-        </PhoneButton>
-
-        <footer className="mt-7 border-t border-[#FF7A00]/10 py-5 text-center">
-          <p className="text-[9px] font-bold text-zinc-700">
-            MaiTroll • Troll City
-          </p>
-
-          <nav className="mt-4 flex flex-wrap items-center justify-center gap-x-3 gap-y-2" aria-label="Homepage links">
-            {[
-              { label: 'About', path: '/about', icon: Home },
-              { label: 'Contact', path: '/contact', icon: Mail },
-              { label: 'Support', path: '/support', icon: HelpCircle },
-              { label: 'FAQ', path: '/faq', icon: MessageCircle },
-              { label: 'Privacy', path: '/privacy', icon: Shield },
-              { label: 'Terms', path: '/terms', icon: FileText },
-              { label: 'App Downloads', path: '/app-downloads', icon: Download },
-              { label: 'Support Our City ❤️', path: '/donate', icon: Heart },
-            ].map(({ label, path, icon: Icon }) => (
-              <Link
-                key={path}
-                to={path}
-                className="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wide text-[#FF7A00]/70 transition hover:text-[#A855F7]"
-              >
-                <Icon size={10} />
-                {label}
-              </Link>
-            ))}
-          </nav>
-
-          <p className="mt-1 text-[8px] font-bold text-zinc-800">
-            All rights reserved © 2025 Troll City
-          </p>
-        </footer>
+        {/* City comes after the broadcast, gaming, and podcast rows. */}
+        <PhoneCityBuildings onOpen={open}/>
+        <div className="flex justify-center gap-3 pb-1 text-[9px] text-slate-500"><Link to="/about">About</Link><Link to="/support">Support</Link><Link to="/legal/terms">Terms</Link><Link to="/legal/privacy">Privacy</Link></div>
       </main>
-
-      <style>{`
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-      `}</style>
+      <style>{`.scrollbar-hide::-webkit-scrollbar{display:none}.scrollbar-hide{scrollbar-width:none;-ms-overflow-style:none}`}</style>
     </div>
   )
 }

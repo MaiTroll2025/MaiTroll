@@ -672,7 +672,7 @@ export default function Home() {
   return (
     <MaiTrollOperatingHoursWrapper>
       <div
-        className="relative min-h-full w-full overflow-y-auto overflow-x-hidden md:overflow-y-auto text-white"
+        className={`relative min-h-full w-full ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}
       >
           <DynamicWeatherBackground
             isDark={theme === 'dark'}
@@ -712,11 +712,11 @@ export default function Home() {
         />
         
         <main className="flex-1 min-w-0">
-          <div className="mx-auto max-w-[1920px] px-3 pb-8 pt-3 md:px-5">
+          <div className="px-3 pb-8 pt-3 md:px-5">
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-bold text-white/80 hover:bg-white/10 hover:text-white transition-all"
+              className={`inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold transition-all ${theme === 'light' ? 'border-gray-300 bg-white/80 text-gray-700 hover:bg-white hover:text-gray-900' : 'border-white/10 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white'}`}
               title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             >
               <Sun className="h-4 w-4" />
@@ -790,7 +790,7 @@ export default function Home() {
             )}
 
             {activeTab === 'home' && (
-              <section className="flex gap-4">
+              <section className="-ml-3 flex gap-4 lg:-ml-5">
                 <div className="min-w-0 flex-1 space-y-4">
                   <FeaturedBroadcastersRow onItemClick={handleScrollItemClick} />
                   <PodcastRow />

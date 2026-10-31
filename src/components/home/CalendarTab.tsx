@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Calendar, ChevronLeft, ChevronRight, Clock, Users, MapPin, Plus, List, Grid3X3, X } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addMonths, subMonths, addWeeks, subWeeks, isSameMonth, isSameDay, isToday, parseISO } from 'date-fns';
 import type { CalendarEvent, CalendarViewType, EventCategory } from '@/types/calendar';
@@ -21,6 +22,7 @@ export default function CalendarTab({ onCreateEvent, isAdmin, refreshKey }: Cale
   const [loading, setLoading] = useState(true);
   const [popupDate, setPopupDate] = useState<Date | null>(null);
   const [popupPosition, setPopupPosition] = useState<{ x: number; y: number } | null>(null);
+  const navigate = useNavigate();
 
   const fetchEvents = useCallback(async () => {
     setLoading(true);
@@ -458,7 +460,7 @@ export default function CalendarTab({ onCreateEvent, isAdmin, refreshKey }: Cale
                   background: `linear-gradient(135deg, ${getCategoryColor(event.category_slug)}08, transparent)`,
                 }}
                 onClick={() => {
-                  window.location.href = `/events/${event.id}`;
+                  navigate(`/events/${event.id}`);
                 }}
               >
                 <div className="flex items-start justify-between gap-2">
@@ -514,7 +516,7 @@ export default function CalendarTab({ onCreateEvent, isAdmin, refreshKey }: Cale
           borderColor: `${getCategoryColor(event.category_slug)}30`,
           background: `linear-gradient(135deg, ${getCategoryColor(event.category_slug)}08, transparent)`,
         }}
-        onClick={() => window.location.href = `/events/${event.id}`}
+        onClick={() => navigate(`/events/${event.id}`)}
       >
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
@@ -563,7 +565,7 @@ export default function CalendarTab({ onCreateEvent, isAdmin, refreshKey }: Cale
           borderColor: `${getCategoryColor(event.category_slug)}30`,
           background: `linear-gradient(135deg, ${getCategoryColor(event.category_slug)}08, transparent)`,
         }}
-        onClick={() => window.location.href = `/events/${event.id}`}
+        onClick={() => navigate(`/events/${event.id}`)}
       >
         <div className="flex items-center justify-between gap-2">
           <span className="text-xl">{event.category_icon || '📅'}</span>
@@ -615,7 +617,7 @@ export default function CalendarTab({ onCreateEvent, isAdmin, refreshKey }: Cale
           borderColor: `${getCategoryColor(event.category_slug)}30`,
           background: `linear-gradient(135deg, ${getCategoryColor(event.category_slug)}08, transparent)`,
         }}
-        onClick={() => window.location.href = `/events/${event.id}`}
+        onClick={() => navigate(`/events/${event.id}`)}
       >
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../lib/store'
 import { toast } from 'sonner'
@@ -45,6 +46,7 @@ const getCategoryIcon = (type) => {
 
 const FamilyShop = ({ user: _authUser }: { user?: UserProfile | null }) => {
   const { user } = useAuthStore()
+  const navigate = useNavigate()
   const [shopItems, setShopItems] = useState([])
   const [familyPurchases, setFamilyPurchases] = useState([])
   const [familyStats, setFamilyStats] = useState(null)
@@ -270,7 +272,7 @@ const FamilyShop = ({ user: _authUser }: { user?: UserProfile | null }) => {
             Join a family to unlock exclusive perks and customizations!
           </p>
           <button
-            onClick={() => window.location.href = '/family/browse'}
+            onClick={() => navigate('/family/browse')}
             className="px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-semibold transition-colors"
           >
             Browse Families
@@ -464,7 +466,7 @@ const FamilyShop = ({ user: _authUser }: { user?: UserProfile | null }) => {
         {/* Call to Action */}
         <div className="text-center">
           <button
-            onClick={() => window.location.href = '/family/lounge'}
+            onClick={() => navigate('/family/lounge')}
             className="px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-semibold transition-colors"
           >
             ← Back to Family Lounge

@@ -1,10 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { BarChart3, CheckCircle2, ChevronRight, Clock, Headphones, Loader2, Lock, Mic, Play, Radio, RefreshCw, ShieldCheck, Sparkles, Star, TrendingUp, Users, Zap } from 'lucide-react';
+import { BarChart3, ChevronRight, Clock, Loader2, Lock, Mic, Play, Radio, Sparkles, Star, TrendingUp, Users } from 'lucide-react';
 import { toast } from 'sonner'
 import useSEO from '@/hooks/useSEO';
 
-import { RTCAdminMonitor } from '@/components/admin'
+;
 import { useIsMobile } from '@/hooks/useIsMobile'
 import { useAuthStore } from '@/lib/store'
 import { supabase } from '@/lib/supabase'
@@ -82,9 +82,6 @@ const formatStartedTime = (value?: string | null) => {
     minute: '2-digit',
   })
 }
-
-const glassCard =
-  'rounded-3xl border border-white/10 bg-white/[0.055] shadow-2xl shadow-black/25 backdrop-blur-xl'
 
 const neonCard =
   'rounded-3xl border border-cyan-300/20 bg-cyan-400/[0.06] shadow-2xl shadow-cyan-950/30 backdrop-blur-xl'
@@ -337,7 +334,7 @@ export default function PodcastCentral() {
       })
 
       if (rtcLogError) {
-        console.warn('[PodcastCentral] RTCAdmin Monitor log failed:', rtcLogError)
+        console.warn('[PodcastCentral] log failed:', rtcLogError)
       }
 
       setActivePodcast({
@@ -517,10 +514,9 @@ export default function PodcastCentral() {
                   Podcast Central
                 </h1>
 
-                <p className="mt-2 max-w-2xl text-sm text-slate-300 md:text-base">
-                  Start live audio rooms, keep listeners connected with the mini player, and let
-                  RTCAdmin Monitor track the session.
-                </p>
+                  <p className="mt-2 max-w-2xl text-sm text-slate-300 md:text-base">
+                    Start live audio rooms and keep listeners connected.
+                  </p>
               </div>
 
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 md:grid-cols-2">
@@ -635,60 +631,6 @@ export default function PodcastCentral() {
           </section>
         </header>
 
-        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <div className={cn(glassCard, 'p-4')}>
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-400/15">
-                <Headphones className="h-5 w-5 text-cyan-200" />
-              </div>
-              <div>
-                <p className="text-sm font-black text-white">Mini Player</p>
-                <p className="text-xs text-slate-400">Listen while navigating</p>
-              </div>
-            </div>
-          </div>
-
-          <div className={cn(glassCard, 'p-4')}>
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-purple-400/15">
-                <ShieldCheck className="h-5 w-5 text-purple-200" />
-              </div>
-              <div>
-                <p className="text-sm font-black text-white">Access Rules</p>
-                <p className="text-xs text-slate-400">Staff need Level 10</p>
-              </div>
-            </div>
-          </div>
-
-          <div className={cn(glassCard, 'p-4')}>
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-pink-400/15">
-                <Zap className="h-5 w-5 text-pink-200" />
-              </div>
-              <div>
-                <p className="text-sm font-black text-white">Agora Powered</p>
-                <p className="text-xs text-slate-400">Audio-only sessions</p>
-              </div>
-            </div>
-          </div>
-
-          <div className={cn(glassCard, 'p-4')}>
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-400/15">
-                {refreshing ? (
-                  <Loader2 className="h-5 w-5 animate-spin text-emerald-200" />
-                ) : (
-                  <RefreshCw className="h-5 w-5 text-emerald-200" />
-                )}
-              </div>
-              <div>
-                <p className="text-sm font-black text-white">Auto Refresh</p>
-                <p className="text-xs text-slate-400">Updates every 30 seconds</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
         <main className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
           <section className={cn(theme.panelStrong, 'p-5')}>
             <div className="mb-4 flex items-center justify-between gap-3">
@@ -755,34 +697,6 @@ export default function PodcastCentral() {
               )}
             </section>
 
-            <section className={cn(glassCard, 'p-5')}>
-              <h2 className="mb-4 flex items-center gap-2 text-lg font-black text-white">
-                <CheckCircle2 className="h-5 w-5 text-emerald-300" />
-                Rules Grid
-              </h2>
-
-              <div className="grid gap-3">
-                <div className="rounded-2xl border border-emerald-300/20 bg-emerald-400/10 p-3">
-                  <p className="text-sm font-black text-emerald-100">Level 10+</p>
-                  <p className="text-xs text-emerald-100/75">Can start and host podcasts.</p>
-                </div>
-
-                <div className="rounded-2xl border border-cyan-300/20 bg-cyan-400/10 p-3">
-                  <p className="text-sm font-black text-cyan-100">All Users</p>
-                  <p className="text-xs text-cyan-100/75">Can listen to live podcasts.</p>
-                </div>
-
-                <div className="rounded-2xl border border-red-300/20 bg-red-500/10 p-3">
-                  <p className="text-sm font-black text-red-100">Staff Under Level 10</p>
-                  <p className="text-xs text-red-100/75">Cannot start podcasts.</p>
-                </div>
-
-                <div className="rounded-2xl border border-purple-300/20 bg-purple-400/10 p-3">
-                  <p className="text-sm font-black text-purple-100">Admin / CEO</p>
-                  <p className="text-xs text-purple-100/75">Always has access.</p>
-                </div>
-              </div>
-            </section>
           </aside>
         </main>
 
@@ -828,24 +742,6 @@ export default function PodcastCentral() {
               </div>
             </div>
           </section>
-        </section>
-
-
-        <section className={cn(theme.panel, 'p-5')}>
-          <div className="mb-4 flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-400/15">
-              <ShieldCheck className="h-5 w-5 text-cyan-100" />
-            </div>
-
-            <div>
-              <h2 className="text-xl font-black text-white">RTCAdmin Monitor</h2>
-              <p className="text-sm text-slate-400">Podcast sessions report into admin monitoring</p>
-            </div>
-          </div>
-
-          <div className="rounded-3xl border border-white/10 bg-black/20 p-3">
-            <RTCAdminMonitor />
-          </div>
         </section>
       </div>
     </div>

@@ -118,6 +118,7 @@ const HytroGamingApply = lazyWithRetry(() => import("./pages/gaming/HytroGamingA
 const HytroGamingContract = lazyWithRetry(() => import("./pages/gaming/HytroGamingContract"));
 
 const GamesPage = lazyWithRetry(() => import("./pages/games/GamesPage"));
+const MaiTrollRun = lazyWithRetry(() => import("./components/games/MaiTrollRun/MaiTrollRun"));
 const AgencyHRDashboard = lazyWithRetry(() => import("./pages/agency-hr-dashboard"));
 const AttorneyDashboard = lazyWithRetry(() => import("./pages/attorney/AttorneyDashboard"));
 const ProsecutorDashboard = lazyWithRetry(() => import("./pages/prosecutor/ProsecutorDashboard"));
@@ -1676,7 +1677,7 @@ const appShell = (
            {user && <AdminOfficerQuickMenu />}
            {user && <ChatBubble />}
            <StaffWalkieTalkieProvider>
-             <RTCAdminMonitor />
+             <RTCAdminMonitor headerDropdown />
              {import.meta.env.DEV && (profile?.is_admin || profile?.is_superadmin || ['admin','ceo','superadmin'].includes(profile?.role || '')) }
               <ErrorBoundary>
                 <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div></div>}>
@@ -1726,6 +1727,7 @@ const appShell = (
                 <Route path="/jobs" element={<HowToVideosPage />} />
                 <Route path="/jobs/opportunities" element={<JobsOpportunitiesPage />} />
                 <Route path="/games" element={<GamesPage />} />
+<Route path="/mai-troll-run" element={<MaiTrollRun />} />
 
                 <Route path="/hytrogaming" element={<HytroGaming />} />
                  <Route path="/hytrogaming/apply" element={<HytroGamingApply />} />
@@ -2821,9 +2823,7 @@ const appShell = (
 <Route
                        path="/rtcadminmonitor"
                        element={
-                         <RequireRole roles={[UserRole.ADMIN, UserRole.HR_ADMIN, UserRole.AGENCY_HR_MANAGER, UserRole.LEAD_TROLL_OFFICER, UserRole.TROLL_OFFICER, UserRole.SECRETARY, 'ceo', 'officer', 'pastor']}>
-                           <RtcAdminMonitorGate />
-                         </RequireRole>
+                         <RtcAdminMonitorGate fullPage onClose={() => navigate('/home')} />
                        }
                      />
                   <Route path="/rfc" element={<AdminRFC />} />
@@ -3112,6 +3112,7 @@ function UsernameRedirect() {
 
 // Mini Podcast Player wrapper component
 function MiniPodcastPlayerWrapper() {
+  const navigate = useNavigate()
   const activePodcast = usePodcastStore(state => state.activePodcast)
   const showMiniPlayer = usePodcastStore(state => state.showMiniPlayer)
   const isPlaying = usePodcastStore(state => state.isPlaying)
@@ -3123,7 +3124,7 @@ function MiniPodcastPlayerWrapper() {
   const setVolume = usePodcastStore(state => state.setVolume)
   const setShowMiniPlayer = usePodcastStore(state => state.setShowMiniPlayer)
 
-  if (!activePodcast || !showMiniPlayer) return null
+  if (isMobileWidth || !activePodcast || !showMiniPlayer) return null
 
   const handleClose = () => {
     setShowMiniPlayer(false)
@@ -3131,7 +3132,7 @@ function MiniPodcastPlayerWrapper() {
 
   const handleExpand = () => {
     // Navigate to podcast room
-    window.location.href = `/podcast/${activePodcast.id}`
+    navigate(`/podcast/${activePodcast.id}`)
   }
 
   return (

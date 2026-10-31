@@ -52,7 +52,6 @@ import BattleView from '@/pages/broadcast/BattleView'
 
 import PhoneGiftModal from '@/phone/components/PhoneGiftModal'
 import PinProductModal from '@/components/broadcast/PinProductModal'
-import MaiBag from '@/components/mai-bag/MaiBag'
 import GiftVideoOverlay from '@/components/broadcast/GiftVideoOverlay'
 import GiftFlyOverlay from '@/components/broadcast/GiftFlyOverlay'
 import ShareModal from '@/components/broadcast/ShareModal'
@@ -159,6 +158,8 @@ export default function PhoneBroadcastPage() {
 
   const [isShareModalOpen, setIsShareModalOpen] =
     useState(false)
+
+  const [showViewerList, setShowViewerList] = useState(false)
 
   const [isCashoutModalOpen, setIsCashoutModalOpen] =
     useState(false)
@@ -501,7 +502,7 @@ export default function PhoneBroadcastPage() {
     stream as any,
   )
 
-  const { audience } =
+  const { audience, isAudienceLoading } =
     useStreamAudiencePresence(
       streamId || '',
       user?.id,
@@ -2138,6 +2139,11 @@ export default function PhoneBroadcastPage() {
     })
   }, [occupiedRemoteSeats, stream?.box_count, stream?.seat_count])
 
+  const activeViewers = useMemo(
+    () => audienceWithAnon.filter((m) => m.is_active && !m.left_at),
+    [audienceWithAnon],
+  )
+
   if (isStreamLoading || loadedRouteId !== routeStreamId) {
     return (
       <div className="flex h-[100dvh] items-center justify-center bg-black text-sm text-white/70">
@@ -2345,8 +2351,7 @@ export default function PhoneBroadcastPage() {
     >
       <GiftFlyOverlay streamId={streamId} />
       <div
-        className="relative flex h-[100dvh] w-full flex-col overflow-hidden bg-black text-white"
-        style={{ paddingBottom: msgBoxHeight }}
+        className="relative flex h-[100dvh] w-full flex-col overflow-hidden bg-[#0c0717] text-white"
       >
         {/* ======================================================
             BROADCAST VIDEO REGION
@@ -2356,7 +2361,7 @@ export default function PhoneBroadcastPage() {
             clipped to exactly this space, so it can never be letterboxed and
             centered inside a taller full-screen black canvas.
         ====================================================== */}
-        <div className="relative z-0 min-h-0 w-full flex-1 overflow-hidden bg-black">
+        <div className="relative z-0 min-h-0 w-full flex-1 overflow-hidden bg-[radial-gradient(ellipse_at_55%_14%,#2f1552_0%,#140a25_46%,#080710_100%)]">
         {pullRefreshing && (
           <div
             className="absolute inset-x-0 top-0 z-[400] flex justify-center pt-3 pointer-events-none"
@@ -2375,7 +2380,8 @@ export default function PhoneBroadcastPage() {
           * FULL-SCREEN BROADCASTER CAMERA (single authoritative render)
           * ============================================================
           */}
-        <div className="absolute inset-0 z-0">
+        <div className="absolute left-[2%] top-[112px] z-10 h-[min(39dvh,340px)] w-[46%] overflow-hidden rounded-[18px] border border-fuchsia-400/60 bg-black shadow-[0_0_24px_rgba(168,85,247,0.20)]">
+          <div className="pointer-events-none absolute left-2 top-2 z-20 rounded-full bg-purple-950/85 px-2 py-1 text-[10px] font-bold text-white">♛ Host</div>
           <LocalCameraFullVideo
             videoTrack={session.localTracks?.[1] ?? null}
             facingMode={session.cameraFacingMode}
@@ -2482,22 +2488,11 @@ export default function PhoneBroadcastPage() {
         <RemoteAudioManager remoteUsers={Array.from(session.remoteParticipants.values())} hostUserId={stream?.user_id} />
 
         {/* ======================================================
-            MAI BAG (top-right)
-        ====================================================== */}
-        {streamId && (
-          <MaiBag
-            streamId={streamId}
-            phone
-            className="absolute right-3 top-[5.5rem] z-20"
-          />
-        )}
-
-        {/* ======================================================
             AUDIENCE TICKER + CROWN / HOST STATUS (top)
         ====================================================== */}
         {stream && (
-          <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex flex-col items-start gap-1.5 px-3 pt-[calc(env(safe-area-inset-top)+0.5rem)]">
-            <div className="pointer-events-auto w-full rounded-2xl border border-cyan-400/10 bg-gradient-to-r from-slate-950/85 via-black/70 to-slate-950/85 px-2 py-1.5 shadow-[0_2px_24px_rgba(34,211,238,0.10)] backdrop-blur-md">
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex flex-col items-start gap-1.5 px-3 pt-[calc(env(safe-area-inset-top)+0.5rem)]">
+            <div className="pointer-events-auto flex w-full items-center gap-1.5 rounded-[1.15rem] border border-cyan-300/25 bg-gradient-to-r from-[#070B18]/95 via-[#0B1326]/88 to-[#070B18]/95 px-2 py-0.5 shadow-[0_0_16px_rgba(0,229,255,0.10),inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-md">
               <MobileAudienceTicker
                 audience={audienceWithAnon}
                 currentUserId={user?.id}
@@ -2505,6 +2500,9 @@ export default function PhoneBroadcastPage() {
                 viewerCount={stream.viewer_count ?? 0}
                 likes={stream.total_likes ?? 0}
                 maxVisible={6}
+                streamId={streamId}
+                phone
+                onViewerCountClick={() => setShowViewerList(true)}
               />
             </div>
 
@@ -2589,7 +2587,7 @@ export default function PhoneBroadcastPage() {
             REMOTE SEATS ROW (bottom, compact like PhoneViewerPage)
         ====================================================== */}
         {!areBroadcastSeatsDisabled() && phoneSeatSlots.length > 0 && (
-          <div className="pointer-events-none absolute left-0 right-0 z-40 flex justify-center gap-1.5 px-2 transition-all duration-300 bottom-[calc(86px+env(safe-area-inset-bottom))]">
+          <div className="pointer-events-none absolute right-[2%] top-[112px] z-40 grid h-[min(39dvh,340px)] w-[49%] grid-cols-2 grid-rows-2 gap-1.5 transition-all duration-300">
             {phoneSeatSlots.map((seat) => (
               seat.userId ? (
                 <RemoteSeatThumbnail
@@ -2604,7 +2602,7 @@ export default function PhoneBroadcastPage() {
                 <div
                   key={`phone-seat-${seat.index}`}
                   aria-label={`Guest seat ${seat.index} available`}
-                  className="pointer-events-auto flex h-16 w-16 shrink-0 flex-col items-center justify-center overflow-hidden rounded-lg border border-dashed border-cyan-300/50 bg-slate-950/75 text-cyan-100/80 shadow-lg backdrop-blur-sm"
+                  className="pointer-events-auto flex h-full min-h-0 min-w-0 flex-col items-center justify-center overflow-hidden rounded-xl border border-dashed border-purple-400/60 bg-[#1a102e]/90 text-purple-100 shadow-lg backdrop-blur-sm"
                 >
                   <span className="text-lg leading-none">+</span>
                   <span className="mt-1 text-[9px] font-bold">Seat {seat.index}</span>
@@ -2618,13 +2616,13 @@ export default function PhoneBroadcastPage() {
             FLYING CHAT
         ====================================================== */}
         {floatingMessages.length > 0 && (
-          <div className="pointer-events-none absolute inset-x-0 top-[calc(env(safe-area-inset-top)+100px)] z-30 flex flex-col items-center gap-1 px-3">
+          <div className="pointer-events-none absolute inset-x-0 top-[calc(112px+min(39dvh,340px)+16px)] bottom-2 z-30 flex flex-col items-start justify-end gap-1.5 overflow-hidden px-3">
             {floatingMessages
               .slice(0, 8)
               .map((message) => (
                 <div
                   key={message.id}
-                  className="pointer-events-auto mobile-fall-chat"
+                  className="pointer-events-auto max-w-[90%] rounded-xl bg-white/[0.055] px-2.5 py-1 mobile-fall-chat"
                   onAnimationEnd={() =>
                     setFloatingMessages((previous) =>
                       previous.filter((item) => item.id !== message.id),
@@ -2667,7 +2665,7 @@ export default function PhoneBroadcastPage() {
              HOST SETTINGS (bottom-right, above control bar)
          ====================================================== */}
          {stream && (
-           <div className="absolute bottom-3 right-3 z-40">
+           <div className="absolute bottom-2 right-2 z-40">
 <MobileBroadcastHostSettings
                 isMicOn={session.micEnabled}
                 isCamOn={session.cameraEnabled}
@@ -2708,7 +2706,7 @@ export default function PhoneBroadcastPage() {
         {/* ======================================================
             PHONE CONTROL BAR — own layout row, directly above chat input
         ====================================================== */}
-        <div className="relative z-40 flex w-full shrink-0 items-center justify-around gap-1 bg-slate-950/95 px-2 py-3">
+        <div className="relative z-40 flex w-full shrink-0 items-center justify-around gap-1 border-t border-purple-400/20 bg-[#10091e] px-2 py-2">
           <ControlButton
             active={session.cameraEnabled}
             onClick={session.toggleCamera}
@@ -2770,7 +2768,7 @@ export default function PhoneBroadcastPage() {
         ====================================================== */}
         <form
           onSubmit={handleChatSubmit}
-          className="relative z-40 w-full shrink-0 border-t border-white/10 bg-slate-950/95 px-3 py-2 pb-[calc(env(safe-area-inset-bottom,0px)+0.5rem)]"
+          className="relative z-40 w-full shrink-0 border-t border-purple-400/20 bg-[#10091e] px-3 py-2 pb-[calc(env(safe-area-inset-bottom,0px)+0.5rem)]"
         >
           <input
             type="text"
@@ -2778,7 +2776,7 @@ export default function PhoneBroadcastPage() {
             onChange={(event) => setChatInput(event.target.value)}
             placeholder="Say something..."
             maxLength={280}
-            className="h-10 w-full rounded-lg border border-white/10 bg-black/25 px-3 text-sm text-white outline-none transition-colors placeholder:text-white/35 focus:border-cyan-400/40 focus:ring-1 focus:ring-cyan-400/20"
+            className="h-10 w-full rounded-full border border-purple-400/30 bg-purple-950/30 px-4 text-sm text-white outline-none transition-colors placeholder:text-white/40 focus:border-purple-400 focus:ring-1 focus:ring-purple-500/30"
           />
 
           <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
@@ -2823,7 +2821,7 @@ export default function PhoneBroadcastPage() {
 
         <div
           ref={msgBoxRef}
-          className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-slate-950/95 px-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.5rem)] backdrop-blur-sm"
+          className="hidden"
         >
           {floatingMessages.slice(0, 6).map((message) => (
             <div
@@ -2904,6 +2902,58 @@ export default function PhoneBroadcastPage() {
           broadcasterId={stream?.user_id}
         />
 
+        {showViewerList && (
+          <div
+            className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+            onClick={() => setShowViewerList(false)}
+          >
+            <div
+              className="w-full max-w-md rounded-2xl border border-white/10 bg-slate-950/95 p-5 shadow-2xl"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <h3 className="text-base font-black text-white">Active Viewers</h3>
+                  <p className="text-xs text-zinc-500">Showing all active viewers</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowViewerList(false)}
+                  aria-label="Close active viewers"
+                  className="rounded-lg p-1 text-zinc-400 hover:text-white"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <div className="max-h-80 space-y-2 overflow-y-auto">
+                {isAudienceLoading ? (
+                  <p className="text-sm text-zinc-500">Loading viewers...</p>
+                ) : activeViewers.length === 0 ? (
+                  <p className="text-sm text-zinc-500">No active viewers</p>
+                ) : (
+                  activeViewers.map((member) => (
+                    <div
+                      key={member.id}
+                      className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3"
+                    >
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-cyan-500/20 text-xs font-bold text-cyan-300">
+                        {member.username?.charAt(0)?.toUpperCase() || '?'}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-sm font-bold text-white">
+                          {member.username || 'Viewer'}
+                        </div>
+                        <div className="text-xs text-zinc-500">
+                          {member.role || 'audience'}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        )}
         {isShareModalOpen && (
           <ShareModal
             isOpen={isShareModalOpen}
@@ -3237,7 +3287,7 @@ function RemoteSeatThumbnail({
   }, [])
 
   return (
-    <div className="pointer-events-auto relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-white/20 bg-black/60 shadow-lg">
+    <div className="pointer-events-auto relative h-full min-h-0 min-w-0 w-full overflow-hidden rounded-xl border border-purple-400/70 bg-[#190d29] shadow-[0_0_12px_rgba(168,85,247,0.16)]">
       <div ref={containerRef} className="absolute inset-0" />
       {!videoStream && (
         <div className="absolute inset-0 flex items-center justify-center">
@@ -3250,6 +3300,9 @@ function RemoteSeatThumbnail({
           )}
         </div>
       )}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 truncate bg-gradient-to-t from-black/90 via-black/55 to-transparent px-1.5 pb-1.5 pt-5 text-[10px] font-bold text-white">
+        {username}
+      </div>
     </div>
   )
 }
@@ -3380,7 +3433,7 @@ function ControlButton({
       disabled={disabled}
       aria-label={label}
       className={`
-        flex h-12 min-w-10 max-w-14 flex-1
+        flex h-11 min-w-10 max-w-14 flex-1
         flex-col items-center justify-center
         gap-1 rounded-2xl border
         text-[8px] font-black uppercase
@@ -3409,10 +3462,10 @@ function ControlButton({
               `
               : active
                 ? `
-                  border-cyan-300/30
-                  bg-cyan-400/15
-                  text-cyan-100
-                  hover:bg-cyan-400/20
+                  border-purple-400/30
+                  bg-purple-500/15
+                  text-purple-100
+                  hover:bg-purple-500/20
                 `
                 : `
                   border-white/10

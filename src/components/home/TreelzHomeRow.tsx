@@ -28,7 +28,7 @@ function TreelzThumb({
 
   return (
     <article 
-      className="group relative flex-shrink-0 snap-start overflow-hidden rounded-xl border border-white/10 bg-white/[0.04] transition-all duration-300 hover:border-cyan-400/30 hover:bg-white/[0.08] cursor-pointer" 
+      className="group relative flex-shrink-0 snap-start overflow-hidden rounded-xl border border-white/10 bg-white/[0.04] transition-all duration-300 hover:border-cyan-400/30 hover:bg-white/[0.08] cursor-pointer"
       style={{ width: 150 }}
       onClick={handleClick}
     >

@@ -72,6 +72,35 @@ body,
   background: #020617;
 }
 
+@media (min-width: 769px) {
+  .tc-web-layout {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .tc-web-layout main,
+  .tc-web-layout main > .flex,
+  .tc-web-layout main > .flex > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .app-viewport.tc-home-web-zoom {
+    zoom: 0.75;
+    width: 133.333%;
+    height: 133.333dvh;
+    --tc-sidebar-vh: 133.333dvh;
+  }
+
+  .app-viewport.tc-web-page-zoom {
+    zoom: 0.9;
+    width: 111.111%;
+    height: 111.111dvh;
+    --tc-sidebar-vh: 111.111dvh;
+  }
+}
+
 * {
   box-sizing: border-box;
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { useTCNNRoles } from '@/hooks/useTCNNRoles';
@@ -17,6 +18,7 @@ import {
 export default function LiveControlTab() {
   const { user } = useAuthStore();
   const { isNewsCaster, isChiefNewsCaster } = useTCNNRoles(user?.id);
+  const navigate = useNavigate();
   const [isLive, setIsLive] = useState(false);
   const [viewerCount, setViewerCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -47,7 +49,7 @@ export default function LiveControlTab() {
 
   const handleGoLive = () => {
     // Navigate to TCNN setup page
-    window.location.href = '/tcnn/setup';
+    navigate('/tcnn/setup');
   };
 
   if (isLoading) {

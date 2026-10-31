@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase, UserProfile } from '../lib/supabase'
 import { useAuthStore } from '../lib/store'
 import { declareWar, completeWar } from '../lib/familyWars'
@@ -9,6 +10,7 @@ import {
 
 const FamilyWarsHub = ({ user: _authUser }: { user?: UserProfile | null }) => {
   const { user } = useAuthStore()
+  const navigate = useNavigate()
   const [family, setFamily] = useState(null)
   const [memberRole, setMemberRole] = useState('member')
   const [currentWar, setCurrentWar] = useState(null)
@@ -278,7 +280,7 @@ const FamilyWarsHub = ({ user: _authUser }: { user?: UserProfile | null }) => {
             Join a family to participate in epic family battles!
           </p>
           <button
-            onClick={() => window.location.href = '/family/browse'}
+            onClick={() => navigate('/family/browse')}
             className="px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-semibold transition-colors"
           >
             Browse Families

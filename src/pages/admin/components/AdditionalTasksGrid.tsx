@@ -162,7 +162,7 @@ export default function AdditionalTasksGrid({
            icon: <Shield className="w-5 h-5" />,
            label: 'Staff Audit',
            description: 'Audit staff actions & permissions',
-           action: () => window.location.href = '/admin/staff-audit',
+           action: () => navigate('/admin/staff-audit'),
            color: 'text-red-400',
            bgColor: 'bg-red-500/20'
          },

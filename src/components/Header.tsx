@@ -1,17 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Bell, BellRing, Home, LogOut, Zap, Monitor, Download, Smartphone, Plus, ChevronRight, Maximize2, Minimize2, ChevronDown, ArrowRight } from 'lucide-react';
+import { Bell, BellRing, Home, LogOut, Monitor, Users, Download, Smartphone, Plus, ChevronRight, Maximize2, Minimize2, ChevronDown, ArrowRight, Radio, Zap } from 'lucide-react';
 import { toast } from 'sonner'
 
 import { useAuthStore } from '../lib/store'
 import { doesUserProfileExist, supabase } from '../lib/supabase'
+import { usePresenceStore } from '../lib/presenceStore'
 import { getVapidPublicKey } from '../lib/vapid';
 import ProfileFrame from '@/components/profile/ProfileFrame'
 import { useUserFrame } from '@/hooks/useUserFrame'
 
 import ProfileDropdown from './ui/ProfileDropdown'
 import PresidentialToolsModal from './PresidentialToolsModal'
-import MaiNetworkSwitcher from './mai-network/MaiNetworkSwitcher'
 import RGBSearchBar from './header/RGBSearchBar'
 import GlobalTicker from './header/GlobalTicker'
 import { isDesktopPlatform, getDesktopDownloadUrl } from '../utils/desktopDownload'
@@ -20,6 +20,7 @@ import { useIsPhone } from '../phone/useIsPhone'
 
 const Header = () => {
   const { user, profile } = useAuthStore()
+  const onlineCount = usePresenceStore((state) => state.onlineUserIds.size)
   const headerFrame = useUserFrame(user?.id)
   const navigate = useNavigate()
   const location = useLocation()
@@ -49,6 +50,10 @@ const Header = () => {
   const [notificationDropdownOpen, setNotificationDropdownOpen] = useState(false)
   const notificationRef = useRef<HTMLDivElement>(null)
 
+  const handleNotificationIconClick = () => {
+    setNotificationDropdownOpen((prev) => !prev)
+  }
+
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (notificationRef.current && !notificationRef.current.contains(e.target as Node)) {
@@ -58,7 +63,6 @@ const Header = () => {
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
-  const [isMaiSwitcherOpen, setIsMaiSwitcherOpen] = useState(false)
   const [hasDeviceSubscription, setHasDeviceSubscription] = useState(false)
   const [showDesktopDownload, setShowDesktopDownload] = useState(false)
 
@@ -74,6 +78,41 @@ const Header = () => {
     ((profile as any)?.role === 'admin' ||
       (profile as any)?.role === 'ceo' ||
       (profile as any)?.is_admin)
+  const [canOpenRtcMonitor, setCanOpenRtcMonitor] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+
+    const checkRtcMonitorAccess = async () => {
+      if (!user?.id) {
+        setCanOpenRtcMonitor(false)
+        return
+      }
+
+      try {
+        const { data, error } = await supabase.rpc('can_access_rtc_admin_monitor', {
+          p_user_id: user.id,
+        })
+
+        if (error) throw error
+        if (!cancelled) setCanOpenRtcMonitor(!!data)
+      } catch (error) {
+        console.error('[Header] RTC monitor access check failed:', error)
+        if (!cancelled) setCanOpenRtcMonitor(false)
+      }
+    }
+
+    void checkRtcMonitorAccess()
+    return () => {
+      cancelled = true
+    }
+  }, [user?.id, profile?.role, profile?.troll_role, profile?.is_admin, profile?.is_superadmin])
+
+  const openRtcMonitor = () => {
+    if (canOpenRtcMonitor) {
+      navigate('/rtcadminmonitor')
+    }
+  }
 
   const urlBase64ToUint8Array = (base64String: string) => {
     const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
@@ -394,44 +433,82 @@ const Header = () => {
 
   return (
     <>
-      <header className="h-[72px] bg-slate-950/95 backdrop-blur-2xl border-b border-cyan-400/20 text-white flex items-center justify-between px-4 md:px-8 sticky top-0 z-40">
-        <div className="flex-none z-10 w-32 md:w-auto">
-          {location.pathname !== '/' && (
+      <header className="sticky top-0 z-40 w-full border-b border-white/[0.09] bg-[#070914]/95 text-white shadow-[0_12px_34px_rgba(0,0,0,0.35)] backdrop-blur-2xl">
+        {/* MaiTroll signature accent. Kept decorative and out of the interaction layer. */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-[#fd4fa8] via-[#9668ff] to-[#3de5f0]" />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden bg-[radial-gradient(ellipse_at_18%_-80%,rgba(217,60,174,0.16),transparent_48%),radial-gradient(ellipse_at_85%_-80%,rgba(32,210,241,0.12),transparent_40%)]" />
+
+        <div className="relative flex h-[66px] w-full min-w-0 items-center gap-2 px-3 sm:gap-3 sm:px-4 lg:h-[74px] lg:gap-4 lg:px-6 2xl:px-8">
+          {/* Brand and site search stay together so the header feels like an app. */}
+          <div className="relative z-10 flex min-w-0 shrink-0 items-center gap-2 sm:gap-3">
             <button
-              onClick={() => navigate('/')}
-              className="p-2.5 text-slate-400 hover:text-white transition-all duration-200 hover:bg-white/[0.04] rounded-xl"
-              title="Home"
               type="button"
+              onClick={() => navigate('/')}
+              aria-label="MaiTroll home"
+              title="MaiTroll Home"
+              className="group inline-flex shrink-0 items-center gap-2 rounded-xl p-1.5 transition hover:bg-white/[0.06] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 sm:px-2"
             >
-              <Home size={20} />
+              <span className="relative grid h-9 w-9 shrink-0 place-items-center rounded-[11px] border border-white/15 bg-gradient-to-br from-[#ff419b] via-[#9659e9] to-[#13c8e6] shadow-[0_0_20px_rgba(180,70,224,0.22)] sm:h-10 sm:w-10">
+                <Zap className="h-5 w-5 fill-white/20 text-white drop-shadow" strokeWidth={2.6} />
+              </span>
+              <span className="hidden flex-col items-start leading-none sm:flex">
+                <span className="text-[17px] font-black tracking-[-0.055em] text-white lg:text-xl">MAI<span className="bg-gradient-to-r from-[#ff78c2] to-[#57e2fb] bg-clip-text text-transparent">TROLL</span></span>
+                <span className="mt-1 text-[8px] font-extrabold uppercase tracking-[.22em] text-slate-400">Your city. Your world.</span>
+              </span>
             </button>
-          )}
-          <RGBSearchBar />
-        </div>
+            {location.pathname !== '/' && (
+              <button
+                onClick={() => navigate('/')}
+                className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/[0.07] bg-white/[0.035] text-slate-400 transition hover:border-cyan-300/25 hover:bg-white/[0.08] hover:text-white xl:inline-flex"
+                title="Go to Home"
+                aria-label="Go to Home"
+                type="button"
+              >
+                <Home size={17} />
+              </button>
+            )}
+            <div className="relative z-10 w-[112px] min-w-0 sm:w-[175px] lg:w-[205px] xl:w-[245px]">
+              <RGBSearchBar />
+            </div>
+          </div>
 
-        <div className="flex-1 min-w-0 mx-1 md:mx-6 z-10 overflow-hidden">
-          <GlobalTicker />
-        </div>
+          {/* World news ticker flexes rather than squeezing the tools out of view. */}
+          <div className="relative z-10 hidden h-10 min-w-0 flex-1 items-center overflow-hidden rounded-xl border border-white/[0.07] bg-[#101629]/65 px-2 md:flex lg:px-3">
+            <div className="mr-2 hidden shrink-0 items-center gap-1.5 border-r border-white/10 pr-3 text-[9px] font-extrabold uppercase tracking-[.15em] text-[#69dced] 2xl:flex">
+              <Radio className="h-3.5 w-3.5" /> CITY PULSE
+            </div>
+            <div className="min-w-0 flex-1 overflow-hidden"><GlobalTicker /></div>
+          </div>
 
-        <div className="flex-none relative z-10 flex items-center space-x-3 md:space-x-5">
+          <div className="relative z-20 ml-auto flex shrink-0 items-center gap-1 sm:gap-1.5 lg:gap-2">
           {user && <PresidentialToolsModal />}
 
-          {user && (
+          {user && (canOpenRtcMonitor ? (
             <button
-              onClick={() => setIsMaiSwitcherOpen(true)}
-              className="relative p-2.5 text-slate-400 hover:text-purple-300 transition-all duration-200 hover:bg-white/[0.04] rounded-xl"
-              title="MAI Network"
+              onClick={openRtcMonitor}
+              className="relative z-10 pointer-events-auto inline-flex h-9 items-center gap-1.5 rounded-xl border border-white/[0.07] bg-white/[0.035] px-2 text-slate-300 transition-all duration-200 hover:border-cyan-300/25 hover:bg-cyan-400/[0.08] hover:text-cyan-200 sm:h-10 sm:px-2.5"
+              title="Open RTC Admin Monitor"
+              aria-label={`Open RTC Admin Monitor; ${onlineCount} users online`}
               type="button"
             >
-              <Zap className="w-5 h-5" />
-              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-purple-500 rounded-full animate-pulse" />
+              <Monitor className="h-5 w-5" />
+              <span className="text-xs font-bold tabular-nums">{onlineCount}</span>
             </button>
-          )}
+          ) : (
+            <div
+              className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-white/[0.07] bg-white/[0.035] px-2 text-slate-300 sm:h-10 sm:px-2.5"
+              title={`${onlineCount} users online`}
+              aria-label={`${onlineCount} users online`}
+            >
+              <Users className="h-5 w-5" />
+              <span className="text-xs font-bold tabular-nums">{onlineCount}</span>
+            </div>
+          ))}
 
           {user && (
               <button
                 onClick={toggleFullscreen}
-                className="hidden md:flex items-center gap-2 px-3 py-2 text-xs font-semibold text-amber-100 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-300/20 rounded-xl transition-all duration-200"
+                className="hidden xl:flex h-10 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.035] px-3 text-xs font-bold text-slate-200 transition hover:border-[#ca8af6]/35 hover:bg-[#ca8af6]/10"
                 title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
                 type="button"
               >
@@ -449,7 +526,7 @@ const Header = () => {
                 onClick={() => {
                   void enablePushNotifications()
                 }}
-                className="hidden sm:flex items-center gap-2 px-3 py-2 text-xs font-semibold text-cyan-100 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-300/20 rounded-xl transition-all duration-200"
+                className="hidden xl:flex items-center gap-2 rounded-xl border border-cyan-300/20 bg-cyan-400/[0.07] px-3 py-2 text-xs font-semibold text-cyan-100 transition hover:bg-cyan-400/15"
                 title="Enable Push Notifications"
                 type="button"
               >
@@ -464,7 +541,7 @@ const Header = () => {
                   href="https://play.google.com/store/apps/details?id=com.maitroll.app&pli=1"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hidden sm:flex items-center gap-2 px-3 py-2 text-xs font-semibold text-cyan-100 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-300/20 rounded-xl transition-all duration-200"
+                  className="hidden xl:flex items-center gap-2 rounded-xl border border-cyan-300/20 bg-cyan-400/[0.07] px-3 py-2 text-xs font-semibold text-cyan-100 transition hover:bg-cyan-400/15"
                   title="Get MaiTroll on Google Play"
                 >
                   <Smartphone className="w-4 h-4" />
@@ -481,7 +558,7 @@ const Header = () => {
                       : 'To add MaiTroll to your Home Screen on iOS:\n1. Open this page in Safari on your iPhone/iPad\n2. Tap the Share button (square with arrow up)\n3. Scroll down and tap "Add to Home Screen"\n4. Tap "Add" in the top right'
                     alert(message)
                   }}
-                  className="hidden sm:flex items-center gap-2 px-3 py-2 text-xs font-semibold text-purple-100 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-300/20 rounded-xl transition-all duration-200"
+                  className="hidden xl:flex items-center gap-2 rounded-xl border border-fuchsia-300/20 bg-fuchsia-400/[0.07] px-3 py-2 text-xs font-semibold text-fuchsia-100 transition hover:bg-fuchsia-400/15"
                   title="Add to Home Screen on iOS"
                 >
                   <Plus className="w-4 h-4" />
@@ -494,7 +571,7 @@ const Header = () => {
             {showDesktopDownload && !isElectron && !user && (
               <button
                 onClick={handleDesktopDownload}
-                className="hidden sm:flex items-center gap-2 px-3 py-2 text-xs font-semibold text-purple-100 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-300/20 rounded-xl transition-all duration-200"
+                className="hidden xl:flex items-center gap-2 rounded-xl border border-fuchsia-300/20 bg-fuchsia-400/[0.07] px-3 py-2 text-xs font-semibold text-fuchsia-100 transition hover:bg-fuchsia-400/15"
                 title="Download MaiTroll for Windows"
                 type="button"
               >
@@ -508,7 +585,7 @@ const Header = () => {
                  onClick={async () => {
                    await downloadUpdate()
                  }}
-                 className="hidden sm:flex items-center gap-2 px-3 py-2 text-xs font-semibold text-amber-100 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-300/20 rounded-xl transition-all duration-200"
+                 className="hidden xl:flex items-center gap-2 rounded-xl border border-amber-300/20 bg-amber-400/[0.07] px-3 py-2 text-xs font-semibold text-amber-100 transition hover:bg-amber-400/15"
                  title={`Update available: ${updateStatus.version}`}
                  type="button"
                >
@@ -522,7 +599,7 @@ const Header = () => {
                  onClick={async () => {
                    await installUpdate()
                  }}
-                 className="hidden sm:flex items-center gap-2 px-3 py-2 text-xs font-semibold text-emerald-100 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-300/20 rounded-xl transition-all duration-200"
+                 className="hidden xl:flex items-center gap-2 rounded-xl border border-emerald-300/20 bg-emerald-400/[0.07] px-3 py-2 text-xs font-semibold text-emerald-100 transition hover:bg-emerald-400/15"
                  title="Restart and install update"
                  type="button"
                >
@@ -534,21 +611,10 @@ const Header = () => {
           {user && (
             <div className="relative" ref={notificationRef}>
               <button
-                onClick={() => {
-                  if (user?.id && unreadNotifications > 0) {
-                    setUnreadNotifications(0)
-                    try {
-                      void supabase.rpc('mark_all_notifications_read', {
-                        p_user_id: user.id,
-                      })
-                    } catch (err) {
-                      console.error('Error marking notifications as read:', err)
-                    }
-                  }
-                  setNotificationDropdownOpen((prev) => !prev)
-                }}
-                className="relative p-2.5 text-slate-400 hover:text-purple-300 transition-all duration-200 hover:bg-white/[0.04] rounded-xl"
+                onClick={handleNotificationIconClick}
+                className="relative grid h-9 w-9 place-items-center rounded-xl border border-white/[0.07] bg-white/[0.035] text-slate-300 transition hover:border-fuchsia-300/25 hover:bg-fuchsia-400/[0.08] hover:text-fuchsia-200 sm:h-10 sm:w-10"
                 title="Notifications"
+                aria-label="Notifications"
                 type="button"
               >
                 <Bell className="w-5 h-5" />
@@ -562,7 +628,7 @@ const Header = () => {
               </button>
 
               {notificationDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-80 rounded-xl border border-white/10 bg-slate-950/90 backdrop-blur-2xl shadow-[0_0_32px_rgba(0,0,0,0.6)] z-50">
+                <div className="absolute right-0 z-50 mt-3 w-[min(340px,calc(100vw-24px))] overflow-hidden rounded-2xl border border-white/10 bg-[#0d1324]/95 shadow-[0_24px_70px_rgba(0,0,0,0.65)] backdrop-blur-2xl">
                   <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
                     <h3 className="text-xs font-black text-white">Notifications</h3>
                     <button
@@ -633,7 +699,7 @@ const Header = () => {
               <div className="hidden md:flex items-center gap-2">
                 <button
                   onClick={handleLogout}
-                  className="p-2.5 text-red-400/70 hover:text-red-300 transition-all duration-200 hover:bg-red-500/[0.06] rounded-xl"
+                  className="grid h-10 w-10 place-items-center rounded-xl border border-red-400/10 bg-red-400/[0.035] text-red-300/75 transition hover:border-red-300/25 hover:bg-red-400/10 hover:text-red-200"
                   title="Logout"
                   type="button"
                 >
@@ -643,7 +709,7 @@ const Header = () => {
 
               <button
                 onClick={handleProfileClick}
-                className="md:hidden flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-troll-neon-gold to-troll-neon-orange text-troll-dark-bg border-2 border-troll-neon-gold/50 shadow-lg shadow-troll-neon-gold/20 active:scale-95 transition-all duration-300"
+                className="md:hidden flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-troll-neon-gold to-troll-neon-orange text-troll-dark-bg border-2 border-troll-neon-gold/50 shadow-lg shadow-troll-neon-gold/20 active:scale-95 transition-all duration-300"
                 aria-label="Open profile"
                 type="button"
                 style={{ overflow: 'visible' }}
@@ -657,14 +723,14 @@ const Header = () => {
               </button>
             </>
           )}
+          </div>
+        </div>
+        <div className="relative z-10 flex h-7 items-center overflow-hidden border-t border-white/[0.055] bg-[#0a1120]/75 px-3 md:hidden">
+          <span className="mr-2 shrink-0 text-[8px] font-extrabold uppercase tracking-wider text-[#60e0f0]">CITY PULSE</span>
+          <div className="min-w-0 flex-1 overflow-hidden"><GlobalTicker /></div>
         </div>
       </header>
 
-      <MaiNetworkSwitcher
-        isOpen={isMaiSwitcherOpen}
-        onClose={() => setIsMaiSwitcherOpen(false)}
-        platformTheme="troll-city"
-      />
     </>
   )
 }

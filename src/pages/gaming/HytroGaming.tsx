@@ -21,7 +21,7 @@ import React, {
   useState,
 } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Briefcase, ChevronRight, Clock3, Crown, Eye, Flame, Gamepad2, Loader2, MonitorPlay, Play, Radio, Search, ShieldCheck, Sparkles, Trophy, Users, Zap } from 'lucide-react';
+import { ArrowLeft, Briefcase, ChevronRight, Clock3, Eye, Flame, Gamepad2, Loader2, Play, Radio, Search, ShieldCheck, Trophy, Users, ArrowUpRight } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { supabase } from '@/lib/supabase';
@@ -32,6 +32,7 @@ import LazyLiveThumbnail from '@/components/broadcast/LazyLiveThumbnail';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { isStandalone } from '@/pwa/install';
 import HytroGamingLanding from './HytroGamingLanding';
+import GamesSection from '@/components/home/GamesSection';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -114,18 +115,18 @@ function StatPill({
   return (
     <div
       className={cn(
-        'flex min-w-0 items-center gap-3 rounded-2xl border px-4 py-3 shadow-lg backdrop-blur-xl',
+        'flex min-w-0 items-center gap-2 rounded-2xl border px-3 py-3 shadow-lg backdrop-blur-xl',
         toneClass
       )}
     >
-      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/10">
+      <div className="hidden h-10 w-10 shrink-0 place-items-center rounded-xl sm:grid bg-white/10">
         {icon}
       </div>
       <div className="min-w-0">
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/45">
           {label}
         </p>
-        <p className="truncate text-lg font-black text-white">{value}</p>
+        <p className="truncate text-base font-black text-white sm:text-lg">{value}</p>
       </div>
     </div>
   );
@@ -183,7 +184,7 @@ function GamingStreamCard({
         'group relative w-full overflow-hidden rounded-3xl text-left transition-all duration-300',
         'border border-white/10 bg-slate-950/70 shadow-2xl shadow-black/30 backdrop-blur-xl',
         'hover:-translate-y-1 hover:border-cyan-300/35 hover:shadow-[0_0_45px_rgba(34,211,238,0.16)]',
-        featured && 'lg:col-span-2'
+        featured && 'xl:col-span-2'
       )}
     >
       <div className="pointer-events-none absolute -inset-px rounded-3xl bg-gradient-to-br from-cyan-400/20 via-purple-500/10 to-emerald-400/10 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
@@ -191,7 +192,7 @@ function GamingStreamCard({
       <div
         className={cn(
           'relative overflow-hidden bg-gradient-to-br from-slate-900 via-[#090117] to-cyan-950/40',
-          featured ? 'aspect-[16/8.5]' : 'aspect-[16/10]'
+          featured ? 'aspect-[16/9]' : 'aspect-[16/9]'
         )}
       >
         {/* Lazy-loaded live thumbnail — loads preview on hover */}
@@ -374,6 +375,7 @@ export default function HytroGaming() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortMode, setSortMode] = useState<SortMode>('viewers');
+  const [activeArcadeTab, setActiveArcadeTab] = useState<'games' | 'share'>('games');
 
   const streamsSectionRef = useRef<HTMLDivElement | null>(null);
 
@@ -553,398 +555,79 @@ export default function HytroGaming() {
     return <HytroGamingLanding />;
   }
 
+  const canSeeStreams = isMobileOrPWA || agencyStatus === 'approved' || agencyStatus === 'exempt';
+
   return (
-    <div className="relative min-h-screen overflow-y-auto overflow-x-hidden md:overflow-hidden bg-slate-950 text-white">
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_12%_10%,rgba(34,211,238,0.18),transparent_30%),radial-gradient(circle_at_84%_18%,rgba(168,85,247,0.16),transparent_32%),radial-gradient(circle_at_50%_100%,rgba(16,185,129,0.10),transparent_34%)]" />
-      <div className="pointer-events-none fixed inset-0 opacity-[0.08] [background-image:linear-gradient(rgba(255,255,255,.14)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.14)_1px,transparent_1px)] [background-size:36px_36px]" />
-
-      {/* Sticky Arena Header */}
-      <header className="sticky top-0 z-30 border-b border-white/10 bg-slate-950/78 backdrop-blur-2xl">
-        <div className="mx-auto max-w-7xl px-4 py-3">
-          <div className="flex items-center justify-between gap-4">
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl border border-white/10 bg-white/[0.04] text-white/75 transition hover:bg-white/10 hover:text-white sm:hidden"
-              aria-label="Go back"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </button>
-
-            <div className="min-w-0 shrink-0">
-              <HytroLogo compact />
-            </div>
-
-            <div className="hidden flex-1 justify-center sm:flex">
-              <div className="relative w-full max-w-md">
-                <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-                <input
-                  type="text"
-                  placeholder="Search gamers, battles, streams..."
-                  value={searchQuery}
-                  onChange={(event) => setSearchQuery(event.target.value)}
-                  className="w-full rounded-2xl border border-white/10 bg-white/[0.05] py-2.5 pl-10 pr-4 text-sm font-medium text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-300/45 focus:ring-2 focus:ring-cyan-400/15"
-                />
-              </div>
-            </div>
-
-            <div className="hidden items-center gap-2 md:flex">
-              {(['viewers', 'featured', 'recent'] as SortMode[]).map((mode) => (
-                <SortChip
-                  key={mode}
-                  mode={mode}
-                  active={sortMode === mode}
-                  onClick={() => setSortMode(mode)}
-                />
-              ))}
-            </div>
-
-            {!isMobileOrPWA && (
-              <button
-                type="button"
-                onClick={() => navigate('/broadcast/setup/gaming')}
-                className="hidden rounded-2xl bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 px-4 py-2.5 text-xs font-black text-white shadow-[0_0_28px_rgba(34,211,238,0.22)] transition hover:scale-[1.02] lg:inline-flex"
-              >
-                Go Live
-              </button>
-            )}
-          </div>
-
-          <div className="mt-3 sm:hidden">
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-              <input
-                type="text"
-                placeholder="Search gaming streams..."
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                className="w-full rounded-2xl border border-white/10 bg-white/[0.05] py-2.5 pl-10 pr-4 text-sm font-medium text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-300/45"
-              />
-            </div>
-          </div>
-
-          <div className="mt-3 flex gap-2 overflow-x-auto pb-1 md:hidden">
-            {(['viewers', 'featured', 'recent'] as SortMode[]).map((mode) => (
-              <SortChip
-                key={mode}
-                mode={mode}
-                active={sortMode === mode}
-                onClick={() => setSortMode(mode)}
-              />
-            ))}
+    <div className="relative flex min-h-[100dvh] flex-col overflow-x-hidden bg-[#070812] text-white md:h-[100dvh] md:overflow-hidden">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_15%_5%,rgba(124,58,237,.25),transparent_40%),radial-gradient(ellipse_at_95%_70%,rgba(6,182,212,.13),transparent_40%)]" />
+      {/* One toolbar, not a stack of landing-page sections */}
+      <header className="relative z-20 shrink-0 border-b border-violet-400/15 bg-[#0b0e20]/95 px-3 py-3 backdrop-blur-xl sm:px-6">
+        <div className="mx-auto flex max-w-[1600px] flex-wrap items-center gap-3">
+          <button type="button" onClick={() => navigate(-1)} aria-label="Go back" className="grid size-9 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/5 hover:bg-white/10"><ArrowLeft className="size-4" /></button>
+          <HytroLogo compact />
+          <div className="ml-auto flex items-center gap-2 text-[11px] font-bold text-slate-400">
+            <span className="hidden rounded-lg border border-white/10 px-3 py-2 sm:inline-flex"><Radio className="mr-2 size-3.5 text-red-400" />{streams.length} live</span>
+            <span className="hidden rounded-lg border border-white/10 px-3 py-2 md:inline-flex"><Users className="mr-2 size-3.5 text-cyan-400" />{formatCompactNumber(totalViewers)} watching</span>
           </div>
         </div>
       </header>
 
-      {/* ── Mobile/PWA Notice ────────────────────────────────────────────────── */}
-      {isMobileOrPWA && (
-        <div className="relative z-10 mx-auto max-w-7xl px-4 pt-4">
-          <div className="rounded-2xl border border-cyan-300/20 bg-cyan-400/5 p-4 text-center">
-            <p className="text-sm font-semibold text-cyan-100">
-              HytroGame streaming is currently available on desktop. You can still watch and interact with streams from this device.
-            </p>
+      <main className="relative z-10 mx-auto flex min-h-0 w-full max-w-[1600px] flex-1 flex-col gap-3 px-3 py-3 sm:px-6 sm:py-4">
+        {/* Arcade marquee and single horizontal navigation */}
+        <div className="shrink-0 overflow-hidden rounded-2xl border border-fuchsia-400/20 bg-gradient-to-r from-[#221038] via-[#12152d] to-[#092a39] p-3 shadow-[inset_0_0_35px_rgba(168,85,247,.09)] sm:p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="grid size-11 place-items-center rounded-xl border border-fuchsia-400/30 bg-fuchsia-400/15 shadow-[0_0_28px_rgba(217,70,239,.17)]"><Gamepad2 className="size-6 text-fuchsia-300" /></div>
+              <div><p className="text-[10px] font-black uppercase tracking-[.25em] text-fuchsia-300">MaiTroll Arcade</p><h1 className="text-lg font-black leading-tight sm:text-2xl">Play games. Share gameplay. Compete.</h1></div>
+            </div>
+            <div role="tablist" aria-label="Arcade areas" className="flex w-full items-center gap-1 rounded-xl border border-white/10 bg-black/35 p-1 sm:w-auto">
+              <button role="tab" aria-selected={activeArcadeTab === 'games'} onClick={() => setActiveArcadeTab('games')} className={cn('flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 py-2.5 text-xs font-black transition sm:flex-none',activeArcadeTab === 'games' ? 'bg-gradient-to-r from-fuchsia-600 to-violet-600 text-white shadow-lg':'text-slate-300 hover:bg-white/10')}><Gamepad2 className="size-4" /> Arcade Games</button>
+              <button role="tab" aria-selected={activeArcadeTab === 'share'} onClick={() => setActiveArcadeTab('share')} className={cn('flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 py-2.5 text-xs font-black transition sm:flex-none',activeArcadeTab === 'share' ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-lg':'text-slate-300 hover:bg-white/10')}><MonitorPlayIcon /> Game Share</button>
+            </div>
           </div>
         </div>
-      )}
 
-      <main className="relative z-10 mx-auto max-w-7xl px-4 pb-12 pt-6 sm:pt-8">
-        {/* ── Desktop Agency Gate ───────────────────────────────────────────── */}
-        {!isMobileOrPWA && agencyStatus === 'loading' && (
-          <div className="flex flex-col items-center justify-center gap-4 py-12 text-center">
-            <Loader2 className="h-8 w-8 animate-spin text-cyan-300" />
-            <p className="text-sm text-slate-400">Checking agency status...</p>
-          </div>
-        )}
-
-        {!isMobileOrPWA && agencyStatus === 'pending' && (
-          <div className="mx-auto max-w-7xl px-4 py-12">
-            <div className="rounded-2xl border border-amber-400/30 bg-amber-400/5 p-5 text-center">
-              <Clock3 className="mx-auto h-8 w-8 text-amber-300" />
-              <h3 className="mt-3 text-lg font-black text-amber-100">Agency Application Pending</h3>
-              <p className="mt-2 text-sm text-slate-400">
-                 Your agency application is under review. You&apos;ll be able to access HytroGaming once approved.
-              </p>
-              <button
-                type="button"
-                onClick={() => navigate('/hytrogaming/apply')}
-                className="mt-4 inline-flex items-center gap-2 rounded-xl border border-amber-300/40 bg-amber-300 px-5 py-2.5 text-sm font-black text-slate-950 transition hover:bg-amber-200"
-              >
-                <Briefcase className="h-4 w-4" />
-                View Application
-              </button>
+        {/* Only one primary arcade area is displayed at a time. */}
+        {activeArcadeTab === 'games' ? (
+          <section role="tabpanel" aria-label="Arcade Games" className="min-h-0 flex-1 overflow-y-auto rounded-2xl border border-white/10 bg-[#0d1228]/90 p-3 sm:p-5">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
+              <div><h2 className="flex items-center gap-2 text-base font-black"><Trophy className="size-5 text-amber-300" /> Game Library & Rankings</h2><p className="text-xs text-slate-400">Choose a game and challenge the leaderboard.</p></div>
+              <span className="rounded-full border border-fuchsia-400/20 bg-fuchsia-400/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-fuchsia-200">Insert coin • Press play</span>
             </div>
-          </div>
-        )}
-
-        {!isMobileOrPWA && agencyStatus === 'none' && user && (
-          <div className="mx-auto max-w-7xl px-4 py-12">
-            <div className="rounded-2xl border border-cyan-300/20 bg-cyan-400/5 p-6 text-center sm:p-8">
-              <Gamepad2 className="mx-auto h-10 w-10 text-cyan-300" />
-              <h3 className="mt-4 text-xl font-black text-white">Apply for Agency to Game Share</h3>
-              <p className="mt-2 max-w-lg mx-auto text-sm text-slate-400">
-                To stream on HytroGaming, you need to apply for an agency. 
-                The startup fee is the same as regular agencies, with a monthly fee of 5,000 Troll Coins.
-                You can also apply for a loan to cover the fees.
-              </p>
-              <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-center">
-                <button
-                  type="button"
-                  onClick={() => navigate('/hytrogaming/apply')}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 px-6 py-3 text-sm font-black text-white shadow-[0_0_35px_rgba(34,211,238,0.20)] transition hover:scale-[1.02]"
-                >
-                  <Briefcase className="h-4 w-4" />
-                  Apply for Agency
-                </button>
-                <button
-                  type="button"
-                  onClick={() => navigate('/agencies')}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/12 bg-white/[0.06] px-6 py-3 text-sm font-bold text-white/90 transition hover:bg-white/[0.1]"
-                >
-                  Learn More
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ── Streams Content ───────────────────────────────────────────────── */}
-        {/* Mobile/PWA always shows streams. Desktop requires approved/exempt, or public viewing when not signed in. */}
-        {(isMobileOrPWA || agencyStatus === 'approved' || agencyStatus === 'exempt' || !user) && (
-        <>
-        {/* Hero */}
-        <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.045] p-5 shadow-2xl shadow-black/30 backdrop-blur-2xl sm:p-8 lg:p-10">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(34,211,238,0.20),transparent_30%),radial-gradient(circle_at_80%_30%,rgba(168,85,247,0.18),transparent_32%)]" />
-          <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-cyan-400/10 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-32 left-1/3 h-72 w-72 rounded-full bg-purple-500/10 blur-3xl" />
-
-          <div className="relative grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
-            <div>
-              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-cyan-300/25 bg-cyan-300/10 px-3 py-2 text-xs font-black uppercase tracking-[0.18em] text-cyan-100">
-                <Sparkles className="h-4 w-4" />
-                Viewer-powered gaming arena
-              </div>
-
-              <HytroLogo />
-
-              <h1 className="mt-6 max-w-3xl text-4xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl">
-                Watch live gaming battles with{' '}
-                <span className="bg-gradient-to-r from-cyan-300 via-blue-400 to-purple-400 bg-clip-text text-transparent">
-                  Hype, Gifts, and Seats.
-                </span>
-              </h1>
-
-              <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-300 sm:text-base">
-                Jump into live gaming streams, discover featured creators, join the arena,
-                and power up the room with viewer energy.
-              </p>
-
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                {!isMobileOrPWA && (
-                  <button
-                    type="button"
-                    onClick={() => navigate('/broadcast/setup/gaming')}
-                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 px-5 py-3 text-sm font-black text-white shadow-[0_0_35px_rgba(34,211,238,0.20)] transition hover:scale-[1.02]"
-                  >
-                    <Radio className="h-4 w-4" />
-                    Start Gaming Stream
-                  </button>
-                )}
-
-                <button
-                  type="button"
-                  onClick={scrollToStreams}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/12 bg-white/[0.06] px-5 py-3 text-sm font-black text-white/90 transition hover:bg-white/[0.1]"
-                >
-                  <Play className="h-4 w-4" />
-                  Explore Live
-                </button>
-              </div>
-
-              <div className="mt-7 grid gap-3 sm:grid-cols-3">
-                <StatPill
-                  icon={<Radio className="h-5 w-5 text-red-300" />}
-                  label="Live Streams"
-                  value={streams.length.toLocaleString()}
-                  tone="cyan"
-                />
-                <StatPill
-                  icon={<Users className="h-5 w-5 text-emerald-300" />}
-                  label="Watching"
-                  value={formatCompactNumber(totalViewers)}
-                  tone="green"
-                />
-                <StatPill
-                  icon={<Flame className="h-5 w-5 text-orange-300" />}
-                  label="Featured"
-                  value={featuredStreams.length.toLocaleString()}
-                  tone="orange"
-                />
-              </div>
-            </div>
-
-            <div className="relative">
-              <div className="relative overflow-hidden rounded-[2rem] border border-cyan-300/20 bg-slate-950/80 p-4 shadow-[0_0_60px_rgba(34,211,238,0.12)]">
-                <div className="rounded-[1.5rem] border border-white/10 bg-gradient-to-br from-slate-900 via-[#080217] to-cyan-950/40 p-5">
-                  <div className="mb-4 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="h-3 w-3 rounded-full bg-red-500 shadow-[0_0_16px_rgba(239,68,68,0.8)]" />
-                      <p className="text-xs font-black uppercase tracking-[0.18em] text-white/60">
-                        Arena Preview
-                      </p>
-                    </div>
-
-                    <div className="rounded-full bg-white/10 px-3 py-1 text-xs font-black text-cyan-100">
-                      60 FPS
-                    </div>
-                  </div>
-
-                  <div className="grid aspect-video place-items-center overflow-hidden rounded-3xl border border-white/10 bg-black/30">
-                    <div className="text-center">
-                      <div className="mx-auto grid h-24 w-24 place-items-center rounded-[2rem] border border-cyan-300/25 bg-cyan-300/10 shadow-[0_0_40px_rgba(34,211,238,0.18)]">
-                        <MonitorPlay className="h-12 w-12 text-cyan-200" />
-                      </div>
-                      <p className="mt-4 text-lg font-black text-white">Gaming Lobby</p>
-                      <p className="mt-1 text-xs text-slate-400">
-                        Featured streams, live battles, and creator rooms.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 grid grid-cols-3 gap-3">
-                    <div className="rounded-2xl border border-purple-300/20 bg-purple-400/10 p-3">
-                      <Crown className="h-5 w-5 text-purple-200" />
-                      <p className="mt-2 text-xs font-black text-white">Top Fans</p>
-                    </div>
-                    <div className="rounded-2xl border border-cyan-300/20 bg-cyan-400/10 p-3">
-                      <Zap className="h-5 w-5 text-cyan-200" />
-                      <p className="mt-2 text-xs font-black text-white">Hype</p>
-                    </div>
-                    <div className="rounded-2xl border border-emerald-300/20 bg-emerald-400/10 p-3">
-                      <Trophy className="h-5 w-5 text-emerald-200" />
-                      <p className="mt-2 text-xs font-black text-white">Battles</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Featured Arena */}
-        {featuredStreams.length > 0 && (
-          <section className="mt-10">
-            <div className="mb-4 flex items-center justify-between gap-4">
-              <div>
-                <div className="flex items-center gap-2">
-                  <Flame className="h-5 w-5 text-orange-300" />
-                  <h2 className="text-xl font-black text-white">Featured Arena</h2>
-                </div>
-                <p className="mt-1 text-sm text-slate-400">
-                  Hot gaming streams getting pushed to the front.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setSortMode('featured')}
-                className="hidden rounded-2xl border border-orange-300/20 bg-orange-400/10 px-4 py-2 text-xs font-black text-orange-100 transition hover:bg-orange-400/15 sm:inline-flex"
-              >
-                View Featured
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
-              {featuredStreams.slice(0, 3).map((stream, index) => (
-                <GamingStreamCard
-                  key={stream.id}
-                  stream={stream}
-                  featured={index === 0}
-                  onClick={() => handleStreamClick(stream)}
-                />
-              ))}
-            </div>
+            {/* GamesSection retains ALL existing game, coin, multiplayer and leaderboard logic. */}
+            <div className="min-w-0 [&_table]:w-full [&_th]:text-left [&_td]:border-b [&_td]:border-white/5"><GamesSection /></div>
           </section>
-        )}
-
-        {/* Streams */}
-        <section ref={streamsSectionRef} className="mt-10 scroll-mt-28">
-          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <div className="flex items-center gap-2">
-                <Gamepad2 className="h-5 w-5 text-cyan-300" />
-                <h2 className="text-xl font-black text-white">Live Gaming Streams</h2>
-              </div>
-              <p className="mt-1 text-sm text-slate-400">
-                {filteredStreams.length.toLocaleString()}{' '}
-                {filteredStreams.length === 1 ? 'stream' : 'streams'} available
-                {searchQuery.trim() ? ` for “${searchQuery.trim()}”` : ''}
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-bold text-slate-300">
-              <Radio className="h-4 w-4 text-red-300" />
-              Realtime updates active
-            </div>
-          </div>
-
-          {loading ? (
-            <div className="grid min-h-[280px] place-items-center rounded-[2rem] border border-white/10 bg-white/[0.035]">
-              <div className="flex flex-col items-center gap-4">
-                <div className="grid h-20 w-20 place-items-center rounded-3xl border border-cyan-300/25 bg-cyan-300/10">
-                  <Loader2 className="h-10 w-10 animate-spin text-cyan-300" />
+        ) : (
+          <section role="tabpanel" aria-label="Game Share" className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
+            {isMobileOrPWA && <div className="rounded-xl border border-cyan-400/20 bg-cyan-400/5 px-4 py-2 text-xs text-cyan-100">Desktop is required to start game sharing; you can watch streams here.</div>}
+            {!isMobileOrPWA && agencyStatus === 'loading' && <div className="flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 p-7 text-sm text-slate-300"><Loader2 className="size-5 animate-spin" /> Checking agency status...</div>}
+            {!isMobileOrPWA && agencyStatus === 'pending' && <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-400/25 bg-amber-400/10 p-4"><div><h2 className="font-black text-amber-100">Agency application pending</h2><p className="text-xs text-slate-300">Your application is under review.</p></div><button onClick={() => navigate('/hytrogaming/apply')} className="rounded-xl bg-amber-300 px-4 py-2 text-xs font-black text-slate-950">View Application</button></div>}
+            {!isMobileOrPWA && agencyStatus === 'none' && <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-cyan-400/25 bg-cyan-400/10 p-4"><div><h2 className="font-black">Apply to Game Share</h2><p className="max-w-2xl text-xs text-slate-300">Agency membership is required to stream. The monthly fee is 5,000 Troll Coins; startup fees match regular agencies. Loans may be available.</p></div><div className="flex gap-2"><button onClick={() => navigate('/hytrogaming/apply')} className="rounded-xl bg-cyan-400 px-4 py-2 text-xs font-black text-slate-950">Apply</button><button onClick={() => navigate('/agencies')} className="rounded-xl border border-white/20 px-4 py-2 text-xs font-bold">Learn More</button></div></div>}
+            {canSeeStreams && <>
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-[#0d132a] p-3 sm:p-4">
+                <div><h2 className="flex items-center gap-2 text-lg font-black"><Radio className="size-5 text-red-400" /> Game Share Arena</h2><p className="text-xs text-slate-400">Watch creators broadcast their gameplay live.</p></div>
+                <div className="flex flex-wrap gap-2">
+                  <span className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-bold">{streams.length} Live</span>
+                  <span className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-bold">{formatCompactNumber(totalViewers)} Viewers</span>
+                  {!isMobileOrPWA && <button onClick={() => navigate('/broadcast/setup/gaming')} className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-cyan-400 to-blue-500 px-4 py-2 text-xs font-black text-slate-950"><Radio className="size-4" /> Start Game Share</button>}
                 </div>
-                <p className="text-sm font-semibold text-slate-400">
-                  Loading HytroGaming arena...
-                </p>
               </div>
-            </div>
-          ) : filteredStreams.length === 0 ? (
-            <div className="grid min-h-[360px] place-items-center rounded-[2rem] border border-white/10 bg-white/[0.035] p-6 text-center">
-              <div>
-                <div className="mx-auto grid h-24 w-24 place-items-center rounded-[2rem] border border-white/10 bg-white/[0.04]">
-                  <Gamepad2 className="h-12 w-12 text-slate-600" />
-                </div>
-
-                <h3 className="mt-5 text-xl font-black text-white">
-                  No gaming streams live
-                </h3>
-
-                <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-slate-400">
-                  {searchQuery.trim()
-                    ? `No streams matched “${searchQuery.trim()}”. Try another gamer name or stream title.`
-                    : 'Be the first creator to light up the HytroGaming arena.'}
-                </p>
-
-                {!searchQuery.trim() && !isMobileOrPWA && (
-                  <button
-                    type="button"
-                    onClick={() => navigate('/broadcast/setup/gaming')}
-                    className="mt-5 inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-purple-500 to-cyan-500 px-5 py-3 text-sm font-black text-white transition hover:scale-[1.02]"
-                  >
-                    <Radio className="h-4 w-4" />
-                    Start Gaming Stream
-                  </button>
-                )}
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="relative min-w-[170px] flex-1"><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-500" /><input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Find streams or gamers" className="w-full rounded-xl border border-white/10 bg-[#121a31] py-2.5 pl-9 pr-3 text-sm outline-none focus:border-cyan-400/50" /></div>
+                {(['viewers','featured','recent'] as SortMode[]).map(mode => <SortChip key={mode} mode={mode} active={sortMode === mode} onClick={() => setSortMode(mode)} />)}
               </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-              {filteredStreams.map((stream) => (
-                <GamingStreamCard
-                  key={stream.id}
-                  stream={stream}
-                  onClick={() => handleStreamClick(stream)}
-                />
-              ))}
-            </div>
-          )}
-        </section>
-        </>
+              <div ref={streamsSectionRef} className="min-h-0 flex-1 overflow-y-auto rounded-2xl border border-white/10 bg-[#0d1228]/70 p-3">
+                {loading ? <div className="flex min-h-36 items-center justify-center gap-2 text-slate-400"><Loader2 className="size-5 animate-spin" /> Loading game shares...</div> : filteredStreams.length === 0 ? <div className="grid min-h-40 place-items-center text-center"><div><Gamepad2 className="mx-auto mb-3 size-8 text-slate-500" /><p className="font-bold">No live gaming streams</p><p className="mt-1 text-xs text-slate-400">{searchQuery.trim() ? 'Try a different search.' : 'No one is game sharing right now.'}</p></div></div> : <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{filteredStreams.map(stream => <GamingStreamCard key={stream.id} stream={stream} onClick={() => handleStreamClick(stream)} />)}</div>}
+              </div>
+            </>}
+          </section>
         )}
       </main>
     </div>
   );
 }
+
+function MonitorPlayIcon() { return <Gamepad2 className="size-4" />; }
 
 function getStreamViewers(stream: GamingStream) {
   return stream.current_viewers || stream.viewer_count || 0;

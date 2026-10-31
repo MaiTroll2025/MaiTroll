@@ -4,6 +4,7 @@ import { Button } from '../ui/button'
 import { Participant, Tournament } from './types'
 import { Crown, Trophy, AlertCircle, Share2, LogOut } from 'lucide-react'
 import { useAuthStore } from '../../lib/store'
+import { useNavigate } from 'react-router-dom'
 
 interface MyStatusCardProps {
   participant?: Participant | null
@@ -15,6 +16,7 @@ interface MyStatusCardProps {
 
 export default function MyStatusCard({ participant, tournament, onJoin, onWithdraw, loading }: MyStatusCardProps) {
   const { user } = useAuthStore()
+  const navigate = useNavigate()
 
   if (!user) {
     return (
@@ -27,7 +29,7 @@ export default function MyStatusCard({ participant, tournament, onJoin, onWithdr
         </CardHeader>
         <CardContent>
            <p className="text-gray-300 mb-6 text-sm">Log in to participate in the tournament and track your progress.</p>
-           <Button className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold shadow-[0_0_15px_rgba(147,51,234,0.4)] transition-all hover:scale-105" onClick={() => window.location.href = '/auth'}>
+           <Button className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold shadow-[0_0_15px_rgba(147,51,234,0.4)] transition-all hover:scale-105" onClick={() => navigate('/auth')}>
              Log In to Join
            </Button>
         </CardContent>

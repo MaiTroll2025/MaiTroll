@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../lib/store'
 import { useSubscriberBadges } from '../../hooks/useCreatorSubscription'
@@ -18,6 +19,7 @@ interface _ShoutoutForm {
 
 export default function SubscriberPerksPanel({ broadcasterId, streamId, onClose }: SubscriberPerksPanelProps) {
   const { user, profile } = useAuthStore()
+  const navigate = useNavigate()
   const { badges: subscriberBadges, loading } = useSubscriberBadges(broadcasterId)
   const [subscribers, setSubscribers] = useState<Array<{ username: string; tierName: string; tierColor: string }>>([])
   const [selectedSubscriber, setSelectedSubscriber] = useState<string>('')
@@ -108,7 +110,7 @@ export default function SubscriberPerksPanel({ broadcasterId, streamId, onClose 
       }).select('id').single()).data?.id
 
       if (threadId) {
-        window.location.href = `/utromail?threadId=${threadId}`
+        navigate(`/utromail?threadId=${threadId}`)
         onClose()
       }
     } catch (err: any) {

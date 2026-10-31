@@ -200,6 +200,7 @@ export default function BattleViewMobile({ battleView }: { battleView: BattleVie
         seatIndex: p.seat_index,
         points: participantContributions?.[p.user_id] || 0,
         videoTrack,
+        isLocal: !!isLocal,
         hasAudio,
         hasVideo,
         audioMuted,

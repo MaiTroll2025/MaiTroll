@@ -2094,17 +2094,17 @@ const handleStartStream = async () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] text-white p-3 md:p-6 overflow-y-auto">
-      <div className="max-w-5xl w-full mx-auto flex flex-col gap-3 py-4">
-
+    <div className="h-[100dvh] min-h-[540px] overflow-x-hidden overflow-y-auto bg-[#080d17] text-white xl:overflow-hidden">
+      <div className="mx-auto flex h-full w-full max-w-[2200px] flex-col gap-2 px-3 py-2 lg:px-4 xl:overflow-hidden">
         {/* Top Header Bar */}
-        <div className="flex items-center justify-between px-1">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-[#101827]/90 px-5 py-4 shadow-xl shadow-black/15">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-sky-400/20 bg-sky-400/10">
               <Radio size={16} className="text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-bold bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">Go Live</h1>
+              <h1 className="text-xl font-bold tracking-tight text-white">Broadcast Studio</h1>
+              <p className="mt-0.5 text-xs text-slate-400">Configure your camera, audio and broadcast before going live</p>
             </div>
           </div>
           {broadcasterLimitInfo && !broadcasterLimitInfo.unrestricted && (
@@ -2127,11 +2127,12 @@ const handleStartStream = async () => {
           )}
         </div>
 
-        {/* Main Grid: Camera + Quick Cards */}
-        <div className="flex gap-3 flex-1 min-h-0" style={{ minHeight: '320px' }}>
 
-          {/* Camera Preview Card - Large */}
-          <div className="flex-[2.5] relative overflow-hidden rounded-2xl border border-white/10 bg-black shadow-2xl">
+        {/* PC streaming application: fixed stage, fixed command deck, independently scrollable settings on limited heights. */}
+        <div className="grid min-h-[320px] flex-1 grid-cols-1 gap-2 xl:min-h-0 xl:grid-cols-[minmax(0,1.65fr)_minmax(360px,.9fr)] 2xl:grid-cols-[minmax(0,1.9fr)_minmax(390px,.85fr)]">
+          <div className="min-h-0 min-w-0">
+          {/* Larger cinematic preview: maintain the capture preview refs and overlay children. */}
+          <section aria-label="Broadcast camera preview" className="relative isolate h-full min-h-[250px] w-full min-w-0 overflow-hidden rounded-2xl border border-white/15 bg-black shadow-[0_18px_60px_rgba(0,0,0,.5)]">
             {showPermissionPrompt ? (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/90 p-6 text-center">
                 <div className="w-14 h-14 bg-yellow-500/20 rounded-full flex items-center justify-center mb-3">
@@ -2183,7 +2184,7 @@ const handleStartStream = async () => {
             )}
 
             {/* Preview badge */}
-            <div className="absolute top-3 left-3 z-10 bg-black/60 backdrop-blur px-2.5 py-1 rounded-full text-[9px] text-white font-bold border border-white/10 flex items-center gap-1.5">
+            <div className="absolute left-4 top-4 z-20 flex items-center gap-2 rounded-lg border border-white/15 bg-black/70 px-3 py-2 text-[11px] font-bold tracking-widest text-white backdrop-blur">
               <div className="w-1.5 h-1.5 rounded-full bg-green-400" /> PREVIEW
             </div>
 
@@ -2225,7 +2226,7 @@ const handleStartStream = async () => {
             )}
 
             {/* Media controls overlay */}
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-3 bg-black/50 backdrop-blur-md px-5 py-2 rounded-full border border-white/10">
+            <div className="absolute bottom-4 left-1/2 z-20 flex max-w-[calc(100%-24px)] -translate-x-1/2 flex-wrap items-center justify-center gap-2 rounded-2xl border border-white/20 bg-[#0d1423]/85 px-4 py-2 shadow-2xl backdrop-blur-xl sm:gap-3">
               <button
                 type="button"
                 onClick={toggleVideo}
@@ -2267,14 +2268,20 @@ const handleStartStream = async () => {
                 </div>
               )}
             </div>
-          </div>
+          </section>
 
-          {/* Right Column: Quick Setting Cards */}
-          <div className="flex-1 flex flex-col gap-2.5 min-w-0" style={{ minWidth: '160px' }}>
+          </div>
+          <aside aria-label="Broadcast setup controls" className="min-h-0 min-w-0 overflow-visible rounded-2xl border border-white/10 bg-[#101827] p-3 xl:overflow-y-auto xl:[scrollbar-width:thin]">
+            <div className="grid grid-cols-1 gap-2 2xl:grid-cols-2">
+
+            <div className="col-span-full border-b border-white/10 pb-2">
+              <p className="text-[11px] font-bold uppercase tracking-[.2em] text-sky-300">Quick settings</p>
+              <p className="mt-1 text-xs text-slate-400">Manage access, guests and stream options</p>
+            </div>
 
             {/* Password Protection Card */}
             {canCreateProtected && (
-              <div className="flex-1 bg-zinc-900/80 rounded-xl border border-white/10 p-3 flex flex-col justify-between">
+              <div className="rounded-xl border border-white/10 bg-[#172134] p-4 flex flex-col justify-between">
                 <div className="flex items-center gap-1.5 mb-2">
                   <Lock size={13} className="text-purple-400" />
                   <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">Lock</span>
@@ -2323,7 +2330,7 @@ const handleStartStream = async () => {
               if (areBroadcastSeatsDisabled()) return null;
               const effectiveMaxSeats = seatCap.enabled ? Math.min(MAX_GUEST_SEATS, seatCap.max) : MAX_GUEST_SEATS;
               return (
-                <div className="flex-1 bg-zinc-900/80 rounded-xl border border-amber-500/20 p-3 flex flex-col justify-between">
+                <div className="rounded-xl border border-white/10 bg-[#172134] p-4 flex flex-col justify-between">
                   <div className="flex items-center gap-1.5 mb-1">
                     <span className="text-[10px] font-bold text-amber-300 uppercase tracking-wider">Seats</span>
                     {seatCap.enabled && (
@@ -2426,7 +2433,7 @@ const handleStartStream = async () => {
             {/* Category Info Card */}
             {category !== 'general' && (
               <div className={cn(
-                "flex-1 rounded-xl border p-3",
+                "rounded-xl border p-4",
                 category === 'gaming' ? "bg-amber-500/10 border-amber-500/25" :
                 category === 'debate' ? "bg-blue-500/10 border-blue-500/25" :
                 category === 'education' ? "bg-green-500/10 border-green-500/25" :
@@ -2440,9 +2447,8 @@ const handleStartStream = async () => {
                 {renderCategoryInfo()}
               </div>
             )}
-          </div>
-        </div>
-
+                      </div>
+            <div className="mt-2 space-y-2">
         {/* Password Input (when protected) */}
         {isProtected && canCreateProtected && (
           <div className="bg-zinc-900/80 rounded-xl border border-purple-500/20 p-3">
@@ -2473,13 +2479,14 @@ const handleStartStream = async () => {
         {renderReligionSelector()}
 
         {/* Camera Off Image Upload */}
-        <div className="bg-zinc-900/80 rounded-2xl border border-cyan-500/20 p-4">
+        <details className="rounded-xl border border-white/10 bg-[#101827] p-3"><summary className="cursor-pointer text-xs font-bold text-slate-300">Camera-off image</summary>
+        <div className="pt-3">
           <div className="flex items-center gap-2 mb-3">
             <VideoOff size={16} className="text-cyan-400" />
             <span className="text-xs font-bold text-cyan-300 uppercase tracking-wider">Camera Off Image</span>
           </div>
           <CameraOffImageUpload userId={user?.id} />
-        </div>
+        </div></details>
 
         {/* Permission Warning */}
         {showPermissionPrompt && (
@@ -2491,12 +2498,12 @@ const handleStartStream = async () => {
         )}
 
         {/* Broadcast Agreement */}
-        <div className="bg-zinc-900/80 rounded-2xl border border-amber-500/20 p-4">
-          <div className="flex items-center gap-2 mb-3">
+        <div className="rounded-xl border border-white/10 bg-[#151e2c] p-3">
+          <div className="flex items-center gap-2 mb-2">
             <ShieldCheck size={16} className="text-amber-400" />
             <span className="text-xs font-bold text-amber-300 uppercase tracking-wider">Broadcast Agreement</span>
           </div>
-          <div className="max-h-40 overflow-y-auto rounded-xl bg-zinc-800/60 border border-zinc-700 p-3 mb-3 text-xs text-zinc-300 leading-relaxed space-y-2">
+          <details className="group mb-2 rounded-xl border border-white/10 bg-black/20 p-2 text-xs text-zinc-300"><summary className="cursor-pointer select-none font-semibold text-slate-300">Read full broadcast terms</summary><div className="max-h-32 overflow-y-auto pt-2 leading-relaxed space-y-2">
             <p>
               By starting a broadcast, I confirm that I am at least 18 years old and will comply with all applicable laws in my jurisdiction. I understand that I am solely responsible for the content I create, stream, share, or display on Mai Troll.
             </p>
@@ -2509,7 +2516,7 @@ const handleStartStream = async () => {
             <p>
               Mai Troll reserves the right to remove content, suspend broadcasts, restrict features, or terminate accounts that violate these rules.
             </p>
-          </div>
+          </div></details>
           <label className="flex items-start gap-3 cursor-pointer group">
             <div className="relative mt-0.5">
               <input
@@ -2537,9 +2544,14 @@ const handleStartStream = async () => {
           </label>
         </div>
 
+            </div>
+          </aside>
+        </div>
+        {/* Persistent bottom command bar: title, category and Start Broadcast remain visible. */}
+        <div className="shrink-0">
         {/* Bottom Row: Title + Category + Go Live */}
-        <div className="bg-zinc-900/80 rounded-2xl border border-white/10 p-4 flex flex-col md:flex-row items-stretch md:items-end gap-3">
-          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="rounded-xl border border-white/10 bg-[#101827] p-3 flex flex-col lg:flex-row items-stretch lg:items-end gap-2 shadow-xl shadow-black/15">
+          <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
             <div>
               <label className="block text-[10px] font-medium text-gray-400 mb-1">Stream Title</label>
               <input
@@ -2701,7 +2713,7 @@ const handleStartStream = async () => {
                    (broadcasterLimitInfo && !broadcasterLimitInfo.canStart) ||
                    (isBroadcastLocked && !canBroadcast())
                  }
-                 className="w-full md:w-auto px-8 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-black font-bold text-sm hover:from-amber-300 hover:to-orange-400 transition-all transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 whitespace-nowrap"
+                 className="flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-gradient-to-r from-emerald-400 to-teal-400 px-7 py-2.5 text-sm font-extrabold text-slate-950 shadow-lg shadow-emerald-500/15 transition hover:from-emerald-300 hover:to-teal-300 active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-50 xl:w-auto"
                >
                  {loading ? (
                    <span className="flex items-center gap-2">
@@ -2727,6 +2739,7 @@ const handleStartStream = async () => {
         {shouldForceRearCamera && !hasRearCamera && (
           <p className="text-red-400 text-xs text-center">A rear camera is required for this category but none was detected.</p>
         )}
+        </div>
       </div>
 
       <LicenseRecoveryModal

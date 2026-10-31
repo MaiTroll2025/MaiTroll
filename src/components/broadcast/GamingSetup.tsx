@@ -1,25 +1,228 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react'
-import { BarChart3, ChevronDown, Eye, EyeOff, Gamepad2, Loader2, Mail, Mic, MicOff, MonitorPlay, Pause, Power, Radio, Settings, ShieldCheck, Users, Video, VideoOff, Volume2, VolumeX, AlertTriangle, Activity, Layout } from 'lucide-react';
+/**
+ * HytroGaming broadcaster studio — screen-first, persistent-chat redesign.
+ * Preserves the original GamingSetup props and all streaming callbacks.
+ * Chat is supplied by parent via chatPanel (no mock chat or altered backend).
+ * Optional gameCatalogSearch enables a full remote catalog without exposing keys.
+ */
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Activity, AlertTriangle, ChevronDown, ChevronLeft, ChevronRight, Eye, EyeOff, Gamepad2, Loader2, Mail, Maximize2, Mic, MicOff, MonitorPlay, Power, Radio, Search, Settings, Users, Video, VideoOff, X, MessageCircle, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { SceneConfig } from '@/components/broadcast/GamingSceneManager'
 import TipBanner from '@/components/broadcast/TipBanner'
 import ProfileFrame from '@/components/profile/ProfileFrame'
 import { useUserFrame } from '@/hooks/useUserFrame'
 
-const POPULAR_GAMES = [
-  'Fortnite','Apex Legends','Call of Duty: Warzone','Valorant','League of Legends',
-  'Counter-Strike 2','Dota 2','Overwatch 2','Rocket League','Fall Guys',
-  'Grand Theft Auto V','Red Dead Redemption 2','Elden Ring','Cyberpunk 2077',
-  'The Witcher 3','World of Warcraft','Final Fantasy XIV','Destiny 2','Rainbow Six Siege',
-  'SplitGate','Halo Infinite','Call of Duty: Modern Warfare II','PUBG','ARMA 3',
-  'Escape from Tarkov','Dead by Daylight','Among Us','Brawlhalla',
-  'Super Smash Bros. Ultimate','Street Fighter 6','Mortal Kombat 1',
-  'FIFA 24','NBA 2K24','Madden NFL 24','F1 23',
-]
+const GAME_CATALOG = [
+  'Fortnite',
+  'Minecraft',
+  'Roblox',
+  'Grand Theft Auto V',
+  'Grand Theft Auto Online',
+  'Grand Theft Auto VI',
+  'Red Dead Redemption 2',
+  'Call of Duty: Warzone',
+  'Call of Duty: Black Ops 6',
+  'Call of Duty: Modern Warfare III',
+  'Call of Duty: Modern Warfare II',
+  'Valorant',
+  'Counter-Strike 2',
+  'Apex Legends',
+  'Overwatch 2',
+  'Rainbow Six Siege',
+  'Rainbow Six Extraction',
+  'PUBG: Battlegrounds',
+  'Escape from Tarkov',
+  'The Finals',
+  'Delta Force',
+  'Battlefield 2042',
+  'Battlefield V',
+  'Battlefield 1',
+  'Halo Infinite',
+  'Halo: The Master Chief Collection',
+  'Destiny 2',
+  'Warframe',
+  'Splitgate 2',
+  'Helldivers 2',
+  'Deep Rock Galactic',
+  'Palworld',
+  'ARK: Survival Ascended',
+  'ARK: Survival Evolved',
+  'Rust',
+  'DayZ',
+  '7 Days to Die',
+  'Project Zomboid',
+  'Sons of the Forest',
+  'The Forest',
+  'Subnautica',
+  "No Man's Sky",
+  'Sea of Thieves',
+  'Among Us',
+  'Fall Guys',
+  'Lethal Company',
+  'Phasmophobia',
+  'Content Warning',
+  'Dead by Daylight',
+  'Resident Evil 4',
+  'Resident Evil Village',
+  'Resident Evil 7',
+  'Silent Hill 2',
+  'The Outlast Trials',
+  'Little Nightmares',
+  "Five Nights at Freddy's",
+  'Dying Light 2',
+  'The Last of Us Part I',
+  'The Last of Us Part II',
+  'Elden Ring',
+  'Elden Ring Nightreign',
+  'Dark Souls III',
+  'Sekiro: Shadows Die Twice',
+  'Bloodborne',
+  'Lies of P',
+  'Black Myth: Wukong',
+  'Monster Hunter Wilds',
+  'Monster Hunter World',
+  'Monster Hunter Rise',
+  "Dragon's Dogma 2",
+  "Baldur's Gate 3",
+  'Diablo IV',
+  'Path of Exile 2',
+  'Path of Exile',
+  'World of Warcraft',
+  'Final Fantasy XIV',
+  'Final Fantasy VII Rebirth',
+  'Final Fantasy XVI',
+  'Genshin Impact',
+  'Honkai: Star Rail',
+  'Zenless Zone Zero',
+  'Wuthering Waves',
+  'Lost Ark',
+  'New World',
+  'Guild Wars 2',
+  'The Elder Scrolls Online',
+  'The Elder Scrolls V: Skyrim',
+  'Fallout 4',
+  'Fallout 76',
+  'Starfield',
+  'Cyberpunk 2077',
+  'The Witcher 3: Wild Hunt',
+  'Hogwarts Legacy',
+  "Assassin's Creed Shadows",
+  "Assassin's Creed Mirage",
+  "Assassin's Creed Valhalla",
+  'Ghost of Tsushima',
+  'God of War Ragnarök',
+  'God of War',
+  'Horizon Forbidden West',
+  'Horizon Zero Dawn',
+  'Spider-Man 2',
+  "Marvel's Spider-Man",
+  "Marvel's Spider-Man: Miles Morales",
+  'Marvel Rivals',
+  'League of Legends',
+  'Dota 2',
+  'Teamfight Tactics',
+  'Smite 2',
+  'Heroes of the Storm',
+  'Rocket League',
+  'EA Sports FC 25',
+  'EA Sports FC 24',
+  'eFootball',
+  'NBA 2K25',
+  'NBA 2K24',
+  'Madden NFL 25',
+  'Madden NFL 24',
+  'MLB The Show 25',
+  'NHL 25',
+  'WWE 2K25',
+  'UFC 5',
+  'F1 25',
+  'F1 24',
+  'Forza Horizon 5',
+  'Forza Motorsport',
+  'Gran Turismo 7',
+  'Assetto Corsa Competizione',
+  'iRacing',
+  'Need for Speed Unbound',
+  'The Crew Motorfest',
+  'Mario Kart 8 Deluxe',
+  'Super Smash Bros. Ultimate',
+  'Super Mario Bros. Wonder',
+  'Super Mario Odyssey',
+  'Mario Party Superstars',
+  'Super Mario Party Jamboree',
+  'The Legend of Zelda: Tears of the Kingdom',
+  'The Legend of Zelda: Breath of the Wild',
+  'Pokémon Scarlet',
+  'Pokémon Violet',
+  'Pokémon Legends: Arceus',
+  'Animal Crossing: New Horizons',
+  'Splatoon 3',
+  'Pikmin 4',
+  'Metroid Dread',
+  'Kirby and the Forgotten Land',
+  'Street Fighter 6',
+  'Tekken 8',
+  'Mortal Kombat 1',
+  'Guilty Gear Strive',
+  'Dragon Ball: Sparking! ZERO',
+  'Dragon Ball FighterZ',
+  'Brawlhalla',
+  'MultiVersus',
+  'Super Auto Pets',
+  'Hearthstone',
+  'Magic: The Gathering Arena',
+  'Yu-Gi-Oh! Master Duel',
+  'Clash Royale',
+  'Clash of Clans',
+  'Brawl Stars',
+  'Mobile Legends: Bang Bang',
+  'Honor of Kings',
+  'League of Legends: Wild Rift',
+  'PUBG Mobile',
+  'Call of Duty: Mobile',
+  'Free Fire',
+  'Pokémon GO',
+  'Stumble Guys',
+  'Geometry Dash',
+  'OSU!',
+  'Beat Saber',
+  'VRChat',
+  'Rec Room',
+  'Microsoft Flight Simulator',
+  'Euro Truck Simulator 2',
+  'American Truck Simulator',
+  'Farming Simulator 25',
+  'The Sims 4',
+  'Stardew Valley',
+  'Terraria',
+  'Core Keeper',
+  "Don't Starve Together",
+  'RimWorld',
+  'Factorio',
+  'Satisfactory',
+  'Oxygen Not Included',
+  'Cities: Skylines II',
+  'Civilization VI',
+  'Civilization VII',
+  'Age of Empires IV',
+  'Age of Empires II',
+  'StarCraft II',
+  'Total War: Warhammer III',
+  'Crusader Kings III',
+  'Europa Universalis IV',
+  'Football Manager 2024',
+  'Football Manager 2025',
+  'Chess',
+  'Just Chatting',
+  'Retro Gaming',
+  'Other Game'
+] as const
 
 interface GamingSetupProps {
   streamTitle?: string
   onStreamTitleChange?: (title: string) => void
+  /** Optional remote game-catalog search: inject from a server-backed IGDB/RAWG/etc integration. */
+  gameCatalogSearch?: (query: string) => Promise<string[]>
   gameTitle?: string
   onGameChange?: (game: string) => void
   isMicEnabled?: boolean
@@ -101,561 +304,188 @@ interface GamingSetupProps {
   onClearOverlayText?: () => void
 }
 
-// Two-phase flow: preview → live
 
-export function GamingSetup({
-  streamTitle = 'Ranked Grind to Top 1 | Mai Troll',
-  isMicEnabled = true,
-  hasMicTrack: _hasMicTrack = false,
-  onToggleMic,
-  onStartPreview,
-  onStopPreview,
-  onGoLive,
-  onEndStream,
-  isPreviewing = false,
-  isLive = false,
-  isConnecting = false,
-  errorMessage,
-  className,
-  viewerCount = 0,
-  streamDuration = '00:00:00',
-  username = 'Gamer',
-  userLevel = 1,
-  userAvatar = null,
-  chatPanel,
-  onStreamTitleChange,
-  onGameChange,
-  gameTitle = '',
-  heartbeatStatus,
-  scenes = [],
-  activeSceneId = null,
-  onCreateScene: _onCreateScene,
-  onDeleteScene: _onDeleteScene,
-  onSwitchScene,
-  onUpdateScene,
-  onAddTextOverlay,
-  onUpdateTextOverlay,
-  onDeleteTextOverlay: _onDeleteTextOverlay,
-  onSetBackgroundImage: _onSetBackgroundImage,
-  screenStream = null,
-  cameraStream = null,
-  micStream: _micStream = null,
-  screenAudioTrack: _screenAudioTrack = null,
-  hasScreenAudioTrack = false,
-  hasCameraTrack: _hasCameraTrack = false,
-  isCameraEnabled = false,
-  onToggleCamera,
-  inlineAgreementChecked = false,
-  onInlineAgreementChange,
-streamId,
-  userId,
-  // Camera overlay layout
-  cameraLayout: _cameraLayout = { xPercent: 3, yPercent: 3, widthPercent: 32, radius: 12 },
-  onUpdateCameraLayout,
-  // Overlay text
-  overlayText = '',
-  overlayTextVisible = true,
-  onSetOverlayText,
-  onToggleOverlayText,
-  onClearOverlayText,
-  }: GamingSetupProps) {
-  const [showGameSearch, setShowGameSearch] = React.useState(false)
-  const [gameSearchQuery, setGameSearchQuery] = React.useState('')
-  const [selectedGame, setSelectedGame] = React.useState<string>('')
-  const [showScenePanel, setShowScenePanel] = React.useState(false)
+const buttonBase = 'inline-flex items-center justify-center gap-2 rounded-xl border text-xs font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-40'
+const cardBase = 'rounded-2xl border border-white/10 bg-[#0c1424]/95 shadow-lg shadow-black/20'
+
+type StudioTab = 'stream' | 'scenes' | 'overlays' | 'settings'
+
+export function GamingSetup(props: GamingSetupProps) {
+  const {
+    className, streamTitle = 'Ranked Grind to Top 1 | Mai Troll', onStreamTitleChange,
+    gameTitle = '', onGameChange, gameCatalogSearch, isMicEnabled = true, onToggleMic,
+    onStartPreview, onStopPreview, onGoLive, onEndStream, isPreviewing = false,
+    isLive = false, isConnecting = false, errorMessage, viewerCount = 0,
+    streamDuration = '00:00:00', username = 'Gamer', userLevel = 1,
+    userAvatar = null, userId, chatPanel, heartbeatStatus, scenes = [], activeSceneId,
+    onSwitchScene, onUpdateScene, onAddTextOverlay, onUpdateTextOverlay,
+    screenStream, cameraStream, hasScreenAudioTrack = false, isCameraEnabled = false,
+    onToggleCamera, inlineAgreementChecked = false, onInlineAgreementChange, streamId,
+    cameraLayout = { xPercent: 3, yPercent: 3, widthPercent: 32, radius: 12 },
+    onUpdateCameraLayout, overlayText = '', overlayTextVisible = true,
+    onSetOverlayText, onToggleOverlayText, onClearOverlayText,
+  } = props
   const userFrame = useUserFrame(userId)
+  const [tab, setTab] = useState<StudioTab>('stream')
+  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [gamePickerOpen, setGamePickerOpen] = useState(false)
+  const [gameSearch, setGameSearch] = useState('')
+  const [remoteGames, setRemoteGames] = useState<string[]>([])
+  const [remoteLoading, setRemoteLoading] = useState(false)
+  const [studioChatWide, setStudioChatWide] = useState(false)
+  const [expandedPreview, setExpandedPreview] = useState(false)
+  const previewRef = useRef<HTMLDivElement>(null)
 
-  const filteredGames = React.useMemo(() => {
-    if (!gameSearchQuery) return POPULAR_GAMES.slice(0, 15)
-    return POPULAR_GAMES.filter(g => g.toLowerCase().includes(gameSearchQuery.toLowerCase())).slice(0, 10)
-  }, [gameSearchQuery])
+  useEffect(() => {
+    if (!gameCatalogSearch || !gamePickerOpen || !gameSearch.trim()) {
+      setRemoteGames([])
+      return
+    }
+    let cancelled = false
+    const id = window.setTimeout(() => {
+      setRemoteLoading(true)
+      gameCatalogSearch(gameSearch.trim()).then((games) => {
+        if (!cancelled) setRemoteGames(Array.isArray(games) ? games.filter((x): x is string => typeof x === 'string') : [])
+      }).catch(() => { if (!cancelled) setRemoteGames([]) })
+        .finally(() => { if (!cancelled) setRemoteLoading(false) })
+    }, 280)
+    return () => { cancelled = true; window.clearTimeout(id) }
+  }, [gameCatalogSearch, gameSearch, gamePickerOpen])
 
-  // Status config for two-phase flow: preview → live
-  const statusConfig = React.useMemo(() => {
-    if (isConnecting) return { label: 'Going Live...', detail: 'Joining Agora and publishing tracks.', className: 'border-cyan-400/30 bg-cyan-500/10 text-cyan-100', dotClassName: 'bg-cyan-300 shadow-[0_0_14px_rgba(34,211,238,0.9)] animate-pulse' }
-    if (isLive) return { label: 'Live on HytroGaming', detail: 'Your screen + camera are being broadcast via Agora.', className: 'border-red-400/30 bg-red-500/10 text-red-100', dotClassName: 'bg-red-400 shadow-[0_0_16px_rgba(248,113,113,0.95)] animate-pulse' }
-    if (isPreviewing) return { label: 'Preview Mode', detail: 'Screen captured locally. Adjust camera/mic, then click Go Live.', className: 'border-cyan-400/30 bg-cyan-500/10 text-cyan-100', dotClassName: 'bg-cyan-300 shadow-[0_0_14px_rgba(34,211,238,0.9)]' }
-    return { label: 'Ready to Share', detail: 'Click "Start Preview" to capture your screen and see it locally.', className: 'border-white/10 bg-white/[0.04] text-slate-200', dotClassName: 'bg-slate-400' }
-  }, [isConnecting, isLive, isPreviewing])
+  const games = useMemo(() => {
+    const q = gameSearch.trim().toLowerCase()
+    const all = Array.from(new Set([...remoteGames, ...GAME_CATALOG]))
+    return all.filter(g => !q || g.toLowerCase().includes(q)).slice(0, 75)
+  }, [remoteGames, gameSearch])
+
+  const chooseGame = (game: string) => {
+    const selected = game.trim().slice(0, 120)
+    if (!selected) return
+    onGameChange?.(selected)
+    setGamePickerOpen(false)
+    setGameSearch('')
+  }
+
+  const status = isConnecting ? 'Connecting' : isLive ? 'LIVE' : isPreviewing ? 'PREVIEW' : 'OFFLINE'
+  const action = isConnecting ? null : isLive ? 'end' : isPreviewing ? 'live' : 'preview'
+  const screenReady = Boolean((isPreviewing || isLive) && screenStream)
+  const previewNode = (
+    <div ref={previewRef} className="relative flex min-h-0 min-w-0 flex-1 items-center justify-center overflow-hidden rounded-xl bg-black">
+      {/* Preserve the source aspect ratio; ultrawide and portrait shares remain visible. */}
+      <div className="relative h-full w-full overflow-hidden bg-black">
+        {screenReady ? <LocalVideoPreview stream={screenStream!} /> : (
+          <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-[radial-gradient(circle_at_center,#11304a_0%,#030611_62%)] p-5 text-center">
+            <div className="grid h-20 w-20 place-items-center rounded-3xl border border-cyan-400/25 bg-cyan-500/10"><MonitorPlay className="h-10 w-10 text-cyan-300" /></div>
+            <p className="text-lg font-extrabold">Your game will appear here</p>
+            <p className="max-w-md text-xs text-slate-400">Capture a game window, browser tab, or entire display. The preview scales without cropping.</p>
+            {!isPreviewing && !isLive && <button type="button" onClick={onStartPreview} disabled={!onStartPreview || isConnecting} className={cn(buttonBase,'border-cyan-400/30 bg-cyan-500 px-4 py-2.5 text-white')}>Start Screen Preview</button>}
+          </div>
+        )}
+        {activeSceneId && (() => {
+          const scene = scenes.find(s => s.id === activeSceneId)
+          if (!scene) return null
+          return <div className="pointer-events-none absolute inset-0" style={{ backgroundColor: scene.backgroundImage ? 'transparent' : `${scene.backgroundColor}20` }}>
+            {scene.backgroundImage && <div className="absolute inset-0 bg-cover bg-center opacity-20" style={{ backgroundImage: `url(${scene.backgroundImage})` }} />}
+            {scene.textOverlays.map(overlay => <div key={overlay.id} className="absolute" style={{ left: `${overlay.x}%`, top: `${overlay.y}%`, color: overlay.color, fontSize: `${overlay.fontSize}px`, fontWeight: overlay.bold ? 'bold' : 'normal', transform: 'translate(-50%,-50%)' }}>{overlay.text}</div>)}
+          </div>
+        })()}
+        {/* Broadcast overlay text — wired to the overlay controls */}
+        {overlayText && overlayTextVisible && (
+          <div className="pointer-events-none absolute left-0 right-0 top-4 flex justify-center">
+            <div className="rounded-lg bg-black/60 px-4 py-1.5 text-sm font-extrabold text-white shadow-lg ring-1 ring-white/10">
+              {overlayText}
+            </div>
+          </div>
+        )}
+        {(isPreviewing || isLive) && isCameraEnabled && cameraStream && <DraggableCameraOverlay stream={cameraStream} layout={cameraLayout} onUpdate={onUpdateCameraLayout} />}
+      </div>
+      <div className="pointer-events-none absolute bottom-3 left-3 flex items-center gap-2 rounded-lg bg-black/75 px-3 py-1.5 text-[11px] font-bold text-white backdrop-blur">
+        <span className={cn('h-2 w-2 rounded-full',isLive?'bg-red-500 animate-pulse':isPreviewing?'bg-cyan-400':'bg-slate-500')} />{status}
+      </div>
+      <div className="pointer-events-none absolute bottom-3 right-3 rounded-lg bg-black/75 px-2.5 py-1.5 text-xs font-bold"><Eye className="mr-1 inline h-3.5 w-3.5" />{viewerCount.toLocaleString()}</div>
+    </div>
+  )
 
   return (
-    <div className={cn('flex h-screen flex-col overflow-y-auto overflow-x-hidden md:overflow-hidden bg-[#05080f] text-white', 'bg-[radial-gradient(circle_at_20%_0%,rgba(34,211,238,0.14),transparent_28%),radial-gradient(circle_at_80%_10%,rgba(168,85,247,0.12),transparent_30%),linear-gradient(180deg,#05080f,#02040a)]', className)}>
-      {/* Tip Banner — shows when gifts are sent during stream */}
+    <div className={cn('flex h-[100dvh] min-h-[560px] w-full min-w-0 flex-col overflow-hidden bg-[#050812] text-white',className)}>
       {streamId && <TipBanner streamId={streamId} />}
-
-      {/* ── Header ── */}
-      <header className="border-b border-cyan-400/15 bg-black/35 px-4 py-3 backdrop-blur-2xl sm:px-6">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex min-w-0 items-center gap-5">
-            <div className="flex items-center gap-3">
-              <div className="grid h-11 w-11 place-items-center rounded-2xl border border-cyan-300/30 bg-cyan-400/10 shadow-[0_0_25px_rgba(34,211,238,0.22)]"><Gamepad2 className="h-6 w-6 text-cyan-200" /></div>
-              <div className="leading-none"><div className="text-2xl font-black italic tracking-tight"><span className="text-cyan-300">Troll</span>{' '}<span className="bg-gradient-to-r from-purple-300 to-pink-400 bg-clip-text text-transparent">City</span></div></div>
-            </div>
-            <div className="hidden rounded-2xl border border-emerald-400/40 bg-emerald-400/10 px-5 py-2.5 text-sm font-black text-emerald-200 shadow-[0_0_24px_rgba(74,222,128,0.18)] md:flex md:items-center md:gap-2"><Gamepad2 className="h-4 w-4" />HytroGaming</div>
-          </div>
-          <div className="hidden items-center gap-3 rounded-2xl border border-cyan-400/15 bg-white/[0.04] px-3 py-2 md:flex">
-            {userAvatar ? <div style={{ overflow: 'visible' }}><ProfileFrame frame={userFrame} avatarUrl={userAvatar} username={username} size="sm" /></div> : <div className="grid h-10 w-10 place-items-center rounded-xl border border-purple-300/40 bg-gradient-to-br from-purple-600 to-cyan-500 text-sm font-black">{username.slice(0, 2).toUpperCase()}</div>}
-            <div><p className="text-sm font-black">{username}</p><p className="text-xs font-bold text-cyan-300">LVL {userLevel}</p></div>
-            <ChevronDown className="h-4 w-4 text-slate-400" />
-          </div>
+      <header className="z-20 flex h-16 shrink-0 items-center justify-between gap-3 border-b border-white/10 bg-[#0a1020] px-3 sm:px-5">
+        <div className="flex min-w-0 items-center gap-3">
+          <button type="button" onClick={() => setSidebarOpen(v=>!v)} className="hidden rounded-lg border border-white/10 p-2 text-slate-300 hover:bg-white/10 lg:block" aria-label={sidebarOpen?'Collapse controls':'Expand controls'}>{sidebarOpen?<PanelLeftClose className="h-4 w-4"/>:<PanelLeftOpen className="h-4 w-4"/>}</button>
+          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-cyan-500 to-indigo-600"><Gamepad2 className="h-6 w-6" /></div>
+          <div className="min-w-0 leading-tight"><h1 className="truncate text-base font-black tracking-tight sm:text-xl">HYTRO<span className="text-cyan-300">GAMING</span></h1><p className="hidden text-[10px] font-bold uppercase tracking-widest text-slate-500 sm:block">Creator Studio</p></div>
+        </div>
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+          <span className={cn('flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-[10px] font-black', isLive?'border-red-500/40 bg-red-500/15 text-red-300':isPreviewing?'border-cyan-400/30 bg-cyan-400/10 text-cyan-200':'border-white/10 text-slate-400')}><span className={cn('h-2 w-2 rounded-full',isLive?'bg-red-400 animate-pulse':isPreviewing?'bg-cyan-400':'bg-slate-500')} />{status}</span>
+          <span className="hidden text-xs font-semibold text-slate-300 md:inline"><Users className="mr-1 inline h-3.5 w-3.5" />{viewerCount.toLocaleString()}</span>
+          <span className="hidden text-xs font-mono text-slate-400 sm:inline">{streamDuration}</span>
+          {userAvatar ? <div className="hidden sm:block"><ProfileFrame frame={userFrame} avatarUrl={userAvatar} username={username} size="sm" /></div>:<div className="hidden h-9 w-9 place-items-center rounded-full bg-violet-500/30 text-xs font-bold sm:grid">{username.slice(0,2).toUpperCase()}</div>}
         </div>
       </header>
 
-      {/* ── Main Grid ── */}
-      <main className="grid min-h-0 flex-1 gap-4 p-4 sm:p-6 xl:grid-cols-[360px_minmax(560px,1fr)_360px] 2xl:grid-cols-[420px_minmax(680px,1fr)_420px]">
-
-        {/* ── Left Column: Controls + Settings ── */}
-        <section className="space-y-4">
-
-          {/* Screen Share Control Panel */}
-          <Panel>
-            <PanelHeader icon={<MonitorPlay className="h-4 w-4" />} title="Screen Share" right={isLive && <span className="flex items-center gap-1 text-xs font-black text-red-300"><span className="h-2 w-2 rounded-full bg-red-400 animate-pulse" />LIVE</span>} />
-            <div className="p-4">
-              {/* Status indicator */}
-              <div className={cn('rounded-2xl border px-4 py-3', statusConfig.className)}>
-                <div className="flex items-start gap-3">
-                  <span className={cn('mt-1 h-2.5 w-2.5 shrink-0 rounded-full', statusConfig.dotClassName)} />
-                  <div>
-                    <p className="text-xs font-black uppercase tracking-wide">{statusConfig.label}</p>
-                    <p className="mt-1 text-[11px] leading-5 opacity-80">{statusConfig.detail}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Error display */}
-              {errorMessage && (
-                <div className="mt-3 rounded-xl border border-red-400/30 bg-red-500/10 px-3 py-2">
-                  <div className="flex items-start gap-2">
-                    <AlertTriangle className="h-4 w-4 shrink-0 text-red-300 mt-0.5" />
-                    <p className="text-xs text-red-200">{errorMessage}</p>
-                  </div>
-                </div>
-              )}
-
-              {/* Main action buttons — two-phase: preview → live */}
-              <div className="mt-4 grid gap-2">
-                {/* Phase 1: Not previewing, not live → show "Start Preview" */}
-                {!isPreviewing && !isLive && !isConnecting && (
-                  <button type="button" onClick={onStartPreview} className="flex w-full items-center justify-center gap-2 rounded-xl border border-cyan-300/30 bg-gradient-to-r from-cyan-500 to-blue-600 px-4 py-3.5 text-sm font-black text-white shadow-[0_0_30px_rgba(59,130,246,0.35)] transition hover:scale-[1.01]">
-                    <MonitorPlay className="h-5 w-5" />
-                    Start Preview
-                  </button>
-                )}
-
-                {/* Connecting spinner */}
-                {isConnecting && (
-                  <div className="flex w-full items-center justify-center gap-2 rounded-xl border border-cyan-300/20 bg-cyan-400/10 px-4 py-3.5 text-sm font-black text-cyan-200">
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    Going Live...
-                  </div>
-                )}
-
-                {/* Phase 2: Previewing but not live → show "Go Live" + "Stop Preview" */}
-                {isPreviewing && !isLive && !isConnecting && (
-                  <>
-                    <button type="button" onClick={onGoLive} disabled={!inlineAgreementChecked} className="flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-300/30 bg-gradient-to-r from-emerald-500 to-green-600 px-4 py-3.5 text-sm font-black text-white shadow-[0_0_30px_rgba(52,211,153,0.35)] transition hover:scale-[1.01] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100">
-                      <Radio className="h-5 w-5" />
-                      Go Live
-                    </button>
-                    <button type="button" onClick={onStopPreview} className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-xs font-black text-slate-300 transition hover:bg-white/[0.08]">
-                      Stop Preview
-                    </button>
-                  </>
-                )}
-
-                {/* Phase 3: Live → show "End Stream" */}
-                {isLive && (
-                  <button type="button" onClick={onEndStream} className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-500/30 bg-red-500/15 px-4 py-3 text-sm font-black text-red-200 transition hover:bg-red-500/20">
-                    <Power className="h-5 w-5" />
-                    End Stream
-                  </button>
-                )}
-
-                {/* Mic toggle */}
-              <div className="mt-3 flex items-center justify-between rounded-xl border border-white/10 bg-black/20 px-3 py-2.5">
-                <div className="flex items-center gap-2">
-                  {isMicEnabled ? <Mic className="h-4 w-4 text-emerald-300" /> : <MicOff className="h-4 w-4 text-red-300" />}
-                  <span className="text-xs font-bold text-slate-300">Microphone</span>
-                </div>
-                <button type="button" onClick={onToggleMic} disabled={!onToggleMic} className={cn('grid h-9 w-9 place-items-center rounded-lg border transition', isMicEnabled ? 'border-emerald-300/30 bg-emerald-400/10 text-emerald-200 hover:bg-emerald-400/15' : 'border-red-300/30 bg-red-500/10 text-red-200 hover:bg-red-500/15')}>
-                  {isMicEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
-                </button>
-              </div>
-
-              {/* Camera toggle (webcam overlay, like OBS) */}
-              <div className="mt-2 flex items-center justify-between rounded-xl border border-white/10 bg-black/20 px-3 py-2.5">
-                <div className="flex items-center gap-2">
-                  {isCameraEnabled ? <Video className="h-4 w-4 text-emerald-300" /> : <VideoOff className="h-4 w-4 text-red-300" />}
-                  <span className="text-xs font-bold text-slate-300">Camera</span>
-                </div>
-                <button type="button" onClick={onToggleCamera} disabled={!onToggleCamera} className={cn('grid h-9 w-9 place-items-center rounded-lg border transition', isCameraEnabled ? 'border-emerald-300/30 bg-emerald-400/10 text-emerald-200 hover:bg-emerald-400/15' : 'border-red-300/30 bg-red-500/10 text-red-200 hover:bg-red-500/15')}>
-                  {isCameraEnabled ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
-                </button>
-              </div>
-
-              {/* Device Status Indicators */}
-              <div className="mt-3 rounded-xl border border-white/10 bg-black/20 p-3">
-                <p className="text-[10px] font-bold uppercase text-slate-500 mb-2">Device Status</p>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="flex items-center gap-1.5">
-                    <div className={cn('h-2 w-2 rounded-full', isCameraEnabled ? 'bg-emerald-400' : 'bg-slate-600')} />
-                    <span className="text-[10px] text-slate-400">Camera</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <div className={cn('h-2 w-2 rounded-full', isMicEnabled ? 'bg-emerald-400' : 'bg-slate-600')} />
-                    <span className="text-[10px] text-slate-400">Microphone</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <div className={cn('h-2 w-2 rounded-full', isPreviewing || isLive ? 'bg-emerald-400' : 'bg-slate-600')} />
-                    <span className="text-[10px] text-slate-400">Screen Share</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <div className={cn('h-2 w-2 rounded-full', hasScreenAudioTrack ? 'bg-emerald-400' : 'bg-slate-600')} />
-                    <span className="text-[10px] text-slate-400">Game Audio</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Broadcast Agreement */}
-              <div className="mt-3 rounded-xl border border-amber-500/20 bg-black/20 p-3">
-                <div className="flex items-center gap-1.5 mb-2">
-                  <ShieldCheck size={12} className="text-amber-400" />
-                  <span className="text-[10px] font-bold text-amber-300 uppercase tracking-wider">Broadcast Agreement</span>
-                </div>
-                <div className="max-h-28 overflow-y-auto rounded-lg bg-zinc-800/60 border border-zinc-700 p-2 mb-2 text-[10px] text-zinc-300 leading-relaxed space-y-1.5">
-                  <p>By starting a broadcast, I confirm that I am at least 18 years old and will comply with all applicable laws in my jurisdiction. I understand that I am solely responsible for the content I create, stream, share, or display on Mai Troll.</p>
-                  <p>I agree not to broadcast illegal activity, sell or promote controlled substances, threaten or harm others, share non-consensual content, or violate Mai Troll&apos;s Terms of Service or Community Guidelines.</p>
-                  <p>I further acknowledge that I am of legal age in my jurisdiction to consume any products, substances, beverages, or other items that may be displayed or consumed during my broadcast, and that any such activity is conducted at my own responsibility and in compliance with local laws.</p>
-                  <p>Mai Troll reserves the right to remove content, suspend broadcasts, restrict features, or terminate accounts that violate these rules.</p>
-                </div>
-                <label className="flex items-start gap-2 cursor-pointer group">
-                  <div className="relative mt-0.5">
-                    <input
-                      type="checkbox"
-                      checked={inlineAgreementChecked}
-                      onChange={(e) => onInlineAgreementChange?.(e.target.checked)}
-                      className="sr-only peer"
-                    />
-                    <div className={cn(
-                      'w-4 h-4 rounded border-2 transition-all',
-                      inlineAgreementChecked
-                        ? 'bg-amber-500 border-amber-500'
-                        : 'bg-zinc-800 border-zinc-600 group-hover:border-zinc-500'
-                    )}>
-                      {inlineAgreementChecked && (
-                        <svg className="w-3 h-3 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
-                    </div>
-                  </div>
-                  <span className="text-[10px] text-zinc-300 leading-snug">
-                    I am 18 years of age or older and agree to the Broadcast Agreement, Terms of Service, and Community Guidelines.
-                  </span>
-                </label>
-              </div>
-
-              {/* Heartbeat status */}
-              {heartbeatStatus && isLive && (
-                <div className="mt-3 rounded-xl border border-white/10 bg-black/20 p-3">
-                  <p className="text-[10px] font-bold uppercase text-slate-500 mb-2">Activity Monitor</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="flex items-center gap-1.5">
-                      <div className={cn('h-2 w-2 rounded-full', heartbeatStatus.isChatActive ? 'bg-emerald-400' : 'bg-amber-400')} />
-                      <span className="text-[10px] text-slate-400">Chat</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className={cn('h-2 w-2 rounded-full', heartbeatStatus.isAudioActive ? 'bg-emerald-400' : 'bg-amber-400')} />
-                      <span className="text-[10px] text-slate-400">Audio</span>
-                    </div>
-                  </div>
-                  {heartbeatStatus.isIdle && heartbeatStatus.idleReason && (
-                    <p className="mt-2 text-[10px] text-amber-300">{heartbeatStatus.idleReason}</p>
-                  )}
-                </div>
-              )}
-            </div>
-            </div>
-          </Panel>
-          <Panel>
-            <PanelHeader icon={<Activity className="h-4 w-4" />} title="Camera &amp; Overlay" />
-            <div className="p-4 space-y-3">
-              <OverlayTextControls
-                text={overlayText}
-                visible={overlayTextVisible}
-                onSetText={onSetOverlayText}
-                onToggle={onToggleOverlayText}
-                onClear={onClearOverlayText}
-              />
-              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Camera Layout</div>
-              <div className="rounded-lg border border-white/10 bg-black/20 p-3 text-xs text-slate-300 space-y-1">
-                <div className="flex justify-between">
-                  <span>X</span>
-                  <span>{Math.round(_cameraLayout.xPercent)}%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Y</span>
-                  <span>{Math.round(_cameraLayout.yPercent)}%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Width</span>
-                  <span>{Math.round(_cameraLayout.widthPercent)}%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Radius</span>
-                  <span>{Math.round(_cameraLayout.radius)}px</span>
-                </div>
-              </div>
-              <p className="text-[10px] text-slate-500">Drag the camera preview to reposition. Drag the bottom-right corner to resize. Layout syncs to viewers live.</p>
-            </div>
-          </Panel>
-          <Panel>
-            <PanelHeader icon={<Settings className="h-4 w-4" />} title="Stream Settings" />
-            <div className="divide-y divide-white/10 p-4">
-              <div className="pb-4">
-                <label className="text-xs font-black text-slate-400 uppercase tracking-wide">Stream Title</label>
-                <input type="text" value={streamTitle} onChange={(e) => onStreamTitleChange?.(e.target.value)} placeholder="Enter stream title..." className="mt-2 w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-sm font-medium text-white placeholder:text-slate-500 outline-none focus:border-cyan-300/50" />
-              </div>
-              <div className="pt-4">
-                <label className="text-xs font-black text-slate-400 uppercase tracking-wide">Game</label>
-                <div className="mt-2 relative">
-                  <button type="button" onClick={() => setShowGameSearch(!showGameSearch)} className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-sm font-medium text-white flex items-center justify-between text-left">
-                    <span>{selectedGame || gameTitle || 'Select a game...'}</span>
-                    <ChevronDown className="h-4 w-4 text-slate-400" />
-                  </button>
-                  {showGameSearch && (
-                    <div className="absolute top-full left-0 right-0 mt-2 rounded-xl border border-white/10 bg-[#07111d] shadow-2xl z-50 max-h-60 overflow-y-auto">
-                      <div className="p-2 border-b border-white/10">
-                        <input type="text" value={gameSearchQuery} onChange={(e) => setGameSearchQuery(e.target.value)} placeholder="Search games..." className="w-full rounded-lg bg-black/40 px-3 py-2 text-sm text-white placeholder:text-slate-500 outline-none" />
-                      </div>
-                      <div className="p-2">
-                        {filteredGames.map((game) => (
-                          <button key={game} type="button" onClick={() => { setSelectedGame(game); onGameChange?.(game); setShowGameSearch(false) }} className="w-full rounded-lg px-3 py-2 text-sm text-left text-white hover:bg-white/10 transition-colors">{game}</button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <SettingRow label="Engine" value="Agora RTC (Browser)" />
-              <SettingRow label="Latency" value="Ultra Low (< 1s)" />
-            </div>
-          </Panel>
-
-          {/* Scenes Panel */}
-          {scenes && scenes.length > 0 && onSwitchScene && (
-            <Panel>
-              <PanelHeader icon={<Layout className="h-4 w-4" />} title="Scenes" right={<button type="button" onClick={() => setShowScenePanel(!showScenePanel)} className="text-xs text-slate-400 hover:text-white">{showScenePanel ? 'Hide' : 'Edit'}</button>} />
-              <div className="p-4">
-                <div className="flex flex-wrap gap-2">
-                  {scenes.map((scene) => (
-                    <button key={scene.id} type="button" onClick={() => onSwitchScene(scene.id)} disabled={!isPreviewing && !isLive} className={cn('rounded-lg px-3 py-1.5 text-[11px] font-bold transition', scene.id === activeSceneId ? 'border border-cyan-300/40 bg-cyan-400/20 text-cyan-100' : 'border border-white/10 bg-white/[0.04] text-slate-400 hover:bg-white/[0.08] hover:text-white disabled:opacity-40')}>
-                      {scene.name}
-                    </button>
-                  ))}
-                </div>
-                {showScenePanel && activeSceneId && onUpdateScene && (
-                  <div className="mt-3 space-y-2">
-                    {scenes.find(s => s.id === activeSceneId)?.textOverlays.map((overlay) => (
-                      <div key={overlay.id} className="rounded-lg border border-white/10 bg-black/20 p-2">
-                        <div className="flex items-center gap-2">
-                          <input type="text" value={overlay.text} onChange={(e) => onUpdateTextOverlay?.(activeSceneId, overlay.id, { text: e.target.value })} className="flex-1 rounded bg-transparent px-2 py-1 text-xs text-white outline-none" />
-                          <input type="color" value={overlay.color} onChange={(e) => onUpdateTextOverlay?.(activeSceneId, overlay.id, { color: e.target.value })} className="h-6 w-6 cursor-pointer rounded border-0 bg-transparent" />
-                        </div>
-                      </div>
-                    ))}
-                    <button type="button" onClick={() => onAddTextOverlay?.(activeSceneId)} className="flex items-center gap-1 rounded-lg border border-white/10 bg-white/[0.04] px-2 py-1 text-[10px] font-bold text-cyan-300 hover:bg-white/[0.08]">
-                      + Add Text Overlay
-                    </button>
-                  </div>
-                )}
-              </div>
-            </Panel>
-          )}
-        </section>
-
-        {/* ── Center Column: Preview + Status ── */}
-        <section className="space-y-4">
-          {/* Screen Share Preview */}
-          <Panel className="overflow-hidden">
-            <PanelHeader icon={<MonitorPlay className="h-4 w-4" />} title={isLive ? 'Live Preview' : 'Preview'} right={<div className="flex items-center gap-3 text-xs font-black"><span className="rounded-lg bg-cyan-400/10 px-2 py-1 text-cyan-200">Agora RTC</span><span className="flex items-center gap-1 text-emerald-300"><span className="h-2 w-2 rounded-full bg-emerald-400" />{isLive ? 'LIVE' : isPreviewing ? 'PREVIEW' : 'READY'}</span></div>} />
-            <div className="relative aspect-video overflow-hidden bg-black">
-              {/* Screen share preview — shows during both preview and live phases */}
-              {(isPreviewing || isLive) && screenStream ? (
-                <div className="h-full w-full bg-black">
-                  <LocalVideoPreview stream={screenStream} />
-                </div>
-              ) : (
-                <div className="h-full w-full flex flex-col items-center justify-center bg-[radial-gradient(circle_at_50%_40%,rgba(34,211,238,0.12),transparent_30%),#02040a] px-6 text-center">
-                  <MonitorPlay className="h-16 w-16 text-cyan-300/40" />
-                  <p className="mt-4 text-lg font-black text-white/70">Ready to Share</p>
-                   <p className="mt-2 max-w-sm text-sm text-slate-500">Click &quot;Start Preview&quot; to capture your screen and see it locally before going live.</p>
-                  <p className="mt-3 text-xs text-slate-600">Browser → Agora RTC → HytroGaming Viewers</p>
-                </div>
-              )}
-
-              {/* Scene overlay preview */}
-              {activeSceneId && scenes && (() => {
-                const activeScene = scenes.find(s => s.id === activeSceneId)
-                if (!activeScene) return null
-                return (
-                  <div className="absolute inset-0 pointer-events-none" style={{ backgroundColor: activeScene.backgroundImage ? 'transparent' : activeScene.backgroundColor + '20' }}>
-                    {activeScene.backgroundImage && <div className="absolute inset-0 bg-cover bg-center opacity-20" style={{ backgroundImage: `url(${activeScene.backgroundImage})` }} />}
-                    {activeScene.textOverlays.map((overlay) => (
-                      <div key={overlay.id} className="absolute" style={{ left: `${overlay.x}%`, top: `${overlay.y}%`, fontSize: `${overlay.fontSize}px`, color: overlay.color, fontWeight: overlay.bold ? 'bold' : 'normal', transform: 'translate(-50%, -50%)' }}>
-                        {overlay.text}
-                      </div>
-                    ))}
-                  </div>
-                )
-              })()}
-
-              {/* Draggable camera overlay (like OBS) — shows during both preview and live */}
-              {(isPreviewing || isLive) && isCameraEnabled && cameraStream && (
-                <DraggableCameraOverlay
-                  stream={cameraStream}
-                  layout={_cameraLayout}
-                  onUpdate={onUpdateCameraLayout}
-                />
-              )}
-
-              {/* Stream info overlay */}
-              <div className="absolute bottom-5 left-5 flex items-center gap-3 rounded-2xl border border-white/10 bg-black/60 p-3 backdrop-blur-xl">
-                {userAvatar ? <div style={{ overflow: 'visible' }}><ProfileFrame frame={userFrame} avatarUrl={userAvatar} username={username} size="sm" /></div> : <div className="grid h-11 w-11 place-items-center rounded-xl border border-purple-300/30 bg-purple-500/20 text-xs font-black">{username.slice(0, 2).toUpperCase()}</div>}
-                <div>
-                  <p className="text-xs font-black uppercase">{username}</p>
-                  <div className="mt-1 h-2 w-40 rounded-full bg-white/15"><div className="h-full w-full rounded-full bg-gradient-to-r from-cyan-400 to-emerald-400" /></div>
-                </div>
-                <span className="text-xs font-black">100 / 100</span>
-              </div>
-
-              {/* Viewer count */}
-              <div className="absolute bottom-5 right-5 rounded-2xl border border-white/10 bg-black/60 px-4 py-3 text-xl font-black backdrop-blur-xl flex items-center gap-2">
-                <Eye className="h-5 w-5 text-cyan-300" />
-                {viewerCount}
-              </div>
-            </div>
-          </Panel>
-
-          {/* Stream Metrics */}
-          <div className="grid gap-4 lg:grid-cols-2">
-            <Panel>
-              <PanelHeader icon={<Radio className="h-4 w-4" />} title="Agora Connection" />
-              <div className="p-4">
-                <div className="flex items-center gap-4">
-                  <div className={cn('relative grid h-16 w-16 place-items-center rounded-full border bg-black', isLive ? 'border-emerald-400/40 shadow-[0_0_30px_rgba(74,222,128,0.20)]' : isPreviewing ? 'border-cyan-400/40' : 'border-slate-600')}>
-                    <MonitorPlay className={cn('h-7 w-7', isLive ? 'text-emerald-300' : isPreviewing ? 'text-cyan-300' : 'text-slate-500')} />
-                    {isLive && <span className="absolute -bottom-1 -right-1 grid h-6 w-6 place-items-center rounded-full bg-emerald-500 text-white"><ShieldCheck className="h-3 w-3" /></span>}
-                  </div>
-                  <div>
-                    <p className={cn('text-sm font-black uppercase', isLive ? 'text-red-300' : isPreviewing ? 'text-cyan-300' : 'text-slate-400')}>
-                      {isLive ? 'Live' : isPreviewing ? 'Preview' : 'Not Connected'}
-                    </p>
-                    <p className="mt-1 text-xs text-slate-500">Hytrogaming Engine</p>
-                  </div>
-                </div>
-              </div>
-            </Panel>
-
-            <Panel>
-              <PanelHeader icon={<BarChart3 className="h-4 w-4" />} title="Stream Metrics" />
-              <div className="grid grid-cols-2 gap-3 p-4">
-                <StatusMetric label="Viewers" value={viewerCount.toLocaleString()} icon={<Users className="h-3 w-3" />} />
-                <StatusMetric label="Duration" value={streamDuration} icon={<Activity className="h-3 w-3" />} />
-                <StatusMetric label="Engine" value="Agora" icon={<Radio className="h-3 w-3" />} />
-                <StatusMetric label="Status" value={isLive ? 'LIVE' : isPreviewing ? 'Preview' : 'Ready'} good={isLive || isPreviewing} icon={<Eye className="h-3 w-3" />} />
-              </div>
-            </Panel>
+      <div className={cn('grid min-h-0 min-w-0 flex-1 gap-2 overflow-y-auto p-2 sm:gap-3 sm:p-3 lg:overflow-hidden', sidebarOpen ? 'lg:grid-cols-[260px_minmax(0,1fr)_310px] 2xl:grid-cols-[285px_minmax(0,1fr)_350px]' : 'lg:grid-cols-[minmax(0,1fr)_310px] 2xl:grid-cols-[minmax(0,1fr)_350px]', studioChatWide && 'lg:!grid-cols-[minmax(0,1fr)_400px]')}>
+        {/* Control column: independently scrollable without moving the game or chat. */}
+        {sidebarOpen && <aside className={cn('min-h-0 min-w-0 overflow-y-auto overscroll-contain rounded-2xl border border-white/10 bg-[#0b1221] p-3 [scrollbar-width:thin]','block lg:block',studioChatWide && 'lg:hidden')}>
+          <div className="mb-3 flex items-center justify-between"><h2 className="text-xs font-black uppercase tracking-[.16em] text-cyan-300">Studio controls</h2><Settings className="h-4 w-4 text-slate-500"/></div>
+          <div className="mb-4 grid grid-cols-4 gap-1 rounded-xl bg-black/30 p-1">
+            {(['stream','scenes','overlays','settings'] as StudioTab[]).map(t=><button key={t} type="button" onClick={()=>setTab(t)} className={cn('rounded-lg px-1 py-2 text-[10px] font-extrabold capitalize',tab===t?'bg-cyan-500/20 text-cyan-200':'text-slate-400 hover:text-white')}>{t}</button>)}
           </div>
-        </section>
-
-        {/* ── Right Column: Chat ── */}
-        <section className="flex flex-col space-y-4">
-          <Panel className="flex flex-1 flex-col" style={{ minHeight: 480 }}>
-            <PanelHeader icon={<Mail className="h-4 w-4" />} title="Chat" right={<CounterBadge value={isLive ? 'Live' : 'Offline'} />} />
-            <div className="min-h-0 flex-1 overflow-hidden p-2">{chatPanel || <p className="py-4 text-center text-xs text-slate-500">Start streaming to enable chat</p>}</div>
-          </Panel>
-
-          {/* Quick Info */}
-          <Panel>
-            <PanelHeader icon={<ShieldCheck className="h-4 w-4" />} title="HytroGaming" />
-            <div className="p-4 space-y-3">
-              <div className="flex items-center gap-2 text-xs text-slate-400">
-                <MonitorPlay className="h-3.5 w-3.5 text-cyan-300" />
-                <span>Browser-native screen sharing</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-slate-400">
-                <Radio className="h-3.5 w-3.5 text-emerald-300" />
-                <span>Agora RTC — Ultra low latency</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-slate-400">
-                <Pause className="h-3.5 w-3.5 text-amber-300" />
-                <span>Pause to save Agora minutes</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-slate-400">
-                <Activity className="h-3.5 w-3.5 text-purple-300" />
-                <span>Auto-disconnect on idle</span>
-              </div>
+          {tab==='stream' && <div className="space-y-4">
+            <div><label className="mb-1 block text-[11px] font-semibold text-slate-400">STREAM TITLE</label><input value={streamTitle} onChange={e=>onStreamTitleChange?.(e.target.value)} className="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm outline-none focus:border-cyan-400" placeholder="Name your stream" /></div>
+            <GamePicker open={gamePickerOpen} onOpen={setGamePickerOpen} value={gameTitle} search={gameSearch} onSearch={setGameSearch} games={games} isLoading={remoteLoading} onChoose={chooseGame}/>
+            <div className="grid grid-cols-2 gap-2">
+              <button type="button" onClick={onToggleMic} disabled={!onToggleMic} className={cn(buttonBase,'min-h-12 px-2',isMicEnabled?'border-emerald-400/25 bg-emerald-500/10 text-emerald-300':'border-red-400/25 bg-red-500/10 text-red-300')}>{isMicEnabled?<Mic className="h-4 w-4"/>:<MicOff className="h-4 w-4"/>}{isMicEnabled?'Mic On':'Mic Off'}</button>
+              <button type="button" onClick={onToggleCamera} disabled={!onToggleCamera} className={cn(buttonBase,'min-h-12 px-2',isCameraEnabled?'border-emerald-400/25 bg-emerald-500/10 text-emerald-300':'border-red-400/25 bg-red-500/10 text-red-300')}>{isCameraEnabled?<Video className="h-4 w-4"/>:<VideoOff className="h-4 w-4"/>}{isCameraEnabled?'Cam On':'Cam Off'}</button>
             </div>
-          </Panel>
-        </section>
-      </main>
+            <div className={cn(cardBase,'space-y-2 p-3 text-xs')}><h3 className="font-extrabold text-slate-200">Capture status</h3><Indicator good={Boolean(isPreviewing||isLive)} label="Screen capture"/><Indicator good={isMicEnabled} label="Microphone"/><Indicator good={isCameraEnabled} label="Camera"/><Indicator good={hasScreenAudioTrack} label="Game sound"/></div>
+            {heartbeatStatus && isLive && <div className={cn(cardBase,'p-3 text-xs')}><p className="mb-2 font-bold">Activity monitor</p><Indicator good={heartbeatStatus.isChatActive} label="Chat activity"/><Indicator good={heartbeatStatus.isAudioActive} label="Audio activity"/>{heartbeatStatus.isIdle && <p className="mt-2 text-amber-300">{heartbeatStatus.idleReason || 'Idle'}</p>}</div>}
+          </div>}
+          {tab==='scenes' && <div className="space-y-2">{scenes.length===0?<p className="text-xs text-slate-400">No scenes configured.</p>:scenes.map(scene=><button key={scene.id} type="button" onClick={()=>onSwitchScene?.(scene.id)} disabled={!onSwitchScene || (!isPreviewing&&!isLive)} className={cn(buttonBase,'w-full justify-start px-3 py-3 text-left',activeSceneId===scene.id?'border-cyan-400/30 bg-cyan-500/20 text-cyan-200':'border-white/10 bg-white/5 text-slate-300')}>{scene.name}</button>)}<p className="text-[11px] text-slate-500">Scene switching retains the existing scene manager.</p></div>}
+          {tab==='overlays' && <div className="space-y-3"><OverlayTextControls text={overlayText} visible={overlayTextVisible} onSetText={onSetOverlayText} onToggle={onToggleOverlayText} onClear={onClearOverlayText}/><div className={cn(cardBase,'space-y-2 p-3 text-xs')}><p className="font-bold">Camera placement</p><p>X: {Math.round(cameraLayout.xPercent)}% · Y: {Math.round(cameraLayout.yPercent)}%</p><p>Width: {Math.round(cameraLayout.widthPercent)}% · Radius: {cameraLayout.radius}px</p><p className="text-slate-400">Drag the webcam overlay on the preview to reposition or resize it.</p></div>{activeSceneId && onUpdateScene && scenes.find(s=>s.id===activeSceneId)?.textOverlays.map(item=><div key={item.id} className="flex items-center gap-2"><input aria-label="Scene text" value={item.text} onChange={e=>onUpdateTextOverlay?.(activeSceneId,item.id,{text:e.target.value})} className="min-w-0 flex-1 rounded-lg border border-white/10 bg-black/30 p-2 text-xs"/><input aria-label="Scene text color" type="color" value={item.color} onChange={e=>onUpdateTextOverlay?.(activeSceneId,item.id,{color:e.target.value})}/></div>)}{activeSceneId&&onAddTextOverlay&&<button type="button" className={cn(buttonBase,'border-white/10 p-2')} onClick={()=>onAddTextOverlay(activeSceneId)}>+ Add scene text</button>}</div>}
+          {tab==='settings' && <div className="space-y-3 text-xs"><div className={cn(cardBase,'space-y-2 p-3')}><p>Engine: Agora RTC</p><p>Preview: Browser screen capture</p><p className="text-slate-400">Bitrate, connection, and publishing are controlled by the parent broadcaster page.</p></div><Agreement checked={inlineAgreementChecked} onChange={onInlineAgreementChange}/></div>}
+        </aside>}
+
+        {/* Main live canvas: use all remaining width, not a fixed-size fake screen. */}
+        <main className="flex min-h-[480px] min-w-0 flex-col gap-2 overflow-y-auto overscroll-contain lg:min-h-0 lg:overflow-hidden">
+          <section className="flex min-h-[260px] min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#080d17] lg:min-h-0">
+            <div className="flex shrink-0 items-center justify-between gap-2 border-b border-white/10 px-3 py-2.5 sm:px-4"><div className="flex min-w-0 items-center gap-2"><MonitorPlay className="h-4 w-4 shrink-0 text-cyan-300"/><h2 className="truncate text-sm font-extrabold">Game screen</h2><span className="hidden rounded bg-cyan-400/10 px-2 py-1 text-[10px] text-cyan-200 sm:inline">Source ratio preserved</span></div><button type="button" onClick={()=>setExpandedPreview(true)} aria-label="Expand game preview" className="rounded-lg p-2 hover:bg-white/10"><Maximize2 className="h-4 w-4"/></button></div>
+            {previewNode}
+          </section>
+          <div className="grid shrink-0 grid-cols-3 gap-2 sm:grid-cols-4">
+            <Metric label="Viewers" value={viewerCount.toLocaleString()} icon={<Users className="h-4 w-4"/>}/>
+            <Metric label="Duration" value={streamDuration} icon={<Activity className="h-4 w-4"/>}/>
+            <Metric label="Capture" value={screenReady?'Active':'Off'} icon={<MonitorPlay className="h-4 w-4"/>}/>
+            <div className="hidden sm:block"><Metric label="Connection" value={isLive?'LIVE':isPreviewing?'Preview':'Ready'} icon={<Radio className="h-4 w-4"/>}/></div>
+          </div>
+          {errorMessage && <div role="alert" className="flex shrink-0 items-start gap-2 rounded-lg border border-red-400/30 bg-red-500/10 p-2.5 text-xs text-red-200"><AlertTriangle className="h-4 w-4 shrink-0"/>{errorMessage}</div>}
+          <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 rounded-xl border border-white/10 bg-[#0c1424] p-2.5">
+            <div className="flex items-center gap-2"><button type="button" onClick={onToggleMic} disabled={!onToggleMic} title={isMicEnabled?'Mute microphone':'Unmute microphone'} className={cn(buttonBase,'h-10 w-10',isMicEnabled?'border-emerald-500/20 bg-emerald-500/10 text-emerald-300':'border-red-500/30 bg-red-500/10 text-red-300')}>{isMicEnabled?<Mic className="h-4 w-4"/>:<MicOff className="h-4 w-4"/>}</button><button type="button" onClick={onToggleCamera} disabled={!onToggleCamera} title={isCameraEnabled?'Disable camera':'Enable camera'} className={cn(buttonBase,'h-10 w-10',isCameraEnabled?'border-emerald-500/20 bg-emerald-500/10 text-emerald-300':'border-red-500/30 bg-red-500/10 text-red-300')}>{isCameraEnabled?<Video className="h-4 w-4"/>:<VideoOff className="h-4 w-4"/>}</button></div>
+            <div className="flex flex-wrap gap-2">{action==='preview'&&<button type="button" onClick={onStartPreview} disabled={!onStartPreview} className={cn(buttonBase,'border-cyan-400/25 bg-cyan-500 px-4 py-3 text-white')}><MonitorPlay className="h-4 w-4"/>Start Preview</button>}{isConnecting&&<span className="flex items-center gap-2 px-3 text-xs text-cyan-300"><Loader2 className="h-4 w-4 animate-spin"/>Connecting...</span>}{action==='live'&&<><button type="button" onClick={onStopPreview} disabled={!onStopPreview} className={cn(buttonBase,'border-white/10 bg-white/5 px-3 py-3')}>Stop Preview</button><button type="button" onClick={onGoLive} disabled={!inlineAgreementChecked||!onGoLive} title={!inlineAgreementChecked?'Accept the broadcast agreement to go live':undefined} className={cn(buttonBase,'border-emerald-400/30 bg-emerald-600 px-4 py-3 text-white')}><Radio className="h-4 w-4"/>Go Live</button></>}{action==='end'&&<button type="button" onClick={onEndStream} disabled={!onEndStream} className={cn(buttonBase,'border-red-400/30 bg-red-600 px-4 py-3 text-white')}><Power className="h-4 w-4"/>End Stream</button>}</div>
+          </div>
+          {!inlineAgreementChecked&&!isLive && <div className="shrink-0 rounded-xl border border-amber-400/20 bg-amber-500/5 px-3 py-2"><Agreement checked={inlineAgreementChecked} onChange={onInlineAgreementChange} compact/></div>}
+        </main>
+
+        {/* Chat stays visible at desktop widths. The injected chat component owns its own message scrolling/input. */}
+        <aside className="flex min-h-[360px] min-w-0 flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0b1221] lg:min-h-0">
+          <div className="flex shrink-0 items-center justify-between gap-2 border-b border-white/10 px-3 py-3"><div className="flex items-center gap-2"><MessageCircle className="h-4 w-4 text-cyan-300"/><h2 className="text-sm font-black">Live Chat</h2><span className={cn('rounded-md px-1.5 py-0.5 text-[10px] font-black',isLive?'bg-red-500/20 text-red-300':'bg-white/10 text-slate-400')}>{isLive?'LIVE':'STANDBY'}</span></div><button type="button" onClick={()=>setStudioChatWide(v=>!v)} aria-label={studioChatWide?'Normal chat width':'Widen chat'} className="hidden rounded-lg border border-white/10 p-1.5 text-slate-300 hover:bg-white/10 lg:inline-flex">{studioChatWide?<ChevronRight className="h-4 w-4"/>:<ChevronLeft className="h-4 w-4"/>}</button></div>
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-2 [overflow-wrap:anywhere]">{chatPanel ?? <div className="flex h-full flex-col items-center justify-center gap-2 p-4 text-center text-slate-400"><Mail className="h-7 w-7 text-slate-500"/><p className="text-xs">Your existing live chat appears here when connected.</p></div>}</div>
+          <div className="shrink-0 border-t border-white/10 px-3 py-2 text-center text-[10px] text-slate-500">Chat stays docked beside the game on desktop</div>
+        </aside>
+      </div>
+      {expandedPreview && <div role="dialog" aria-modal="true" aria-label="Expanded game preview" className="fixed inset-0 z-[100] flex flex-col bg-black p-3"><div className="mb-2 flex shrink-0 justify-between text-sm font-bold"><span>Game Preview</span><button type="button" onClick={()=>setExpandedPreview(false)} className="rounded-lg p-2 hover:bg-white/10" aria-label="Close expanded preview"><X className="h-5 w-5"/></button></div><div className="flex min-h-0 flex-1 items-center justify-center overflow-hidden rounded-xl bg-black">{screenReady?<LocalVideoPreview stream={screenStream!}/>:<p className="text-slate-400">Start preview to see your game</p>}</div></div>}
     </div>
   )
 }
 
-// ─── UI Components ────────────────────────────────────────────────────────────
-
-function Panel({ children, className, style }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
-  return <div style={style} className={cn('rounded-2xl border border-cyan-400/20 bg-[#07111d]/82 shadow-[0_0_30px_rgba(0,0,0,0.35)] backdrop-blur-xl', className)}>{children}</div>
+function Indicator({good,label}:{good:boolean;label:string}){return <div className="flex items-center gap-2 py-1 text-slate-300"><span className={cn('h-2 w-2 rounded-full',good?'bg-emerald-400':'bg-slate-500')}/>{label}</div>}
+function Metric({label,value,icon}:{label:string;value:string;icon:React.ReactNode}){return <div className="min-w-0 rounded-xl border border-white/10 bg-[#0c1424] px-3 py-2"><p className="flex items-center gap-1.5 truncate text-xs font-bold text-white">{icon}{value}</p><p className="mt-1 text-[10px] uppercase tracking-wider text-slate-500">{label}</p></div>}
+function GamePicker({open,onOpen,value,search,onSearch,games,isLoading,onChoose}:{open:boolean;onOpen:(v:boolean)=>void;value:string;search:string;onSearch:(v:string)=>void;games:string[];isLoading:boolean;onChoose:(g:string)=>void}){
+  const custom=search.trim() && !games.some(g=>g.toLowerCase()===search.trim().toLowerCase())
+  return <div className="relative"><label className="mb-1 block text-[11px] font-semibold text-slate-400">GAME CATEGORY</label><button type="button" onClick={()=>onOpen(!open)} className="flex w-full items-center justify-between rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-left text-sm"><span className="truncate">{value || 'Choose or search for any game'}</span><ChevronDown className="h-4 w-4 shrink-0"/></button>{value==='Grand Theft Auto VI'&&<span className="mt-1 inline-block rounded bg-amber-400/15 px-2 py-1 text-[10px] font-bold text-amber-200">Coming Soon</span>}{open&&<div className="relative z-40 mt-2 overflow-hidden rounded-xl border border-cyan-400/25 bg-[#0c1526] shadow-2xl"><div className="flex items-center gap-2 border-b border-white/10 p-2"><Search className="h-4 w-4 text-cyan-300"/><input autoFocus value={search} onChange={e=>onSearch(e.target.value)} placeholder="Search all games or enter a custom title" className="min-w-0 flex-1 bg-transparent p-1 text-xs text-white outline-none"/><button type="button" onClick={()=>onOpen(false)} aria-label="Close game search"><X className="h-4 w-4"/></button></div><div className="max-h-48 overflow-y-auto overscroll-contain p-1 [scrollbar-width:thin]">{isLoading&&<p className="px-2 py-1 text-xs text-cyan-200">Searching catalog...</p>}{games.map(g=><button key={g} type="button" onClick={()=>onChoose(g)} className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-xs hover:bg-white/10"><span className="truncate">{g}</span>{g==='Grand Theft Auto VI'&&<span className="ml-2 shrink-0 rounded bg-amber-400/15 px-2 py-0.5 text-[10px] font-bold text-amber-200">Coming Soon</span>}</button>)}{custom&&<button type="button" onClick={()=>onChoose(search)} className="w-full rounded-lg border-t border-white/10 px-3 py-3 text-left text-xs font-bold text-cyan-300 hover:bg-cyan-400/10">Use custom game: “{search.trim()}”</button>}{games.length===0&&!custom&&<p className="p-3 text-xs text-slate-400">No matches. Type a game name to add it.</p>}</div></div>}</div>
 }
+function Agreement({checked,onChange,compact=false}:{checked:boolean;onChange?:(v:boolean)=>void;compact?:boolean}){const [details,setDetails]=useState(false);return <div className="text-[11px]"><label className="flex cursor-pointer items-start gap-2 text-slate-300"><input type="checkbox" checked={checked} onChange={e=>onChange?.(e.target.checked)} disabled={!onChange} className="mt-0.5 accent-cyan-400"/><span>I confirm I am at least 18, and I accept the Broadcast Agreement, Terms of Service, and Community Guidelines.</span></label><button type="button" onClick={()=>setDetails(v=>!v)} className="mt-1.5 text-amber-300 underline underline-offset-2">{details?'Hide':'Read'} broadcast agreement</button>{details&&<div className="mt-2 max-h-36 space-y-2 overflow-y-auto rounded-lg border border-white/10 bg-black/30 p-3 leading-relaxed text-slate-300"><p>I confirm that I am at least 18 years old and will comply with all applicable laws in my jurisdiction. I am responsible for the content I create, stream, share, or display on Mai Troll.</p><p>I agree not to broadcast illegal activity, sell or promote controlled substances, threaten or harm others, share non-consensual content, or violate Mai Troll's Terms of Service or Community Guidelines.</p><p>I am of legal age in my jurisdiction to consume any products, substances, beverages, or other items shown or consumed during my broadcast, and any such activity complies with local laws.</p><p>Mai Troll may remove content, suspend broadcasts, restrict features, or terminate accounts for violations.</p></div>}</div>}
+function OverlayTextControls({text,visible,onSetText,onToggle,onClear}:{text:string;visible:boolean;onSetText?:(v:string)=>void;onToggle?:()=>void;onClear?:()=>void}){const [input,setInput]=useState(text);useEffect(()=>setInput(text),[text]);return <div className={cn(cardBase,'space-y-2 p-3')}><div className="flex items-center justify-between text-xs font-extrabold"><span>On-screen text</span><button type="button" onClick={onToggle} disabled={!onToggle} aria-label={visible?'Hide overlay text':'Show overlay text'}>{visible?<Eye className="h-4 w-4 text-emerald-300"/>:<EyeOff className="h-4 w-4 text-slate-400"/>}</button></div><input value={input} onChange={e=>setInput(e.target.value)} onBlur={()=>onSetText?.(input)} onKeyDown={e=>{if(e.key==='Enter')onSetText?.(input)}} className="w-full rounded-lg border border-white/10 bg-black/30 p-2 text-xs outline-none" placeholder="Type your overlay text"/><div className="flex gap-2"><button type="button" onClick={()=>onSetText?.(input)} disabled={!onSetText} className={cn(buttonBase,'flex-1 border-white/10 px-2 py-2')}>Apply</button><button type="button" onClick={()=>{setInput('');onClear?.()}} disabled={!onClear} className={cn(buttonBase,'border-red-400/25 px-2 py-2 text-red-200')}>Clear</button></div></div>}
 
-function PanelHeader({ icon, title, right }: { icon: React.ReactNode; title: string; right?: React.ReactNode }) {
-  return <div className="flex items-center justify-between border-b border-cyan-400/15 px-4 py-3"><div className="flex items-center gap-2 text-cyan-300">{icon}<h3 className="text-sm font-black uppercase tracking-wide">{title}</h3></div>{right}</div>
-}
-
-function SettingRow({ label, value }: { label: string; value: React.ReactNode }) {
-  return <div className="flex items-center justify-between gap-3 py-3 text-sm"><span className="text-slate-300">{label}</span><div className="max-w-[65%] truncate text-right font-semibold text-slate-200">{value}</div></div>
-}
-
-function CounterBadge({ value }: { value: string }) { return <span className={cn('rounded-lg px-2 py-1 text-[10px] font-black text-white', value === 'Live' ? 'bg-red-600' : 'bg-purple-600')}>{value}</span> }
-
-function StatusMetric({ label, value, good, icon }: { label: string; value: string; good?: boolean; icon?: React.ReactNode }) {
-  return <div><div className="flex items-center gap-1">{icon}<p className={cn('text-xs font-black', good ? 'text-emerald-300' : 'text-white')}>{value}</p></div><p className="mt-1 text-[10px] font-semibold text-slate-500">{label}</p></div>
-}
-
-/** Shows when screen is actively being shared */
-function _ScreenShareActiveIndicator({ isLive }: { isLive: boolean }) {
-  return (
-    <div className="flex flex-col items-center gap-4 px-6 text-center">
-      <div className="relative">
-        <div className="grid h-24 w-24 place-items-center rounded-[2rem] border border-cyan-300/25 bg-cyan-400/10 shadow-[0_0_40px_rgba(34,211,238,0.16)]">
-          <MonitorPlay className="h-12 w-12 text-cyan-200" />
-        </div>
-        {isLive && (
-          <span className="absolute -right-1 -top-1 flex items-center gap-1 rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-black text-white shadow-lg shadow-red-600/30">
-            <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
-            LIVE
-          </span>
-        )}
-      </div>
-      <div>
-        <p className="text-xl font-black text-white">{isLive ? 'Broadcasting Live' : 'Preview Mode'}</p>
-        <p className="mt-2 text-sm text-slate-400">
-          {isLive
-            ? 'Your screen is being broadcast to viewers via Agora RTC.'
-            : 'Preview your screen locally. Toggle camera/mic, then click Go Live.'}
-        </p>
-      </div>
-      <div className="flex items-center gap-4 text-xs text-slate-500">
-        <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-emerald-400" />Local Preview</span>
-        <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-cyan-400" />No OBS Required</span>
-      </div>
-    </div>
-  )
-}
-
-/** Renders a local MediaStream into a video element (for preview) */
 function LocalVideoPreview({ stream, muted = true }: { stream: MediaStream | null; muted?: boolean }) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -687,7 +517,7 @@ function DraggableCameraOverlay({
 }: {
   stream: MediaStream | null
   layout: { xPercent: number; yPercent: number; widthPercent: number; radius: number }
-  onUpdate: (updates: Partial<{ xPercent: number; yPercent: number; widthPercent: number; radius: number }>) => void
+  onUpdate?: (updates: Partial<{ xPercent: number; yPercent: number; widthPercent: number; radius: number }>) => void
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -719,7 +549,7 @@ function DraggableCameraOverlay({
     const x = Number.isFinite(next.xPercent) ? Math.min(95 - w, Math.max(0, next.xPercent!)) : l.xPercent;
     const y = Number.isFinite(next.yPercent) ? Math.min(85, Math.max(0, next.yPercent!)) : l.yPercent;
     const r = Number.isFinite(next.radius) ? Math.min(28, Math.max(0, next.radius!)) : l.radius;
-    onUpdateRef.current({ xPercent: x, yPercent: y, widthPercent: w, radius: r });
+    onUpdateRef.current?.({ xPercent: x, yPercent: y, widthPercent: w, radius: r });
   }, []);
 
   const handleDragStart = useCallback((e: React.MouseEvent | React.TouchEvent, clientX: number, clientY: number) => {
@@ -740,13 +570,13 @@ function DraggableCameraOverlay({
     if (isDragging) {
       const dx = clientX - dragStart.current.clientX;
       const dy = clientY - dragStart.current.clientY;
-      const dxPct = (dx / window.innerWidth) * 100;
-      const dyPct = (dy / window.innerHeight) * 100;
+      const dxPct = (dx / (containerRef.current?.parentElement?.clientWidth || window.innerWidth)) * 100;
+      const dyPct = (dy / (containerRef.current?.parentElement?.clientHeight || window.innerHeight)) * 100;
       applyUpdate({ xPercent: dragStart.current.x + dxPct, yPercent: dragStart.current.y + dyPct });
     }
     if (isResizing) {
       const dx = clientX - resizeStart.current.clientX;
-      const dxPct = (dx / window.innerWidth) * 100;
+      const dxPct = (dx / (containerRef.current?.parentElement?.clientWidth || window.innerWidth)) * 100;
       applyUpdate({ widthPercent: resizeStart.current.width + dxPct });
     }
   }, [isDragging, isResizing, applyUpdate]);
@@ -793,7 +623,7 @@ function DraggableCameraOverlay({
         width: `${layout.widthPercent}%`,
         aspectRatio: '4 / 3',
         borderRadius: `${layout.radius}px`,
-        maxWidth: '70vw',
+        maxWidth: '100%',
       }}
     >
       <div
@@ -801,6 +631,9 @@ function DraggableCameraOverlay({
           'relative overflow-hidden rounded-xl border-2 shadow-2xl transition',
           (isDragging || isResizing) ? 'border-cyan-300 shadow-cyan-500/30' : 'border-white/20'
         )}
+        // Drag anywhere on the card body — the resize corner stops propagation so it wins.
+        onMouseDown={(e) => { e.preventDefault(); handleDragStart(e, e.clientX, e.clientY); }}
+        onTouchStart={(e) => { if (e.touches.length === 1) { e.preventDefault(); handleDragStart(e, e.touches[0].clientX, e.touches[0].clientY); } }}
       >
         <video
           ref={videoRef}
@@ -814,90 +647,17 @@ function DraggableCameraOverlay({
           <div className="h-1.5 w-1.5 rounded-full bg-red-400 animate-pulse" />
           CAM
         </div>
-        {/* Drag handle (top edge) */}
+        {/* Resize handle (bottom-right corner) — stops propagation so it wins over card drag */}
         <div
-          className="absolute top-0 left-0 right-0 h-2 cursor-move bg-black/40"
-          onMouseDown={(e) => handleDragStart(e, e.clientX, e.clientY)}
-          onTouchStart={(e) => handleDragStart(e, e.touches[0].clientX, e.touches[0].clientY)}
-        />
-        {/* Resize handle (bottom-right corner) */}
-        <div
-          className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize bg-white/20 rounded-bl-[inherit]"
-          onMouseDown={(e) => handleResizeStart(e, e.clientX, e.clientY)}
-          onTouchStart={(e) => handleResizeStart(e, e.touches[0].clientX, e.touches[0].clientY)}
+          className="absolute bottom-0 right-0 w-6 h-6 cursor-se-resize bg-white/20 hover:bg-white/40 rounded-bl-[inherit] transition"
+          onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); handleResizeStart(e, e.clientX, e.clientY); }}
+          onTouchStart={(e) => { e.stopPropagation(); if (e.touches.length === 1) { e.preventDefault(); handleResizeStart(e, e.touches[0].clientX, e.touches[0].clientY); } }}
+          title="Drag to resize camera"
         />
       </div>
     </div>
   );
 }
 
-/** On-screen text controls for the host. */
-function OverlayTextControls({
-  text,
-  visible,
-  onSetText,
-  onToggle,
-  onClear,
-}: {
-  text: string
-  visible: boolean
-  onSetText: (text: string) => void
-  onToggle: () => void
-  onClear: () => void
-}) {
-  const [input, setInput] = useState(text);
-
-  useEffect(() => { setInput(text); }, [text]);
-
-  return (
-    <Panel>
-      <PanelHeader icon={<Activity className="h-4 w-4" />} title="On-Screen Text" />
-      <div className="p-4 space-y-3">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Display Text</span>
-          <button
-            type="button"
-            onClick={onToggle}
-            className={cn('grid h-7 w-7 place-items-center rounded-lg border transition', visible
-              ? 'border-emerald-300/30 bg-emerald-400/10 text-emerald-200'
-              : 'border-red-300/30 bg-red-500/10 text-red-200')}
-          >
-            {visible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-          </button>
-        </div>
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onBlur={() => onSetText(input)}
-          placeholder="Type on-screen text..."
-          className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-sm text-white placeholder:text-slate-500 outline-none focus:border-cyan-300/50"
-        />
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => { setInput(''); onClear(); }}
-            disabled={!input}
-            className="flex-1 rounded-xl border border-red-400/30 bg-red-500/10 px-3 py-2 text-xs font-bold text-red-200 hover:bg-red-500/20 disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            Clear Text
-          </button>
-          <button
-            type="button"
-            onClick={() => onToggle()}
-            className="flex-1 rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-xs font-bold text-slate-300 hover:bg-white/[0.08]"
-          >
-            {visible ? 'Hide' : 'Show'}
-          </button>
-        </div>
-        {input && (
-          <div className="rounded-lg border border-white/10 bg-black/20 p-3 text-xs font-bold text-white/80">
-            Preview: {input}
-          </div>
-        )}
-      </div>
-    </Panel>
-  );
-}
 
 export default GamingSetup

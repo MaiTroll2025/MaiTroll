@@ -47,6 +47,7 @@ export default function AppLayout({
     const _showLegacySidebar = useAuthStore((s) => s.showLegacySidebar)
     const user = useAuthStore((s) => s.user)
     const { isMobileWidth } = useIsMobile()
+    const isHomePage = location.pathname === '/' || location.pathname === '/home'
     const isAuthPage = location.pathname.startsWith('/auth');
     const isPublicWebOnlyPage = requiresWebRenderer(location.pathname);
     const isLivePage = location.pathname.startsWith('/live/') || location.pathname.startsWith('/watch/') || location.pathname.startsWith('/gaming/watch/') || (location.pathname.startsWith('/broadcast/') && !location.pathname.startsWith('/broadcast/setup')) || location.pathname.startsWith('/stream/') || location.pathname === '/live-swipe';
@@ -224,12 +225,12 @@ export default function AppLayout({
    const appThemeClass = isThemeExemptPage ? 'tc-theme-exempt' : 'tc-app-shell';
 
   return (
-    <div className={`app-viewport ${appThemeClass} w-screen h-dvh overflow-hidden text-white flex relative`}>
+    <div className={`app-viewport ${appThemeClass} ${!isMobileWidth ? 'tc-web-layout' : ''} ${!isMobileWidth ? (isHomePage ? 'tc-home-web-zoom' : 'tc-web-page-zoom') : ''} w-full min-w-0 h-dvh overflow-hidden text-white flex relative`}>
       {!isAuthPage && <PurchaseRequiredModal />}
       <div className="flex-1 flex flex-col min-h-0 min-w-0 relative">
         {/* Header - Sticky or Fixed */}
         {effectiveShowHeader && !isMobileLayout && (
-          <div className="shrink-0 z-20">
+          <div className="relative z-[1000] shrink-0">
             <Header />
           </div>
         )}

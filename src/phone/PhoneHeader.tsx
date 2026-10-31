@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { Bell, User } from 'lucide-react';
+import { useNavigate } from 'react-router-dom'
 import GlobalTicker from '@/components/header/GlobalTicker'
 import PhoneDrawer from './PhoneDrawer'
 import { PhoneButton } from './components/PhoneButton'
@@ -33,6 +34,7 @@ export default function PhoneHeader({
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [loading, setLoading] = useState(true)
+  const navigate = useNavigate()
   const { profile } = useAuthStore()
 
   const fetchNotifications = useCallback(async () => {
@@ -149,7 +151,7 @@ export default function PhoneHeader({
     }
 
     setNotificationsOpen(false)
-    window.location.assign(route)
+    navigate(route)
   }
 
 return (
@@ -273,7 +275,7 @@ return (
 
                     <div className="px-4 py-2 border-t border-white/10">
                       <button
-                        onClick={() => { setNotificationsOpen(false); window.location.assign('/notifications') }}
+                        onClick={() => { setNotificationsOpen(false); navigate('/notifications') }}
                         className="w-full text-center text-sm text-cyan-400 font-medium"
                       >
                         View all notifications
@@ -292,7 +294,7 @@ return (
                 ) : (
                   <User size={28} strokeWidth={2.5} />
                 )}
-                onClick={() => window.location.assign('/profile')}
+                onClick={() => navigate('/profile')}
               />
             </div>
           ) : (

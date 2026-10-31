@@ -39,9 +39,14 @@ export function applyCameraVideoPresentation(
     mirror?: boolean
   },
 ): void {
+  const facingMode = getCameraFacingMode(options.track, options.facingMode ?? 'user')
+
+  video.style.objectFit = 'cover'
+  video.style.objectPosition = 'center'
+
   applyBroadcastTrackZoom(video, {
     track: options.track,
-    facingMode: options.facingMode,
+    facingMode,
     isLocal: options.isLocal,
     mirror: options.mirror,
   })

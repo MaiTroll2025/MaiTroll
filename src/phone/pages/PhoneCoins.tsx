@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../lib/store'
 import { ArrowLeft, Coins, ShoppingBag, History, TrendingUp, Zap } from 'lucide-react';
+import { COIN_PACKAGES } from '../../lib/coinMath';
+import PayPalPaymentModal from '@/components/broadcast/PayPalPaymentModal'
 
 interface CoinPackage {
   id: string
@@ -16,10 +18,12 @@ interface CoinPackage {
 export default function PhoneCoins() {
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
-  const _profile = useAuthStore((s) => s.profile)
+  const profile = useAuthStore((s) => s.profile)
   const [balance, setBalance] = useState<number>(0)
   const [packages, setPackages] = useState<CoinPackage[]>([])
   const [loading, setLoading] = useState(true)
+  const [paypalOpen, setPaypalOpen] = useState(false)
+  const [selectedPkg, setSelectedPkg] = useState<any>(null)
 
   useEffect(() => {
     if (!user?.id) return
@@ -59,36 +63,44 @@ export default function PhoneCoins() {
   }, [user?.id])
 
   useEffect(() => {
-    const pkgs: CoinPackage[] = [
-      { id: '1', name: 'Starter', coins: 125, price: 0.99 },
-      { id: '2', name: 'Basic', coins: 500, price: 3.99, popular: true },
-      { id: '3', name: 'Pro', coins: 1000, price: 7.99 },
-      { id: '4', name: 'Elite', coins: 2500, price: 19.99 },
-      { id: '5', name: 'Legend', coins: 6250, price: 49.99 },
-    ]
+    const pkgs: CoinPackage[] = COIN_PACKAGES.map((pkg) => ({
+      id: pkg.id,
+      name: pkg.label,
+      coins: pkg.coins,
+      price: pkg.usdPrice,
+      popular: pkg.id === 'pkg-1000',
+    }))
     setPackages(pkgs)
   }, [])
 
-  const handlePurchase = async (pkg: CoinPackage) => {
+  const handlePurchase = (pkg: CoinPackage) => {
     if (!user?.id) {
       navigate('/auth')
       return
     }
 
-    try {
-      const { error } = await supabase.functions.invoke('create-coin-purchase', {
-        body: {
-          packageId: pkg.id,
-          coins: pkg.coins + (pkg.bonus || 0),
-          price: pkg.price,
-        },
-      })
+    const purchasePkg = {
+      ...pkg,
+      price: `$${pkg.price.toFixed(2)}`,
+      purchaseType: 'coins',
+      coin_amount: pkg.coins + (pkg.bonus || 0),
+    }
+    setSelectedPkg(purchasePkg)
+    setPaypalOpen(true)
+  }
 
-      if (error) throw error
-      alert('Purchase initiated! Complete payment in the web app.')
-    } catch (err) {
-      console.error('Purchase error:', err)
-      alert('Purchase failed. Try again.')
+  const handlePaymentSuccess = () => {
+    setPaypalOpen(false)
+    setSelectedPkg(null)
+    if (user?.id) {
+      supabase
+        .from('user_profiles')
+        .select('troll_coins')
+        .eq('id', user.id)
+        .maybeSingle()
+        .then(({ data }) => {
+          setBalance(data?.troll_coins ?? 0)
+        })
     }
   }
 
@@ -189,6 +201,18 @@ export default function PhoneCoins() {
           </div>
         </section>
       </main>
+
+      <PayPalPaymentModal
+        isOpen={paypalOpen}
+        onClose={() => {
+          setPaypalOpen(false)
+          setSelectedPkg(null)
+        }}
+        pkg={selectedPkg}
+        userId={user?.id ?? ''}
+        profile={profile ?? null}
+        onPaymentSuccess={handlePaymentSuccess}
+      />
     </div>
   )
 }

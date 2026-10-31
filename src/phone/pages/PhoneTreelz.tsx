@@ -2018,9 +2018,10 @@ export default function PhoneTreelz() {
       <header className="absolute left-0 right-0 top-0 z-[60] flex items-center justify-between px-4 py-3">
         <button
           onClick={() => navigate(-1)}
-          className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-black/45 backdrop-blur-xl active:scale-90"
+          className="flex h-11 w-11 items-center justify-center gap-1 rounded-xl border border-[#00BFFF]/30 bg-[#00BFFF]/10 text-[#00BFFF] backdrop-blur-xl active:scale-90 shadow-[0_0_15px_rgba(0,191,255,0.25)]"
         >
-          <ArrowLeft size={28} className="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
+          <ArrowLeft size={24} className="text-[#00BFFF] drop-shadow-[0_0_8px_rgba(0,191,255,0.6)]" />
+          <span className="text-[10px] font-black">Back</span>
         </button>
 
         <div className="rounded-full border border-white/10 bg-black/40 px-4 py-2 backdrop-blur-xl">

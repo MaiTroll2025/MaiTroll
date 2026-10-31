@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import type { Stream, Profile, TipPackage } from '../types/database'
 import { supabase } from '../lib/supabase'
 import { useLiveContent } from '../hooks/useLiveContent'
@@ -19,6 +19,7 @@ const CATEGORY_ICONS: Record<string, string> = {
 
 export default function HomePage() {
    const { user } = useAuth()
+   const navigate = useNavigate()
    const { onlineUsers, loadingOnline } = useLiveContent()
    const [streams, setStreams] = useState<Stream[]>([])
   const [creators, setCreators] = useState<Profile[]>([])
@@ -206,9 +207,9 @@ export default function HomePage() {
                   The ultimate live singing competition. Perform on stage, judge with your voice, send gifts, and compete for the Mai Winner crown.
                 </p>
               </div>
-              <button
+                <button
                 onClick={() => {
-                  window.location.href = '/mai-sing-off'
+                  navigate('/mai-sing-off')
                 }}
                 className="rounded-full bg-white px-6 py-2.5 text-sm font-bold text-pink-700 shadow-xl hover:bg-yellow-300"
               >
