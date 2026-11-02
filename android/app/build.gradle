@@ -13,8 +13,8 @@ android {
         applicationId "com.maitroll.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 53
-        versionName "1.2.22"
+        versionCode 55
+        versionName "1.2.24"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -59,11 +59,21 @@ dependencies {
 
 apply from: 'capacitor.build.gradle'
 
-try {
-    def servicesJSON = file('google-services.json')
-    if (servicesJSON.text) {
-        apply plugin: 'com.google.gms.google-services'
+def googleServicesJSON = file('google-services.json')
+def hasGoogleServicesJSON = googleServicesJSON.isFile() && googleServicesJSON.length() > 0
+
+if (hasGoogleServicesJSON) {
+    apply plugin: 'com.google.gms.google-services'
+} else {
+    logger.warn("google-services.json not found. Android push notifications are disabled.")
+}
+
+tasks.matching { it.name == 'preReleaseBuild' }.configureEach {
+    doFirst {
+        if (!hasGoogleServicesJSON) {
+            throw new GradleException(
+                'Missing android/app/google-services.json. Add the Firebase Android config for com.maitroll.app before building a release; otherwise PushNotifications.register() will crash the app.'
+            )
+        }
     }
-} catch(Exception e) {
-    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
 }

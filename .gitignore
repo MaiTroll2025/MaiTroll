@@ -45,6 +45,8 @@ trolltown_unreal/
 *.uproject
 
 # Local-only files
+artifacts/android-emulator/
+artifacts/android-logcat/
 local-ios-fix.patch
 tools/supabase/supabase.exe
 raw-gift-videos/

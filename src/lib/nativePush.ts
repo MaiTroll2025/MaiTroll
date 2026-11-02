@@ -1,4 +1,4 @@
-import { Capacitor } from '@capacitor/core'
+import { Capacitor, registerPlugin } from '@capacitor/core'
 import {
   PushNotifications,
   type Token,
@@ -8,6 +8,13 @@ import { openNotificationDestination } from './notificationDestination'
 
 let listenersRegistered = false
 let registrationInFlight: Promise<void> | null = null
+
+type FirebaseAvailabilityPlugin = {
+  isInitialized(): Promise<{ initialized: boolean }>
+}
+
+const FirebaseAvailability =
+  registerPlugin<FirebaseAvailabilityPlugin>('FirebaseAvailability')
 
 const nativePlatform = () => {
   try {
@@ -62,6 +69,21 @@ export async function registerNativePush(userId: string) {
 async function registerNativePushForUser(_userId: string) {
   try {
     if (!nativePlatform()) return
+
+    if (Capacitor.getPlatform() === 'android') {
+      try {
+        const { initialized } = await FirebaseAvailability.isInitialized()
+        if (!initialized) {
+          console.error(
+            '[NativePush] Firebase is not initialized. Add android/app/google-services.json to enable Android push notifications.',
+          )
+          return
+        }
+      } catch (firebaseCheckError) {
+        console.error('[NativePush] Could not verify Firebase initialization:', firebaseCheckError)
+        return
+      }
+    }
 
     if (!listenersRegistered) {
       try {
