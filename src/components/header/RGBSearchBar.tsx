@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/lib/store';
 import { toast } from 'sonner';
+import { trackMaitrollSearch } from '@/lib/siteAnalytics';
 
 interface SearchResult {
   id: string;
@@ -132,6 +133,7 @@ const RGBSearchBar = () => {
         return;
       }
 
+      trackMaitrollSearch(searchTerm);
       setIsLoading(true);
 
       try {

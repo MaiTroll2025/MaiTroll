@@ -10,6 +10,7 @@ import { useUserFrame } from '@/hooks/useUserFrame'
 import { getAnonymousDisplayName } from '@/lib/anonymousIdentity'
 import { sendChatThroughGate } from '@/lib/sendChatThroughGate'
 import { generateUUID } from '@/lib/uuid'
+import { moderation } from '@/services/maitrollModeration'
 
 /** Small avatar for chat messages — extracts useUserFrame out of .map() */
 function ChatAvatar({ userId, avatarUrl, username }: { userId?: string; avatarUrl: string; username: string }) {
@@ -109,6 +110,12 @@ export function GamingChat({ streamId, className }: GamingChatProps) {
     }
 
     setInput('')
+
+    const modResult = await moderation.checkContent(user.id, text, 'chat')
+    if (!modResult.allowed) {
+      toast.error(modResult.message || 'That message violates Mai Troll\'s chat rules and was not sent.')
+      return
+    }
 
     const displayName = user
       ? (profile?.username || 'You')

@@ -89,11 +89,16 @@ export default function ExploreSearchResults() {
     const term = q.trim()
     try {
       const like = term ? `%${term}%` : '%'
+      const userSearch = supabase
+        .from('user_profiles')
+        .select('id, username, avatar_url, role, followers_count')
+        .ilike('username', like)
+      const usersQuery = user?.id ? userSearch.neq('id', user.id) : userSearch
 
       const [postsRes, usersRes, streamsRes, storesRes, broadRes, auctionsRes, articlesRes, postsForTags] =
         await Promise.all([
           supabase.from('troll_wall_posts_public').select('id, user_id, username, avatar_url, content, created_at, likes').ilike('content', like).order('created_at', { ascending: false }).limit(20),
-          supabase.from('user_profiles').select('id, username, avatar_url, role, followers_count').ilike('username', like).neq('id', user?.id || '').order('followers_count', { ascending: false }).limit(20),
+          usersQuery.order('followers_count', { ascending: false }).limit(20),
           supabase.from('streams').select('id, title, broadcaster_id, category, current_viewers, is_live, thumbnail_url').ilike('title', like).eq('is_live', true).order('current_viewers', { ascending: false }).limit(20),
           supabase.from('shop_items').select('id, name, shop_id, price_coins, image_url, created_at').ilike('name', like).order('created_at', { ascending: false }).limit(20),
           supabase.from('broadcaster_stats').select('user_id, total_gifts_all_time').order('total_gifts_all_time', { ascending: false }).limit(20),

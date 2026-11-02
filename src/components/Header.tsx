@@ -1,11 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Bell, BellRing, Home, LogOut, Monitor, Users, Download, Smartphone, Plus, ChevronRight, Maximize2, Minimize2, ChevronDown, ArrowRight, Radio, Zap } from 'lucide-react';
+import { Bell, BellRing, Home, LogOut, Monitor, Download, Smartphone, Plus, ChevronRight, Maximize2, Minimize2, ChevronDown, ArrowRight, Radio, Zap } from 'lucide-react';
 import { toast } from 'sonner'
 
 import { useAuthStore } from '../lib/store'
 import { doesUserProfileExist, supabase } from '../lib/supabase'
-import { usePresenceStore } from '../lib/presenceStore'
 import { getVapidPublicKey } from '../lib/vapid';
 import ProfileFrame from '@/components/profile/ProfileFrame'
 import { useUserFrame } from '@/hooks/useUserFrame'
@@ -20,7 +19,6 @@ import { useIsPhone } from '../phone/useIsPhone'
 
 const Header = () => {
   const { user, profile } = useAuthStore()
-  const onlineCount = usePresenceStore((state) => state.onlineUserIds.size)
   const headerFrame = useUserFrame(user?.id)
   const navigate = useNavigate()
   const location = useLocation()
@@ -54,6 +52,25 @@ const Header = () => {
     setNotificationDropdownOpen((prev) => !prev)
   }
 
+  const clearAllNotifications = async () => {
+    if (!user?.id) return
+    try {
+      await supabase
+        .from('notifications')
+        .update({ is_read: true, read_at: new Date().toISOString() })
+        .eq('user_id', user.id)
+        .eq('is_read', false)
+      await supabase.from('jail_notifications').update({ is_read: true }).eq('user_id', user.id)
+      setUnreadNotifications(0)
+      setNotifications([])
+      setNotificationDropdownOpen(false)
+      toast.success('Notifications cleared')
+    } catch (err) {
+      console.error('Error clearing notifications:', err)
+      toast.error('Failed to clear notifications')
+    }
+  }
+
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (notificationRef.current && !notificationRef.current.contains(e.target as Node)) {
@@ -78,41 +95,6 @@ const Header = () => {
     ((profile as any)?.role === 'admin' ||
       (profile as any)?.role === 'ceo' ||
       (profile as any)?.is_admin)
-  const [canOpenRtcMonitor, setCanOpenRtcMonitor] = useState(false)
-
-  useEffect(() => {
-    let cancelled = false
-
-    const checkRtcMonitorAccess = async () => {
-      if (!user?.id) {
-        setCanOpenRtcMonitor(false)
-        return
-      }
-
-      try {
-        const { data, error } = await supabase.rpc('can_access_rtc_admin_monitor', {
-          p_user_id: user.id,
-        })
-
-        if (error) throw error
-        if (!cancelled) setCanOpenRtcMonitor(!!data)
-      } catch (error) {
-        console.error('[Header] RTC monitor access check failed:', error)
-        if (!cancelled) setCanOpenRtcMonitor(false)
-      }
-    }
-
-    void checkRtcMonitorAccess()
-    return () => {
-      cancelled = true
-    }
-  }, [user?.id, profile?.role, profile?.troll_role, profile?.is_admin, profile?.is_superadmin])
-
-  const openRtcMonitor = () => {
-    if (canOpenRtcMonitor) {
-      navigate('/rtcadminmonitor')
-    }
-  }
 
   const urlBase64ToUint8Array = (base64String: string) => {
     const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
@@ -483,28 +465,6 @@ const Header = () => {
           <div className="relative z-20 ml-auto flex shrink-0 items-center gap-1 sm:gap-1.5 lg:gap-2">
           {user && <PresidentialToolsModal />}
 
-          {user && (canOpenRtcMonitor ? (
-            <button
-              onClick={openRtcMonitor}
-              className="relative z-10 pointer-events-auto inline-flex h-9 items-center gap-1.5 rounded-xl border border-white/[0.07] bg-white/[0.035] px-2 text-slate-300 transition-all duration-200 hover:border-cyan-300/25 hover:bg-cyan-400/[0.08] hover:text-cyan-200 sm:h-10 sm:px-2.5"
-              title="Open RTC Admin Monitor"
-              aria-label={`Open RTC Admin Monitor; ${onlineCount} users online`}
-              type="button"
-            >
-              <Monitor className="h-5 w-5" />
-              <span className="text-xs font-bold tabular-nums">{onlineCount}</span>
-            </button>
-          ) : (
-            <div
-              className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-white/[0.07] bg-white/[0.035] px-2 text-slate-300 sm:h-10 sm:px-2.5"
-              title={`${onlineCount} users online`}
-              aria-label={`${onlineCount} users online`}
-            >
-              <Users className="h-5 w-5" />
-              <span className="text-xs font-bold tabular-nums">{onlineCount}</span>
-            </div>
-          ))}
-
           {user && (
               <button
                 onClick={toggleFullscreen}
@@ -631,15 +591,23 @@ const Header = () => {
                 <div className="absolute right-0 z-50 mt-3 w-[min(340px,calc(100vw-24px))] overflow-hidden rounded-2xl border border-white/10 bg-[#0d1324]/95 shadow-[0_24px_70px_rgba(0,0,0,0.65)] backdrop-blur-2xl">
                   <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
                     <h3 className="text-xs font-black text-white">Notifications</h3>
-                    <button
-                      onClick={() => {
-                        setNotificationDropdownOpen(false)
-                        navigate('/trollifications')
-                      }}
-                      className="text-xs font-bold text-cyan-300 hover:text-cyan-200"
-                    >
-                      Open full page <ArrowRight className="w-3 h-3 ml-0.5" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={clearAllNotifications}
+                        className="text-xs font-bold text-red-400 hover:text-red-300"
+                      >
+                        Clear all
+                      </button>
+                      <button
+                        onClick={() => {
+                          setNotificationDropdownOpen(false)
+                          navigate('/trollifications')
+                        }}
+                        className="text-xs font-bold text-cyan-300 hover:text-cyan-200"
+                      >
+                        Open full page <ArrowRight className="w-3 h-3 ml-0.5" />
+                      </button>
+                    </div>
                   </div>
 
                   {notificationsLoading ? (

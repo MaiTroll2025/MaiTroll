@@ -17,12 +17,15 @@ export const mockSupabase = {
   insert: vi.fn(() => mockSupabase),
   update: vi.fn(() => mockSupabase),
   delete: vi.fn(() => mockSupabase),
-  channel: vi.fn(() => ({
-    subscribe: vi.fn(),
-    unsubscribe: vi.fn(),
-    remove: vi.fn(),
-    on: vi.fn(),
-  })),
+  channel: vi.fn(() => {
+    const ch = {
+      subscribe: vi.fn(),
+      unsubscribe: vi.fn(),
+      remove: vi.fn(),
+      on: vi.fn(() => ch),
+    };
+    return ch;
+  }),
   removeChannel: vi.fn(),
 } as unknown as SupabaseClient
 

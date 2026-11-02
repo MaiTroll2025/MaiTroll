@@ -84,6 +84,7 @@ import {
   sendStreamBroadcast,
 } from '@/lib/realtime/streamRealtimeManager'
 import { sendChatThroughGate } from '@/lib/sendChatThroughGate'
+import { moderation } from '@/services/maitrollModeration'
 
 import {
   isValidUuid,
@@ -4174,6 +4175,12 @@ useEffect(() => {
         timestamp: Date.now(),
       }, ...previous].slice(0, 50))
       setChatInput('')
+
+      const modResult = await moderation.checkContent(user.id, trimmed, 'chat')
+      if (!modResult.allowed) {
+        toast.error(modResult.message || 'That message violates Mai Troll\'s chat rules and was not sent.')
+        return
+      }
 
       try {
         const result = await sendChatThroughGate({

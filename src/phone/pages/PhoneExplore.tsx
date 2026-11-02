@@ -4,6 +4,7 @@ import { ArrowLeft, Eye, Play, Radio, Search, Flame } from 'lucide-react';
 
 import { supabase } from '@/lib/supabase'
 import { searchUsers } from '@/lib/filtered'
+import { trackMaitrollSearch } from '@/lib/siteAnalytics'
 import HashtagCaption from '@/components/HashtagCaption'
 import { getPhoneNavSections, type PhoneNavSection } from '../phoneNav'
 import { usePhoneRoleAccess } from '../usePhoneRoleAccess'
@@ -200,6 +201,7 @@ export default function PhoneExplore() {
       setUsers([])
       return
     }
+    trackMaitrollSearch(query)
 
     let cancelled = false
     setLoadingUsers(true)

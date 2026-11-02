@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { isMarketingAgent, supabase, UserRole } from '../lib/supabase'
 import { useAuthStore } from '../lib/store'
 import { NIGHT_WATCH_PATROL_ROLES } from '../lib/staff'
+import { canAccessRtcAdminMonitor } from '../lib/rtcAdminAccess'
 import { canAccessTromail } from '../lib/tromail'
 import { useShareAThonRestriction } from '../hooks/useShareAThonRestriction'
 import { useBroadcastLockdown } from '../hooks/useBroadcastLockdown'
@@ -109,7 +110,6 @@ export function usePhoneRoleAccess(): PhoneRoleAccess {
   const [canSeeInmates, setCanSeeInmates] = useState(false)
   const [canSeeAuctionStudio, setCanSeeAuctionStudio] = useState(false)
   const [canSeeAgencyHR, setCanSeeAgencyHR] = useState(false)
-  const [canAccessRtcAdminMonitor, setCanAccessRtcAdminMonitor] = useState(false)
 
   const role = String(profile?.role || '')
   const trollRole = String(profile?.troll_role || '')
@@ -311,18 +311,6 @@ export function usePhoneRoleAccess(): PhoneRoleAccess {
       } catch (error) {
         console.error('[usePhoneRoleAccess] error:', error)
       }
-
-      // RTC Admin Monitor permission: admin roles always pass; Career roles
-      // require an explicit server-side grant (can_access_rtc_admin_monitor).
-      // This is enforced server-side — the frontend is not the only layer.
-      try {
-        const { data: rtcData } = await supabase.rpc('can_access_rtc_admin_monitor', {
-          p_user_id: profile.id,
-        })
-        if (!cancelled) setCanAccessRtcAdminMonitor(!!rtcData)
-      } catch {
-        if (!cancelled) setCanAccessRtcAdminMonitor(false)
-      }
     }
 
     run()
@@ -366,7 +354,7 @@ export function usePhoneRoleAccess(): PhoneRoleAccess {
     isShareAThonRestricted,
     canBroadcast,
     showAdminPagesTab,
-    canAccessRtcAdminMonitor,
+    canAccessRtcAdminMonitor: canAccessRtcAdminMonitor(profile),
   }
 }
 

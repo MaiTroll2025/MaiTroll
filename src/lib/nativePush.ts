@@ -9,66 +9,109 @@ import { openNotificationDestination } from './notificationDestination'
 let listenersRegistered = false
 
 const nativePlatform = () => {
-  const currentPlatform = Capacitor.getPlatform()
-  return currentPlatform === 'android' || currentPlatform === 'ios'
+  try {
+    const currentPlatform = Capacitor.getPlatform()
+    return currentPlatform === 'android' || currentPlatform === 'ios'
+  } catch {
+    return false
+  }
 }
 
 const saveToken = async (userId: string, token: string) => {
-  const platform = Capacitor.getPlatform()
-  if (platform !== 'android' && platform !== 'ios') return
+  try {
+    const platform = Capacitor.getPlatform()
+    if (platform !== 'android' && platform !== 'ios') return
 
-  const { error } = await supabase.from('native_push_tokens').upsert(
-    {
-      user_id: userId,
-      token,
-      platform,
-      user_agent: navigator.userAgent,
-      is_active: true,
-      last_seen_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: 'token' },
-  )
+    const { error } = await supabase.from('native_push_tokens').upsert(
+      {
+        user_id: userId,
+        token,
+        platform,
+        user_agent: navigator.userAgent,
+        is_active: true,
+        last_seen_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'token' },
+    )
 
-  if (error) {
-    console.error('[NativePush] Failed to save token:', error)
+    if (error) {
+      console.error('[NativePush] Failed to save token:', error)
+    }
+  } catch (err) {
+    console.error('[NativePush] saveToken threw:', err)
   }
 }
 
 export async function registerNativePush(_userId: string) {
-  if (!nativePlatform()) return
+  try {
+    if (!nativePlatform()) return
 
-  if (!listenersRegistered) {
-    await PushNotifications.addListener('registration', (token: Token) => {
-      const currentUserId = supabase.auth.getUser().then(({ data }) => data.user?.id)
-      void currentUserId.then((id) => {
-        if (id && token.value) void saveToken(id, token.value)
-      })
+    if (!listenersRegistered) {
+      try {
+        await PushNotifications.addListener('registration', (token: Token) => {
+          void supabase.auth.getUser().then(({ data }) => {
+            const id = data?.user?.id
+            if (id && token.value) {
+              void saveToken(id, token.value)
+            }
+          }).catch((err) => {
+            console.error('[NativePush] registration listener getUser threw:', err)
+          })
+        })
+      } catch (listenerErr) {
+        console.error('[NativePush] addListener registration threw:', listenerErr)
+      }
+
+      try {
+        await PushNotifications.addListener('registrationError', (error) => {
+          console.error('[NativePush] Registration failed:', error)
+        })
+      } catch (listenerErr) {
+        console.error('[NativePush] addListener registrationError threw:', listenerErr)
+      }
+
+      try {
+        await PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
+          try {
+            void openNotificationDestination(
+              action.notification.data?.route || action.notification.data?.url,
+            )
+          } catch (navErr) {
+            console.error('[NativePush] pushNotificationActionPerformed threw:', navErr)
+          }
+        })
+      } catch (listenerErr) {
+        console.error('[NativePush] addListener pushNotificationActionPerformed threw:', listenerErr)
+      }
+
+      listenersRegistered = true
+    }
+
+    let permission
+    try {
+      permission = await PushNotifications.checkPermissions()
+    } catch (permErr) {
+      console.error('[NativePush] checkPermissions threw:', permErr)
+      return
+    }
+
+    const result = permission.receive === 'prompt'
+      ? (await PushNotifications.requestPermissions().catch((reqErr) => {
+          console.error('[NativePush] requestPermissions threw:', reqErr)
+          return { receive: 'denied' as const }
+        }))
+      : permission
+
+    if (result.receive !== 'granted') {
+      console.warn('[NativePush] Notification permission was not granted')
+      return
+    }
+
+    await PushNotifications.register().catch((regErr) => {
+      console.error('[NativePush] register threw:', regErr)
     })
-
-    await PushNotifications.addListener('registrationError', (error) => {
-      console.error('[NativePush] Registration failed:', error)
-    })
-
-    // Action performed when user taps notification
-    await PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
-      void openNotificationDestination(
-        action.notification.data?.route || action.notification.data?.url,
-      )
-    })
-
-    listenersRegistered = true
+  } catch (err) {
+    console.error('[NativePush] registerNativePush threw:', err)
   }
-
-  const permission = await PushNotifications.checkPermissions()
-  const result = permission.receive === 'prompt'
-    ? await PushNotifications.requestPermissions()
-    : permission
-
-  if (result.receive !== 'granted') {
-    console.warn('[NativePush] Notification permission was not granted')
-    return
-  }
-
-  await PushNotifications.register()
 }

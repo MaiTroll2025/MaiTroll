@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { supabase } from '../../lib/supabase'
 import { useUserRestrictions } from '@/hooks/useUserRestrictions'
+import { moderation } from '@/services/maitrollModeration'
 import { createNotification } from '../../lib/notifications'
 import StoryViewer from '../components/MaiPiksStoryViewer'
 import { PhoneButton } from '../components/PhoneButton'
@@ -848,6 +849,12 @@ export default function PhoneMaiPiks() {
   const _createPost = async (media: { url: string; path: string }, caption: string, visibility: StoryVisibility) => {
     if (!currentUser) return
 
+    const modResult = await moderation.checkContent(currentUser.id, caption, 'maipiks')
+    if (!modResult.allowed) {
+      toast.error(modResult.message || 'That post violates Mai Troll\'s rules and was not posted.')
+      return
+    }
+
     const { error } = await supabase.from('maipiks_posts').insert({
       user_id: currentUser.id,
       media_url: media.url,
@@ -878,6 +885,14 @@ export default function PhoneMaiPiks() {
     caption?: string
   ) => {
     if (!currentUser) return false
+
+    if (caption && caption.trim()) {
+      const modResult = await moderation.checkContent(currentUser.id, caption.trim(), 'maipiks')
+      if (!modResult.allowed) {
+        toast.error(modResult.message || 'That story caption violates Mai Troll\'s rules and was not posted.')
+        return false
+      }
+    }
 
     const payload = {
       p_media_url: media.url,

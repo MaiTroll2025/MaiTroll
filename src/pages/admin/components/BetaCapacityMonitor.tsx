@@ -151,11 +151,13 @@ export default function BetaCapacityMonitor() {
       const activeBroadcasters = streams?.length || 0
       const totalViewers = streams?.reduce((sum, s) => sum + (s.current_viewers || 0), 0) || 0
       const maxViewersPerStream = streams?.length > 0 ? Math.max(...streams.map(s => s.current_viewers || 0)) : 0
+      const activeConnections = activeBroadcasters + totalViewers
 
       setData(prev => ({
         ...prev,
         activeBroadcasters,
         activeViewers: totalViewers,
+        activeConnections,
         maxViewersPerStream,
       }))
       setLoading(false)
@@ -166,28 +168,8 @@ export default function BetaCapacityMonitor() {
     }
   }, [])
 
-  const fetchConnectionData = useCallback(async () => {
-    try {
-      const response = await fetch('/api/admin/capacity')
-      if (!response.ok) throw new Error(`HTTP ${response.status}`)
-      const contentType = response.headers.get('content-type') || ''
-      if (!contentType.includes('application/json')) {
-        const text = await response.text()
-        throw new Error(`Expected JSON from /api/admin/capacity but got ${contentType}: ${text.slice(0, 200)}`)
-      }
-      const json = await response.json()
-      setData(prev => ({
-        ...prev,
-        activeConnections: json.activeConnections || 0,
-      }))
-    } catch (err) {
-      console.error('Error fetching connection data:', err)
-    }
-  }, [])
-
   useEffect(() => {
     fetchStreamsData()
-    fetchConnectionData()
     fetchCaps()
 
     const streamsChannel = supabase
@@ -200,8 +182,6 @@ export default function BetaCapacityMonitor() {
         fetchStreamsData()
       })
       .subscribe()
-
-    const connectionInterval = setInterval(fetchConnectionData, 5000)
 
     const capsChannel = supabase
       .channel('beta-capacity-settings')
@@ -218,9 +198,8 @@ export default function BetaCapacityMonitor() {
     return () => {
       supabase.removeChannel(streamsChannel)
       supabase.removeChannel(capsChannel)
-      clearInterval(connectionInterval)
     }
-  }, [fetchStreamsData, fetchConnectionData, fetchCaps])
+  }, [fetchStreamsData, fetchCaps])
 
   if (error && !loading) {
     return (

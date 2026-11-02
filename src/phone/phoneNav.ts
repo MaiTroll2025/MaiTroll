@@ -1,4 +1,4 @@
-import { Home, Coins, Gavel, Scale, Building2, Gamepad2, Trophy, Music, Users, FileText, Wallet, TrendingUp, Megaphone, Briefcase, Package, PawPrint, Store, List, Waves, ShoppingBag, Shuffle, Banknote, Landmark, Radio, Crown, Church, Shield, Wrench, LayoutDashboard, Lock, Database, Settings, Zap, Calendar, Mail, Newspaper, Video, LifeBuoy, Image, Warehouse, DollarSign, Sparkles, Star, type LucideIcon } from 'lucide-react';
+import { Home, Coins, Gavel, Scale, Building2, Gamepad2, Trophy, Music, Users, FileText, Wallet, TrendingUp, Megaphone, Briefcase, Package, PawPrint, Store, List, Waves, ShoppingBag, Shuffle, Banknote, Landmark, Radio, Crown, Church, Shield, Wrench, LayoutDashboard, Lock, Database, Settings, Zap, Calendar, Mail, Newspaper, Video, LifeBuoy, Image, Warehouse, DollarSign, Sparkles, Star, Smartphone, type LucideIcon } from 'lucide-react';
 import { UserRole } from '../lib/supabase'
 import type { PhoneRoleAccess } from './usePhoneRoleAccess'
 
@@ -48,6 +48,7 @@ export function getPhoneNavSections(a: PhoneRoleAccess): PhoneNavSection[] {
       icon: Video,
       show: a.canBroadcast && !a.isShareAThonRestricted,
     },
+    { label: 'MaiCam Connect', path: '/maicam', icon: Smartphone },
     { label: 'Live Now', path: '/viewer', icon: Radio },
     { label: 'High Bcasters', path: '/high-bcasters', icon: Crown },
     { label: 'HytroSpot', path: '#', icon: Star, show: true, onClick: () => window.dispatchEvent(new Event('open-hytrospot-modal')) },

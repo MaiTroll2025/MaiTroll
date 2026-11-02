@@ -12,6 +12,7 @@ import type { LiveItem } from '@/contexts/LiveContentContext'
 import { useRandomFreeSeat } from '@/hooks/useRandomFreeSeat'
 import { PhoneButton } from '../components/PhoneButton'
 import TreelzHomeRow from '@/components/home/TreelzHomeRow'
+import MaiTrollRulesPopup from '@/components/MaiTrollRulesPopup'
 
 const glass =
   'border border-[#39FF14]/10 bg-[#0D0814]/85 backdrop-blur-2xl shadow-[0_15px_50px_rgba(0,0,0,0.40)]'
@@ -599,6 +600,7 @@ export default function PhoneHomepage({
         <PhoneCityBuildings onOpen={open}/>
         <div className="flex justify-center gap-3 pb-1 text-[9px] text-slate-500"><Link to="/about">About</Link><Link to="/support">Support</Link><Link to="/legal/terms">Terms</Link><Link to="/legal/privacy">Privacy</Link></div>
       </main>
+      <MaiTrollRulesPopup />
       <style>{`.scrollbar-hide::-webkit-scrollbar{display:none}.scrollbar-hide{scrollbar-width:none;-ms-overflow-style:none}`}</style>
     </div>
   )

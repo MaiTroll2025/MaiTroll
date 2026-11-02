@@ -380,10 +380,16 @@ export default function PrivacyPolicy() {
             notifications, and core platform functionality. These cannot be disabled.
           </li>
           <li>
-            <strong>Analytics:</strong> Cookies used to understand how visitors interact with
-            the platform, including Google Analytics (<code>_ga</code>, <code>_ga_#</code>) and
-            internal telemetry (<code>telemetry_session_id</code>). These are only activated
-            after you give analytics consent.
+            <strong>First-party site usage:</strong> We collect page paths, a random session-only
+            identifier, referring host, device category, estimated browser resource-transfer
+            totals, and aggregate counts of searches for MaiTroll and #MaiTroll. We do not store
+            IP addresses, account IDs, or full search text in these site-usage records. This
+            measurement is collected regardless of the optional analytics setting.
+          </li>
+          <li>
+            <strong>Analytics:</strong> Google Analytics cookies (<code>_ga</code>, <code>_ga_#</code>)
+            and consent-gated internal telemetry (<code>telemetry_session_id</code>) are only
+            activated after you give analytics consent.
           </li>
           <li>
             <strong>Marketing:</strong> Cookies used to deliver advertisements and measure the
@@ -404,7 +410,8 @@ export default function PrivacyPolicy() {
           <a href="/profile/privacy-settings"> /profile/privacy-settings</a> or by clicking the
           consent banner that appears on your first visit. You may accept all cookies, reject
           non-essential cookies, or customize your preferences by category. Your choice is
-          stored in your browser&apos;s local storage and applies to all non-essential tracking.
+          stored in your browser&apos;s local storage and applies to optional cookies and tracking;
+          first-party site-usage metrics described above are not controlled by this setting.
         </p>
 
         <h3>10.3 International Data Transfers</h3>

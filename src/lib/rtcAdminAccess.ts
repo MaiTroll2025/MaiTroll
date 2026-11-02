@@ -31,13 +31,17 @@ export function canAccessRtcAdminMonitor(profile: UserProfile | null | undefined
   const roles = [profile.role, profile.troll_role].map((role) =>
     String(role || '').toLowerCase(),
   )
+  const isAdmin =
+    profile.is_admin === true ||
+    profile.is_superadmin === true ||
+    roles.some((role) => ['admin', 'superadmin', 'ceo', 'owner'].includes(role))
   const isBroadcasterOrTroller =
     profile.is_broadcaster === true ||
     profile.is_troller === true ||
     roles.some((role) => role === 'broadcaster' || role === 'troller')
 
   return (
-    !isBroadcasterOrTroller &&
-    (profile.is_admin === true || roles.some((role) => RTC_STAFF_ROLES.includes(role)))
+    isAdmin ||
+    (!isBroadcasterOrTroller && roles.some((role) => RTC_STAFF_ROLES.includes(role)))
   )
 }

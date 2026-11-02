@@ -23,7 +23,7 @@ import {
 import { toast } from 'sonner'
 
 import { useAuthStore } from '../lib/store'
-import { supabase, UserRole } from '../lib/supabase'
+import { supabase } from '../lib/supabase'
 import RequireRole from '../components/RequireRole'
 import CourtChat from '../components/CourtChat'
 import CourtDocketModal from '../components/CourtDocketModal'
@@ -94,7 +94,13 @@ function makeCourtRoomName(courtId: string) {
 
 function normalizeCourtRole(profile: any): CourtRole {
   if (!profile) return 'user'
-  if (profile?.is_admin || profile?.role === 'admin') return 'admin'
+  if (
+    profile?.is_admin ||
+    profile?.is_superadmin ||
+    ['admin', 'superadmin'].includes(String(profile?.role || '').toLowerCase()) ||
+    ['admin', 'superadmin'].includes(String(profile?.troll_role || '').toLowerCase())
+  ) return 'admin'
+  if (profile?.is_judge || profile?.role === 'judge' || profile?.troll_role === 'judge') return 'judge'
   if (profile?.is_ceo || profile?.role === 'ceo') return 'ceo'
 
   if (
@@ -124,7 +130,7 @@ function normalizeCourtRole(profile: any): CourtRole {
 }
 
 function canJudge(role: CourtRole) {
-  return role === 'admin' || role === 'ceo' || role === 'lead_troll_officer' || role === 'judge'
+  return role === 'admin' || role === 'judge'
 }
 
 function canEndCourt(role: CourtRole) {
@@ -563,7 +569,8 @@ export default function CourtRoom() {
    }, [judgeMutedUsers])
 
    const effectiveRole = useMemo(() => normalizeCourtRole(profile), [profile])
-  const autoSpot = useMemo(() => getAutoStudioSpot(effectiveRole), [effectiveRole])
+   const canAccessCourtSession = Boolean(profile)
+   const autoSpot = useMemo(() => getAutoStudioSpot(effectiveRole), [effectiveRole])
 
   const canUseMicCamera = canPublishFromSpot(activeSpot)
   const canEnd = canEndCourt(effectiveRole)
@@ -732,7 +739,7 @@ export default function CourtRoom() {
   )
 
   const fetchCourtSession = useCallback(async () => {
-    if (!courtId) return
+    if (!courtId || !canAccessCourtSession) return
 
     const { data, error } = await supabase
       .from('court_sessions')
@@ -747,10 +754,10 @@ export default function CourtRoom() {
     }
 
     setCourtSession(data)
-  }, [courtId, navigate])
+  }, [canAccessCourtSession, courtId, navigate])
 
   const fetchCourtParticipants = useCallback(async () => {
-    if (!courtId) return
+    if (!courtId || !canAccessCourtSession) return
 
     const { data, error } = await supabase
       .from('court_participants')
@@ -760,9 +767,10 @@ export default function CourtRoom() {
     if (!error && data) {
       setCourtParticipants(data)
     }
-  }, [courtId])
+  }, [canAccessCourtSession, courtId])
 
   useEffect(() => {
+    if (!canAccessCourtSession) return
     if (!rawCourtId) {
       const loadActiveSession = async () => {
         const { data, error } = await supabase
@@ -790,10 +798,10 @@ export default function CourtRoom() {
       toast.error('Invalid court session ID.')
       navigate('/troll-court')
     }
-  }, [rawCourtId, courtId, navigate])
+  }, [canAccessCourtSession, rawCourtId, courtId, navigate])
 
   useEffect(() => {
-    if (!courtId) return
+    if (!courtId || !canAccessCourtSession) return
 
     fetchCourtSession()
     fetchCourtParticipants()
@@ -842,7 +850,7 @@ export default function CourtRoom() {
       supabase.removeChannel(sessionChannel)
       supabase.removeChannel(participantChannel)
     }
-  }, [courtId, fetchCourtParticipants, fetchCourtSession, navigate])
+  }, [canAccessCourtSession, courtId, fetchCourtParticipants, fetchCourtSession, navigate])
 
    useEffect(() => {
      return () => {
@@ -851,14 +859,14 @@ export default function CourtRoom() {
    }, [leaveAgora])
 
     useEffect(() => {
-      if (!courtId || !user?.id || activeSpot || isJoining) return
+      if (!canAccessCourtSession || !courtId || !user?.id || activeSpot || isJoining) return
       if (autoSpot !== 'audience') return
       if (autoEnterRef.current) return
 
       autoEnterRef.current = true
 
       void enterCourtroomRef.current('audience')
-    }, [courtId, user?.id, activeSpot, isJoining, autoSpot])
+    }, [canAccessCourtSession, courtId, user?.id, activeSpot, isJoining, autoSpot])
 
    const upsertParticipantRole = async (spot: CourtStudioSpot) => {
     if (!courtId || !user?.id) return
@@ -1262,7 +1270,7 @@ export default function CourtRoom() {
   ])
 
   const canEnterSpecificSpot = (spot: CourtStudioSpot) => {
-    if (isJoining) return false
+    if (!canAccessCourtSession || isJoining) return false
 
     if (activeSpot) {
       if (activeSpot === 'audience' && spot === 'defendant' && calledDefendantId === user?.id) {
@@ -1283,7 +1291,7 @@ export default function CourtRoom() {
 
   return (
     <RequireRole
-      roles={[UserRole.ADMIN, UserRole.LEAD_TROLL_OFFICER, UserRole.TROLL_OFFICER, UserRole.USER]}
+      roles={[]}
       fallbackPath="/access-denied"
     >
       <div className="relative h-[calc(100dvh-76px)] overflow-hidden bg-black text-white">

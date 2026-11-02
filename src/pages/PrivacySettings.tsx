@@ -63,7 +63,7 @@ export default function PrivacySettings() {
       icon: BarChart3,
       title: 'Analytics',
       description:
-        'Help us understand how visitors interact with the platform. Includes Google Analytics, telemetry events, error reporting, and usage statistics.',
+        'Enable Google Analytics cookies and consent-gated telemetry. Anonymous first-party page-usage metrics are collected regardless of this setting.',
       alwaysOn: false,
       enabled: canInitializeAnalytics,
     },

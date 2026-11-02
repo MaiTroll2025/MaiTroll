@@ -9,7 +9,7 @@ import { useIsMobile } from '@/hooks/useIsMobile';
 import { useStaffWalkieTalkieContext } from '@/hooks/useStaffWalkieTalkieContext';
 import { toast } from 'sonner';
 import {
-  Activity, BarChart3, Bug, Clock, Coins, Mail, Monitor, MoreVertical,
+  Activity, BarChart3, Bug, Clock, Coins, Eye, Mail, Monitor, MoreVertical,
   Radio, RefreshCw, Send, Pause, Search, Shield, ShieldAlert, TrendingUp, Flag,
   UserPlus, Users, X, Stamp, FileText, AlertTriangle, Gavel, Lock,
 } from 'lucide-react';
@@ -107,6 +107,34 @@ interface ClickStats {
   googlePlay: number;
   topUrls: { url: string; count: number }[];
   recentClicks: { url: string; clickedAt: string; label: string }[];
+}
+
+interface SiteUsageStats {
+  pageViews: number;
+  uniqueSessions: number;
+  bandwidthBytes: number;
+  maitrollSearches: number;
+  hashtagSearches: number;
+  topPages: { path: string; views: number }[];
+  topSources: { source: string; visits: number }[];
+  deviceBreakdown: { device: string; visits: number }[];
+}
+
+const EMPTY_SITE_USAGE_STATS: SiteUsageStats = {
+  pageViews: 0,
+  uniqueSessions: 0,
+  bandwidthBytes: 0,
+  maitrollSearches: 0,
+  hashtagSearches: 0,
+  topPages: [],
+  topSources: [],
+  deviceBreakdown: [],
+};
+
+function formatTrafficBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  const megabytes = bytes / (1024 * 1024);
+  return megabytes < 1024 ? `${megabytes.toFixed(1)} MB` : `${(megabytes / 1024).toFixed(2)} GB`;
 }
 
 interface ModerationActionLog {
@@ -221,11 +249,8 @@ export default function RTCAdminMonitor({
     canAccessWalkieTalkie: contextCanAccessWalkieTalkie,
   } = useStaffWalkieTalkieContext();
 
-  // When rendered as a full page by RtcAdminMonitorGate, the gate already
-  // performed the authoritative server-side authorization (RPC
-  // can_access_rtc_admin_monitor). Trust that over the client-side role check,
-  // which can diverge (e.g. a user with an explicit grant whose role is not in
-  // the local staff list) and previously produced a blank page.
+  // Full-page access normally follows the authenticated profile's admin/staff
+  // roles; callers may provide an explicit authorization result when needed.
   const isStaff = canAccessRtcAdminMonitor(profile) || (fullPage && isAuthorized === true);
   const isFullAdmin = isStaff && (profile?.is_admin === true || ['admin', 'ceo', 'superadmin'].includes(profile?.role || ''));
   const canReviewMaiPiksReports = isFullAdmin
@@ -400,6 +425,9 @@ export default function RTCAdminMonitor({
   const [clickLoading, setClickLoading] = useState(false);
   const [clickFlash, setClickFlash] = useState(false);
   const [clickError, setClickError] = useState(false);
+  const [siteUsageStats, setSiteUsageStats] = useState<SiteUsageStats>(EMPTY_SITE_USAGE_STATS);
+  const [siteUsageLoading, setSiteUsageLoading] = useState(false);
+  const [siteUsageError, setSiteUsageError] = useState(false);
 
   const [cashoutBonusData, setCashoutBonusData] = useState<any[]>([]);
   const [cashoutLoading, setCashoutLoading] = useState(false);
@@ -745,6 +773,27 @@ return {
       setClickLoading(false);
     }
   }, [analyticsRange, canFetchClickStats]);
+
+  const fetchSiteUsageStats = useCallback(async () => {
+    if (!isFullAdmin) return;
+    setSiteUsageLoading(true);
+    setSiteUsageError(false);
+    try {
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - (analyticsRange - 1));
+      startDate.setHours(0, 0, 0, 0);
+      const { data, error } = await supabase.rpc('get_site_usage_analytics', {
+        p_since: startDate.toISOString(),
+      });
+      if (error) throw error;
+      setSiteUsageStats({ ...EMPTY_SITE_USAGE_STATS, ...(data as Partial<SiteUsageStats> | null) });
+    } catch (error) {
+      console.error('[RTC Monitor] Error fetching site usage analytics:', error);
+      setSiteUsageError(true);
+    } finally {
+      setSiteUsageLoading(false);
+    }
+  }, [analyticsRange, isFullAdmin]);
 
   const fetchStreamAnalytics = useCallback(async () => {
     if (!isStaff) return;
@@ -1480,6 +1529,16 @@ const openAction = useCallback((user: UserListItem, action: string) => {
     }, 30000);
     return () => window.clearInterval(interval);
   }, [activeMainTab, canFetchClickStats, fetchClickStats]);
+
+  useEffect(() => {
+    if (!isFullAdmin || activeMainTab !== 'analytics') return;
+
+    void fetchSiteUsageStats();
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === 'visible') void fetchSiteUsageStats();
+    }, 30000);
+    return () => window.clearInterval(interval);
+  }, [activeMainTab, fetchSiteUsageStats, isFullAdmin]);
 
   // Live website-click monitor: subscribe to outbound_clicks INSERTs so the
   // admin Analytics tab shows clicks in real time (no polling delay).
@@ -2492,7 +2551,7 @@ return (
            <StatCard label="Viewer Min" value={analyticsSummary.totalViewerMinutes.toLocaleString()} tone="border-purple-500/20 bg-purple-500/10 text-purple-400" icon={<BarChart3 className="h-3 w-3" />} />
            <StatCard label="Avg Watch" value={`${analyticsSummary.avgWatchTimePerUser.toFixed(1)}m`} tone="border-purple-500/20 bg-purple-500/10 text-purple-400" icon={<Clock className="h-3 w-3" />} />
            <StatCard label="Gift Coins" value={analyticsSummary.totalGiftCoins.toLocaleString()} tone="border-yellow-500/20 bg-yellow-500/10 text-yellow-400" icon={<Coins className="h-3 w-3" />} />
-           <StatCard label="Clicks" value={clickStats.total.toLocaleString()} tone="border-cyan-500/20 bg-cyan-500/10 text-cyan-400" icon={<TrendingUp className="h-3 w-3" />} />
+           <StatCard label="Outbound Clicks" value={clickStats.total.toLocaleString()} tone="border-cyan-500/20 bg-cyan-500/10 text-cyan-400" icon={<TrendingUp className="h-3 w-3" />} />
          </div>
          <div className="mt-2 rounded-lg border border-cyan-500/20 bg-cyan-500/5 p-3">
            <div className="mb-2 flex items-center justify-between">
@@ -2781,8 +2840,8 @@ return (
   const renderAnalyticsTab = () => (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-2">
-        <button type="button" onClick={() => { fetchStreamAnalytics(); fetchClickStats(); }} disabled={analyticsLoading || clickLoading} className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-purple-600/20 px-3 py-2 text-xs text-purple-400 hover:bg-purple-600/30 disabled:opacity-50">
-          <RefreshCw className={`h-3 w-3 ${analyticsLoading || clickLoading ? 'animate-spin' : ''}`} />
+        <button type="button" onClick={() => { fetchStreamAnalytics(); fetchClickStats(); fetchSiteUsageStats(); }} disabled={analyticsLoading || clickLoading || siteUsageLoading} className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-purple-600/20 px-3 py-2 text-xs text-purple-400 hover:bg-purple-600/30 disabled:opacity-50">
+          <RefreshCw className={`h-3 w-3 ${analyticsLoading || clickLoading || siteUsageLoading ? 'animate-spin' : ''}`} />
           Refresh
         </button>
         {[1, 7, 30].map((days) => (
@@ -2791,6 +2850,50 @@ return (
           </button>
         ))}
       </div>
+      <section className="space-y-3 rounded-lg border border-cyan-500/20 bg-cyan-500/5 p-3">
+        <div>
+          <h3 className="text-sm font-semibold text-cyan-200">MaiTroll.com Site Traffic</h3>
+          <p className="mt-0.5 text-[10px] text-gray-400">Anonymous visits and browser-reported transfer estimates for the selected period.</p>
+        </div>
+        {siteUsageError ? (
+          <p className="text-xs text-red-300">Site analytics could not be loaded. Check that the site-analytics database migration has been applied.</p>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 gap-2">
+              <StatCard label="Page Views" value={siteUsageStats.pageViews.toLocaleString()} tone="border-cyan-500/20 bg-cyan-500/10 text-cyan-300" icon={<Eye className="h-3 w-3" />} />
+              <StatCard label="Sessions" value={siteUsageStats.uniqueSessions.toLocaleString()} tone="border-blue-500/20 bg-blue-500/10 text-blue-300" icon={<Users className="h-3 w-3" />} />
+              <StatCard label="Est. Transfer" value={formatTrafficBytes(siteUsageStats.bandwidthBytes)} tone="border-indigo-500/20 bg-indigo-500/10 text-indigo-300" icon={<Activity className="h-3 w-3" />} />
+              <StatCard label="Searches: MaiTroll / #MaiTroll" value={`${siteUsageStats.maitrollSearches.toLocaleString()} / ${siteUsageStats.hashtagSearches.toLocaleString()}`} tone="border-pink-500/20 bg-pink-500/10 text-pink-300" icon={<Search className="h-3 w-3" />} />
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <h4 className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-gray-400">Top Pages</h4>
+                {siteUsageStats.topPages.length === 0 ? <p className="text-xs text-gray-500">No page views yet</p> : siteUsageStats.topPages.map((page) => (
+                  <div key={page.path} className="flex items-center justify-between gap-2 border-b border-white/5 py-1 text-xs">
+                    <span className="truncate text-gray-300">{page.path}</span>
+                    <span className="shrink-0 text-white">{page.views.toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
+              <div>
+                <h4 className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-gray-400">Traffic Sources</h4>
+                {siteUsageStats.topSources.length === 0 ? <p className="text-xs text-gray-500">No source data yet</p> : siteUsageStats.topSources.map((source) => (
+                  <div key={source.source} className="flex items-center justify-between gap-2 border-b border-white/5 py-1 text-xs">
+                    <span className="truncate text-gray-300">{source.source}</span>
+                    <span className="shrink-0 text-white">{source.visits.toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {siteUsageStats.deviceBreakdown.length > 0 && (
+              <p className="text-[10px] text-gray-400">
+                Devices: {siteUsageStats.deviceBreakdown.map((item) => `${item.device} ${item.visits.toLocaleString()}`).join(' · ')}
+              </p>
+            )}
+          </>
+        )}
+        <p className="text-[10px] text-gray-500">Transfer totals are estimates from browser Resource Timing, not hosting-provider bandwidth. Searches on other websites are not visible here.</p>
+      </section>
       <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-3">
         <div className="mb-1 text-[10px] uppercase text-emerald-300">Revenue Per 1000 Viewer Minutes</div>
         <div className="text-2xl font-bold text-white">${analyticsSummary.revenuePer1000ViewerMinutes.toFixed(2)}</div>
@@ -4249,4 +4352,3 @@ function WalkieTalkieTab() {
     </div>
   );
 }
-

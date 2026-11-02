@@ -36,6 +36,7 @@ import {
 
 import { GiftSystemProvider } from '@/lib/hooks/useGiftSystem'
 import { sendChatThroughGate } from '@/lib/sendChatThroughGate'
+import { moderation } from '@/services/maitrollModeration'
 import { sendStreamBroadcast } from '@/lib/realtime/streamRealtimeManager'
 import { hydrateGiftForOverlay } from '@/lib/gifts'
 import { getGiftVisualConfig } from '@/lib/giftVisuals'
@@ -1749,6 +1750,12 @@ export default function PhoneBroadcastPage() {
         )
 
         setChatInput('')
+
+        const modResult = await moderation.checkContent(user.id, text, 'chat')
+        if (!modResult.allowed) {
+          toast.error(modResult.message || 'That message violates Mai Troll\'s chat rules and was not sent.')
+          return
+        }
 
         window.setTimeout(() => {
           setFloatingMessages(

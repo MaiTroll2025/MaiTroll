@@ -298,6 +298,83 @@ const PROHIBITED_TERMS: Record<
     severity: 'severe',
     contextSensitive: false,
   },
+  // Money solicitation / financial scam solicitation
+  cashapp: {
+    category: 'scam',
+    severity: 'severe',
+    contextSensitive: false,
+  },
+  venmo: {
+    category: 'scam',
+    severity: 'severe',
+    contextSensitive: false,
+  },
+  paypal: {
+    category: 'scam',
+    severity: 'severe',
+    contextSensitive: false,
+  },
+  zelle: {
+    category: 'scam',
+    severity: 'severe',
+    contextSensitive: false,
+  },
+  moneygram: {
+    category: 'scam',
+    severity: 'severe',
+    contextSensitive: false,
+  },
+  westernunion: {
+    category: 'scam',
+    severity: 'severe',
+    contextSensitive: false,
+  },
+  findom: {
+    category: 'scam',
+    severity: 'severe',
+    contextSensitive: false,
+  },
+  onlyfans: {
+    category: 'scam',
+    severity: 'severe',
+    contextSensitive: false,
+  },
+  sugardaddy: {
+    category: 'scam',
+    severity: 'severe',
+    contextSensitive: false,
+  },
+  sugarbaby: {
+    category: 'scam',
+    severity: 'severe',
+    contextSensitive: false,
+  },
+  // Off-platform contact solicitation (WhatsApp and similar)
+  whatsapp: {
+    category: 'off_platform',
+    severity: 'severe',
+    contextSensitive: false,
+  },
+  telegram: {
+    category: 'off_platform',
+    severity: 'severe',
+    contextSensitive: false,
+  },
+  snapchat: {
+    category: 'off_platform',
+    severity: 'severe',
+    contextSensitive: false,
+  },
+  discord: {
+    category: 'off_platform',
+    severity: 'severe',
+    contextSensitive: false,
+  },
+  kik: {
+    category: 'off_platform',
+    severity: 'severe',
+    contextSensitive: false,
+  },
 };
 
 export function checkProhibitedTerms(text: string): {
@@ -330,6 +407,20 @@ export function checkProhibitedTerms(text: string): {
         severity: config.severity,
         category: config.category,
       };
+    }
+  }
+
+  // Substring match catches multi-word forms (e.g. "cash app", "send me cashapp")
+  for (const [term, config] of Object.entries(PROHIBITED_TERMS)) {
+    if (!config.contextSensitive || config.severity === 'severe') {
+      if (normalized.includes(term)) {
+        return {
+          prohibited: true,
+          term,
+          severity: config.severity,
+          category: config.category,
+        };
+      }
     }
   }
 

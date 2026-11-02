@@ -80,6 +80,9 @@ export default function ConsentBanner() {
                   We use cookies and similar technologies to enhance your experience, analyze usage, and
                   personalize content. Choose your preferences below.
                 </p>
+                <p className="text-slate-500 text-[11px] mt-2">
+                  Anonymous first-party page-visit, device category, referrer host, estimated transfer, and limited MaiTroll search counts are collected to measure site usage regardless of this optional analytics setting.
+                </p>
               </div>
               <button
                 onClick={() => setShowBanner(false)}
@@ -123,12 +126,12 @@ export default function ConsentBanner() {
               </button>
             </div>
             <p className="text-slate-400 text-sm mb-4">
-              Necessary cookies enable core functionality. Other categories are optional.
+              Necessary cookies enable core functionality. Anonymous first-party site-usage metrics are always collected; the analytics choice controls Google Analytics.
             </p>
             <div className="space-y-3 mb-4">
               {([
                 { key: 'necessary', label: 'Necessary', desc: 'Required for authentication, security, sessions, payments, and core platform functionality.' },
-                { key: 'analytics', label: 'Analytics', desc: 'Help us understand how visitors interact with the platform (Google Analytics).' },
+                { key: 'analytics', label: 'Analytics', desc: 'Enable Google Analytics cookies to help us understand visits across sessions.' },
                 { key: 'marketing', label: 'Marketing', desc: 'Used to deliver personalized ads and measure campaign effectiveness.' },
                 { key: 'preferences', label: 'Preferences', desc: 'Remember your settings like theme, language, and display preferences.' },
               ] as const).map(({ key, label, desc }) => (

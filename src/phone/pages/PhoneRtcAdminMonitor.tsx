@@ -2,14 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom'
 
 /**
- * Phone RTC Admin Monitor — mobile wrapper that reuses the SAME
- * RtcAdminMonitorGate the web route uses, so there is exactly one
- * authorization path and one RTC monitoring implementation across
- * web and phone.
- *
- * Authorization is enforced server-side via can_access_rtc_admin_monitor().
- * Admin roles always pass; Career roles require an explicit grant.
- * The frontend is NOT the only security layer.
+ * Phone wrapper for the shared RTC Admin Monitor implementation.
  */
 export default function PhoneRtcAdminMonitor() {
   const navigate = useNavigate()
@@ -20,8 +13,8 @@ export default function PhoneRtcAdminMonitor() {
     else navigate('/admin-mobile')
   }
 
-  const RtcAdminMonitorGate = React.lazy(() =>
-    import('../../components/admin/RtcAdminMonitorGate.tsx'),
+  const RTCAdminMonitor = React.lazy(() =>
+    import('../../components/admin/RTCAdminMonitor.tsx'),
   )
 
   return (
@@ -35,7 +28,7 @@ export default function PhoneRtcAdminMonitor() {
         </div>
       }
     >
-      <RtcAdminMonitorGate fullPage onClose={handleClose} />
+      <RTCAdminMonitor fullPage onClose={handleClose} />
     </React.Suspense>
   )
 }

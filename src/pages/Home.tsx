@@ -42,6 +42,7 @@ import { HOME_PAGE_PROMO_PLACEMENTS } from '@/types/cityAds'
 import HytroSpotButton from '@/components/HytroSpotButton'
 import LearnAboutMaiTrollBanner from '@/components/learn-about/LearnAboutMaiTrollBanner'
 import type { TabType } from '@/types/homeTabs'
+import MaiTrollRulesPopup from '@/components/MaiTrollRulesPopup'
 
 const PWAInstallPrompt = lazyWithRetry(() => import('../components/PWAInstallPrompt'))
 const TCNNPopupWidget = lazyWithRetry(() => import('@/components/tcnn/TCNNPopupWidget'))
@@ -934,6 +935,7 @@ export default function Home() {
           broadcaster={supportGoalReminder}
         />
       )}
+      <MaiTrollRulesPopup />
       <style>{`
         .grid-pulse {
           width: 18px;

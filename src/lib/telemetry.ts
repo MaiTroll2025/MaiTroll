@@ -161,17 +161,8 @@ export function initTelemetry() {
     });
     detectRageClick(e);
 
-    // Record outbound link clicks for admin website-traffic monitoring.
-    const anchor = target.closest?.('a') as HTMLAnchorElement | null;
-    if (anchor?.href) {
-      trackOutboundClick(anchor.href);
-    } else {
-      const href = target.getAttribute?.('href');
-      if (href) trackOutboundClick(href);
-    }
   }, true);
 
-  // Patch window.open so ad/payment/download popups are also tracked.
   const originalOpen = window.open.bind(window);
   window.open = function (url?: string, ...rest: any[]) {
     if (url && url !== 'about:blank' && url !== '') {

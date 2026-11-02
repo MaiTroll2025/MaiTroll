@@ -111,6 +111,13 @@ export default function TrollCourt() {
     ['admin', 'judge', 'lead_troll_officer', 'secretary', 'troll_officer'].includes(String(profile?.role || '')) ||
     ['admin', 'judge', 'lead_troll_officer', 'secretary', 'troll_officer'].includes(String(profile?.troll_role || ''))
 
+  const canOpenCourtSession =
+    profile?.is_admin === true ||
+    profile?.is_superadmin === true ||
+    profile?.is_judge === true ||
+    ['admin', 'superadmin', 'judge'].includes(String(profile?.role || '').toLowerCase()) ||
+    ['admin', 'superadmin', 'judge'].includes(String(profile?.troll_role || '').toLowerCase())
+
   const canAddCase =
     profile?.is_admin === true ||
     profile?.is_judge === true ||
@@ -387,6 +394,10 @@ export default function TrollCourt() {
 
   const openCreateModal = () => {
     if (!canSummonUser) return
+    if (!courtSession && !canOpenCourtSession) {
+      toast.error('Only judges and administrators can open court sessions.')
+      return
+    }
     setIsCreateModalOpen(true)
     setSearchQuery('')
     setSelectedUser(null)
@@ -395,6 +406,10 @@ export default function TrollCourt() {
   const handleSummonOrStart = async () => {
     if (!user?.id) {
       toast.error('User not authenticated')
+      return
+    }
+    if (!courtSession && !canOpenCourtSession) {
+      toast.error('Only judges and administrators can open court sessions.')
       return
     }
 
@@ -686,7 +701,7 @@ export default function TrollCourt() {
                   {canStartCourt && courtSession && ['active', 'live'].includes(courtSession.status) && (
                     <CourtActionButton icon={<Eye size={17} />} label="Watch Live Court" onClick={() => navigate(`/troll-court/watch/${courtSession.id}`)} tone="green" />
                   )}
-                  {canSummonUser && (
+                  {canOpenCourtSession && (
                     <CourtActionButton
                       icon={<Scale size={17} />}
                       label={isStartingSession ? 'Opening Court...' : 'Open Court Session'}
@@ -697,12 +712,12 @@ export default function TrollCourt() {
                   )}
                 </div>
 
-                {!canSummonUser && (
+                {!canOpenCourtSession && (
                   <OfficialNotice
                     tone="red"
                     icon={<Shield className="h-5 w-5" />}
                     title="Court authority required"
-                    text="Only authorized Troll Officers, lead officers, secretaries, and administrators may open official court proceedings."
+                    text="Only judges and administrators may open official court sessions."
                   />
                 )}
               </div>

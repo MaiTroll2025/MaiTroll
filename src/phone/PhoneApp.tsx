@@ -3,6 +3,8 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import PhoneHomepage from './pages/PhoneHomepage'
 import PhoneAuth from './pages/PhoneAuth'
 import PhoneGoLive from './pages/PhoneGoLive'
+import PhoneMaiCamEntry from './pages/MaiCamEntry'
+import PhoneMaiCamCamera from './pages/MaiCamCamera'
 import PhoneMAIPiks from './pages/PhoneMaiPiks'
 import PhoneBroadcastPage from './pages/PhoneBroadcastPage'
 import PhoneAuctions from './pages/PhoneAuctions'
@@ -212,6 +214,7 @@ export default function PhoneApp() {
             <Route path="/" element={<PhoneHomepage key={authUser?.id ?? 'anon'} />} />
             <Route path="/auth" element={<PhoneAuth />} />
             <Route path="/login" element={<PhoneAuth />} />
+            <Route path="/maicam" element={<PhoneMaiCamEntry />} />
             <Route path="/careers" element={<PhoneCareers />} />
             <Route path="/go-live" element={<PhoneGoLive />} />
             <Route path="/mai-piks" element={<PhoneMAIPiks />} />

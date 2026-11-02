@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase'
 import { useLiveContent } from '../hooks/useLiveContent'
 import { useAuth } from '../contexts/AuthContext'
 import HomeBroadcastBanner from '../components/HomeBroadcastBanner'
+import MaiTrollRulesPopup from '../components/MaiTrollRulesPopup'
 
 const CATEGORY_ICONS: Record<string, string> = {
   Gaming: '🎮',
@@ -352,6 +353,7 @@ export default function HomePage() {
           </div>
         </aside>
       </section>
+      <MaiTrollRulesPopup />
     </div>
   )
 }

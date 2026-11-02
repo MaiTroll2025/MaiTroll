@@ -21,6 +21,22 @@ function parseLocalDateTime(value: string, utcOffsetSeconds: number): number | u
   return Date.UTC(+year, +month - 1, +day, +hour, +minute) - utcOffsetSeconds * 1000;
 }
 
+function getFallbackWeather(): WeatherData {
+  const now = new Date();
+  const sunriseAt = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 6).getTime();
+  const sunsetAt = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 18).getTime();
+
+  return {
+    condition: 'clear',
+    temperature: 72,
+    windSpeed: 5,
+    ...getSolarPhase(now.getTime(), sunriseAt, sunsetAt),
+    sunriseAt,
+    sunsetAt,
+    location: 'Default Location',
+  };
+}
+
 export function getSolarPhase(
   now: number,
   sunriseAt?: number,
@@ -91,6 +107,11 @@ export async function fetchUserWeather(latitude?: number, longitude?: number): P
         }
       }
     }
+
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+      return getFallbackWeather();
+    }
+
     // Use Open-Meteo (free, no API key needed)
     const response = await fetch(
       `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,windspeed_10m,weathercode&daily=sunrise,sunset&timezone=auto`
@@ -132,21 +153,7 @@ export async function fetchUserWeather(latitude?: number, longitude?: number): P
     
   } catch (error) {
     console.error('Weather fetch error:', error);
-    
-    // Fallback: determine based on time of day
-    const date = new Date();
-    const sunriseAt = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 6).getTime();
-    const sunsetAt = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 18).getTime();
-
-    return {
-      condition: 'clear',
-      temperature: 72,
-      windSpeed: 5,
-      ...getSolarPhase(date.getTime(), sunriseAt, sunsetAt),
-      sunriseAt,
-      sunsetAt,
-      location: 'Default Location'
-    };
+    return getFallbackWeather();
   }
 }
 

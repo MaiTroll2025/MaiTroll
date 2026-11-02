@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
@@ -7,8 +7,9 @@ import requestBroadcastMediaAccess from '@/lib/media/requestBroadcastMediaAccess
 import { activateAutomatedAudience } from '@/lib/automatedAudience';
 import { applyBroadcastTrackZoom } from '@/lib/broadcastTrackZoom';
 import { useStreamStore } from '@/lib/streamStore';
+import { useMaiCamMedia } from '@/lib/maicam/maiCamMediaStore';
 import { LocalAudioTrack, LocalVideoTrack, Room, Track } from 'livekit-client';
-import { Video, VideoOff, Mic, MicOff, RefreshCw, Swords, Gamepad2, Monitor, Lock, Eye, EyeOff, Radio, ShieldCheck, Flame, Bot } from 'lucide-react';
+import { Video, VideoOff, Mic, MicOff, RefreshCw, Swords, Gamepad2, Monitor, Lock, Eye, EyeOff, Radio, ShieldCheck, Flame, Bot, Smartphone } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useScreenShare } from '../../hooks/useScreenShare';
 import { DraggableCameraOverlay } from '../../components/broadcast/DraggableCameraOverlay';
@@ -325,6 +326,7 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
   const [hasMultipleCameras, setHasMultipleCameras] = useState(false);
   const [hasRearCamera, setHasRearCamera] = useState(false);
   const [followerCount, setFollowerCount] = useState<number>(0);
+  const [cameraSource, setCameraSource] = useState<'webcam' | 'maicam'>('webcam');
 
   // Stream mode for gaming category (camera vs screen share)
   const screenShare = useScreenShare();
@@ -342,6 +344,7 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
     setStreamMode,
     setScreenPreviewStream,
   } = useStreamStore();
+  const { remoteStream, connectionState: maicamConnectionState } = useMaiCamMedia();
 
   // Persist screen share state in sessionStorage for tab switch restoration
   useEffect(() => {
@@ -907,6 +910,56 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
     }
   };
 
+  // Wrap MaiCam's remote phone stream into LiveKit tracks for broadcast publishing.
+  // Preserves the option to use a separate PC microphone via the existing audio track.
+  const setupMaiCamTracks = useCallback(async (): Promise<MediaStream | null> => {
+    const rs = remoteStream;
+    if (!rs) {
+      toast.error('MaiCam phone stream is not available. Pair your phone first.');
+      return null;
+    }
+    const videoTracks = rs.getVideoTracks();
+    const audioTracks = rs.getAudioTracks();
+
+    let audioTrack: LocalAudioTrack | null = null;
+    let videoTrack: LocalVideoTrack | null = null;
+
+    // Prefer phone microphone if present; caller can still swap to PC mic via toggleAudio.
+    if (audioTracks.length > 0) {
+      try {
+        audioTrack = new LocalAudioTrack(audioTracks[0]);
+        audioTrack.source = Track.Source.Microphone;
+      } catch (e) {
+        console.warn('[SetupPage] Failed to wrap MaiCam audio track', e);
+      }
+    }
+
+    if (videoTracks.length > 0) {
+      try {
+        videoTrack = new LocalVideoTrack(videoTracks[0]);
+        videoTrack.source = Track.Source.Camera;
+      } catch (e) {
+        console.warn('[SetupPage] Failed to wrap MaiCam video track', e);
+        return null;
+      }
+    } else {
+      toast.error('MaiCam stream has no video track.');
+      return null;
+    }
+
+    setLivekitTracksState([audioTrack, videoTrack]);
+    PreflightStore.setLivekitTracks([audioTrack, videoTrack]);
+    setCameraTrack(videoTrack);
+
+    const combined = new MediaStream();
+    if (audioTrack) combined.addTrack((audioTrack as any).getMediaStreamTrack());
+    combined.addTrack((videoTrack as any).getMediaStreamTrack());
+    setStream(combined);
+    setPreviewStream(combined);
+    attachNativePreview(combined, 'user');
+    toast.success('MaiCam phone camera ready for broadcast');
+    return combined;
+  }, [remoteStream]);
 
 
   // Cleanup session storage when component unmounts (user leaves setup page)
@@ -1057,6 +1110,13 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
       if (stream && streamMode === 'camera') {
           console.log('[SetupPage] Stopping previous camera media tracks.');
           stream.getTracks().forEach(track => track.stop());
+      }
+
+      if (cameraSource === 'maicam') {
+        console.log('[SetupPage] Using MaiCam phone stream for broadcast');
+        const maiStream = await setupMaiCamTracks();
+        if (!maiStream) return;
+        return;
       }
 
       const mediaStream = await acquireMediaStream(facingMode, isVideoEnabled);
@@ -1463,74 +1523,96 @@ const handleStartStream = async () => {
     let audioTrack: LocalAudioTrack | null = null;
     let videoTrack: LocalVideoTrack | null = null;
 
-    try {
-      const result = await requestBroadcastMediaAccess();
-      if (result.status !== 'success') {
-        if (result.status === 'insecure_context') {
-          toast.error('Camera and microphone require HTTPS. Open Mai Troll from the secure website link.');
-        } else if (result.status === 'unsupported_browser') {
-          toast.error('This browser does not support camera/microphone broadcasting. Use Safari on iOS.');
-        } else if (result.status === 'camera_denied' || result.status === 'microphone_denied') {
-          setPermissionStatus('denied');
-          toast.error('Camera or microphone is blocked. On iPhone/iPad, open Safari Website Settings for this site and set Camera and Microphone to Allow, then refresh.');
-          setLoading(false);
-          return;
-        } else if (result.status === 'no_camera_found' || result.status === 'no_microphone_found') {
-          toast.error('No camera or microphone was found on this device.');
-          setLoading(false);
-          return;
-        } else if (result.status === 'device_in_use') {
-          toast.error('Device in use:\n\nClose any other apps or browser tabs that might be using your camera (FaceTime, Zoom, Teams, etc.), then try again.');
-          setLoading(false);
-          return;
-        } else {
-          toast.error('Failed to access camera/microphone. Please check your device and permissions.');
-          setLoading(false);
-          return;
-        }
+    if (cameraSource === 'maicam') {
+      const [maicamAudio, maicamVideo] = livekitTracksRef.current;
+      if (!maicamVideo) {
+        toast.error('MaiCam phone camera is not ready. Pair your phone first and select MaiCam as the camera source.');
+        setLoading(false);
+        return;
       }
-
-      // Success - we have a MediaStream. Wrap into LiveKit tracks and preserve in PreflightStore.
-      const mediaStream = (result as any).stream;
-      // Stop any existing preflight tracks to avoid duplicates
-      try { if (livekitTracksRef.current[0]) livekitTracksRef.current[0]?.stop(); } catch {}
-      try { if (livekitTracksRef.current[1]) livekitTracksRef.current[1]?.stop(); } catch {}
-
-      try {
-        const at = mediaStream.getAudioTracks();
-        if (at.length > 0) {
-          audioTrack = new LocalAudioTrack(at[0]);
-          audioTrack.source = Track.Source.Microphone;
-        }
-      } catch (e) { console.warn('[SetupPage] Failed to create LocalAudioTrack from preflight stream', e); }
-      try {
-        const vt = mediaStream.getVideoTracks();
-        if (vt.length > 0) {
-          videoTrack = new LocalVideoTrack(vt[0]);
-          videoTrack.source = Track.Source.Camera;
-        }
-      } catch (e) { console.warn('[SetupPage] Failed to create LocalVideoTrack from preflight stream', e); }
-
+      audioTrack = maicamAudio ?? null;
+      videoTrack = maicamVideo;
       setLivekitTracksState([audioTrack, videoTrack]);
       PreflightStore.setLivekitTracks([audioTrack, videoTrack]);
       setCameraTrack(videoTrack);
-      setStream(mediaStream);
-      if (mediaStream.getVideoTracks().length > 0) {
-        attachNativePreview(mediaStream, facingMode);
+      const combined = new MediaStream([
+        ...(audioTrack ? [(audioTrack as any).getMediaStreamTrack()] : []),
+        (videoTrack as any).getMediaStreamTrack(),
+      ]);
+      setStream(combined);
+      setPreviewStream(combined);
+      attachNativePreview(combined, facingMode);
+      toast.success('MaiCam phone camera connected to broadcast');
+    } else {
+      try {
+        const result = await requestBroadcastMediaAccess();
+        if (result.status !== 'success') {
+          if (result.status === 'insecure_context') {
+            toast.error('Camera and microphone require HTTPS. Open Mai Troll from the secure website link.');
+          } else if (result.status === 'unsupported_browser') {
+            toast.error('This browser does not support camera/microphone broadcasting. Use Safari on iOS.');
+          } else if (result.status === 'camera_denied' || result.status === 'microphone_denied') {
+            setPermissionStatus('denied');
+            toast.error('Camera or microphone is blocked. On iPhone/iPad, open Safari Website Settings for this site and set Camera and Microphone to Allow, then refresh.');
+            setLoading(false);
+            return;
+          } else if (result.status === 'no_camera_found' || result.status === 'no_microphone_found') {
+            toast.error('No camera or microphone was found on this device.');
+            setLoading(false);
+            return;
+          } else if (result.status === 'device_in_use') {
+            toast.error('Device in use:\n\nClose any other apps or browser tabs that might be using your camera (FaceTime, Zoom, Teams, etc.), then try again.');
+            setLoading(false);
+            return;
+          } else {
+            toast.error('Failed to access camera/microphone. Please check your device and permissions.');
+            setLoading(false);
+            return;
+          }
+        }
+
+        // Success - we have a MediaStream. Wrap into LiveKit tracks and preserve in PreflightStore.
+        const mediaStream = (result as any).stream;
+        // Stop any existing preflight tracks to avoid duplicates
+        try { if (livekitTracksRef.current[0]) livekitTracksRef.current[0]?.stop(); } catch {}
+        try { if (livekitTracksRef.current[1]) livekitTracksRef.current[1]?.stop(); } catch {}
+
+        try {
+          const at = mediaStream.getAudioTracks();
+          if (at.length > 0) {
+            audioTrack = new LocalAudioTrack(at[0]);
+            audioTrack.source = Track.Source.Microphone;
+          }
+        } catch (e) { console.warn('[SetupPage] Failed to create LocalAudioTrack from preflight stream', e); }
+        try {
+          const vt = mediaStream.getVideoTracks();
+          if (vt.length > 0) {
+            videoTrack = new LocalVideoTrack(vt[0]);
+            videoTrack.source = Track.Source.Camera;
+          }
+        } catch (e) { console.warn('[SetupPage] Failed to create LocalVideoTrack from preflight stream', e); }
+
+        setLivekitTracksState([audioTrack, videoTrack]);
+        PreflightStore.setLivekitTracks([audioTrack, videoTrack]);
+        setCameraTrack(videoTrack);
+        setStream(mediaStream);
+        if (mediaStream.getVideoTracks().length > 0) {
+          attachNativePreview(mediaStream, facingMode);
+        }
+        if (import.meta.env.DEV) {
+          console.info('[SetupPage] iOS media preflight checklist - test on:');
+          console.info(' - iPhone Safari browser');
+          console.info(' - iPhone PWA installed to home screen');
+          console.info(' - iPad Safari');
+          console.info(' - Android Chrome');
+          console.info(' - Desktop Chrome');
+        }
+      } catch (err) {
+        console.error('[SetupPage] requestBroadcastMediaAccess failed:', err);
+        toast.error('Failed to request camera/microphone permissions: ' + (err?.message || String(err)));
+        setLoading(false);
+        return;
       }
-      if (import.meta.env.DEV) {
-        console.info('[SetupPage] iOS media preflight checklist - test on:');
-        console.info(' - iPhone Safari browser');
-        console.info(' - iPhone PWA installed to home screen');
-        console.info(' - iPad Safari');
-        console.info(' - Android Chrome');
-        console.info(' - Desktop Chrome');
-      }
-    } catch (err) {
-      console.error('[SetupPage] requestBroadcastMediaAccess failed:', err);
-      toast.error('Failed to request camera/microphone permissions: ' + (err?.message || String(err)));
-      setLoading(false);
-      return;
     }
 
     // All validations passed - now set isStartingStream and proceed
@@ -2252,6 +2334,26 @@ const handleStartStream = async () => {
                   <RefreshCw size={18} />
                 </button>
               )}
+              {/* MaiCam Connect camera source selector */}
+              <button
+                type="button"
+                onClick={() => setCameraSource(cameraSource === 'webcam' ? 'maicam' : 'webcam')}
+                disabled={cameraSource === 'maicam' && maicamConnectionState !== 'connected'}
+                className={`p-2.5 rounded-full transition-colors border ${cameraSource === 'maicam' ? 'bg-[#39FF14]/20 border-[#39FF14]/60 text-[#39FF14]' : 'bg-white/10 border-white/20 text-white'}`}
+                title={cameraSource === 'maicam' ? 'Switch to webcam' : 'Use MaiCam phone camera'}
+              >
+                {cameraSource === 'maicam' ? (
+                  <>
+                    <Smartphone size={16} />
+                    <span className="ml-1 text-[10px] font-bold">MaiCam</span>
+                  </>
+                ) : (
+                  <>
+                    <Smartphone size={16} />
+                    <span className="ml-1 text-[10px] font-bold text-slate-400">MaiCam</span>
+                  </>
+                )}
+              </button>
               {category === 'gaming' && screenShare.isSupported && (
                 <button
                   type="button"

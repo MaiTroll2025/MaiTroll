@@ -5,6 +5,7 @@ import { EffectsProvider } from "./contexts/BroadcastEffectsContext";
 import { CartProvider } from "./lib/cartContext";
 import { Routes, Route, Navigate, Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
 import { SwipeNavigationProvider } from "./contexts/SwipeNavigationContext";
+import { trackSitePageView } from "./lib/siteAnalytics";
 
 const TreelzPage = lazyWithRetry(() => import("./pages/TreelzPage"));
 const TreelzUploadPage = lazyWithRetry(() => import("./pages/TreelzUploadPage"));
@@ -13,6 +14,7 @@ const MaiSingOffPage = lazyWithRetry(() => import("./features/mai-sing-off/pages
 const MaiPiksPage = lazyWithRetry(() => import("./pages/MaiPiksPage"));
 const MaiBusinessLanding = lazyWithRetry(() => import("./features/mai-business/pages/MaiBusinessLanding"));
 const MaiBusinessDashboard = lazyWithRetry(() => import("./features/mai-business/pages/MaiBusinessDashboard"));
+const MaiCamDesktop = lazyWithRetry(() => import("./pages/MaiCamDesktop"));
 const MaiBusinessStart = lazyWithRetry(() => import("./features/mai-business/pages/MaiBusinessStart"));
 const MaiBusinessPlan = lazyWithRetry(() => import("./features/mai-business/pages/MaiBusinessPlan"));
 const MaiBusinessEducation = lazyWithRetry(() => import("./features/mai-business/pages/MaiBusinessEducation"));
@@ -659,7 +661,6 @@ const HomeNotificationPrompt = lazyWithRetry(() => import("./components/HomeNoti
 import { GhostDropInProvider } from "./context/GhostDropInContext";
 const GhostBanner = lazyWithRetry(() => import("./components/home/GhostBanner"));
 const RTCAdminMonitor = lazyWithRetry(() => import("./components/admin/RTCAdminMonitor.tsx"));
-const RtcAdminMonitorGate = lazyWithRetry(() => import("./components/admin/RtcAdminMonitorGate.tsx"));
 import MKeyInvitePopup from "./components/broadcast/mkey/MKeyInvitePopup";
 import { useUtromailMessagePopup } from "@/hooks/useUtromailMessagePopup";
 import UtromailMessagePopup from "@/components/messaging/UtromailMessagePopup";
@@ -1677,7 +1678,7 @@ const appShell = (
            {user && <AdminOfficerQuickMenu />}
            {user && <ChatBubble />}
            <StaffWalkieTalkieProvider>
-             <RTCAdminMonitor headerDropdown />
+              <RTCAdminMonitor />
              {import.meta.env.DEV && (profile?.is_admin || profile?.is_superadmin || ['admin','ceo','superadmin'].includes(profile?.role || '')) }
               <ErrorBoundary>
                 <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div></div>}>
@@ -1896,7 +1897,8 @@ const appShell = (
                        </RequireRole>
                      }
                    />
-                    <Route path="/broadcast/setup" element={<SetupPage />} />
+                     <Route path="/broadcast/setup" element={<SetupPage />} />
+                     <Route path="/maicam" element={<MaiCamDesktop />} />
                     <Route path="/broadcast/school" element={<BroadcastSchoolPage />} />
                     <Route path="/broadcast/setup/gaming" element={<GamingSetupPage />}>
   <Route path="analytics" element={<GamingAnalytics />} />
@@ -2821,11 +2823,11 @@ const appShell = (
                      }
                    />
 <Route
-                       path="/rtcadminmonitor"
-                       element={
-                         <RtcAdminMonitorGate fullPage onClose={() => navigate('/home')} />
-                       }
-                     />
+                        path="/rtcadminmonitor"
+                        element={
+                          <RTCAdminMonitor fullPage onClose={() => navigate('/home')} />
+                        }
+                      />
                   <Route path="/rfc" element={<AdminRFC />} />
                   <Route
                     path="/changelog"
@@ -2968,6 +2970,10 @@ function App() {
   useRouteTitle();
 
   const location = useLocation();
+
+  useEffect(() => {
+    trackSitePageView(location.pathname, location.key);
+  }, [location.key, location.pathname]);
 
   /*
    * Screen-size detection: phone-sized screens get the dedicated src/phone

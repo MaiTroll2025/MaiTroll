@@ -15,7 +15,7 @@ interface UserFrameRecord {
   user_id: string;
   frame_id: string;
   is_equipped: boolean;
-  purchased_at: string;
+  acquired_at: string;
 }
 
 interface ProfileFrameState {
@@ -105,7 +105,7 @@ export const useProfileFrameStore = create<ProfileFrameState>((set, get) => ({
           user_id: row.user_id,
           frame_id: row.frame_id,
           is_equipped: row.is_equipped,
-          purchased_at: row.purchased_at,
+          acquired_at: row.acquired_at,
         }));
 
         const equipped = owned.find(f => f.is_equipped);

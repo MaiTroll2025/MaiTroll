@@ -15,6 +15,7 @@ import { toast } from 'sonner'
 
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/lib/store'
+import { moderation } from '@/services/maitrollModeration'
 
 import ProfileFrame from '@/components/profile/ProfileFrame'
 import { useUserFrame } from '@/hooks/useUserFrame'
@@ -219,6 +220,13 @@ export default function PhoneCommunityWall() {
     }
 
     setSubmitting(true)
+
+    const modResult = await moderation.checkContent(user.id, content.trim(), 'wall')
+    if (!modResult.allowed) {
+      toast.error(modResult.message || 'That post violates Mai Troll\'s wall rules and was not posted.')
+      setSubmitting(false)
+      return
+    }
 
     try {
       const metadata: Record<string, string> = {}

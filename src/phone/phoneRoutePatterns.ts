@@ -6,6 +6,8 @@ const PHONE_NATIVE_ROUTE_PATTERNS = [
   '/',
   '/auth',
   '/login',
+  '/maicam',
+  '/maicam/camera',
   '/careers',
   '/go-live',
   '/mai-piks',

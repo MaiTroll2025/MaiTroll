@@ -118,9 +118,11 @@ export default function PrivacyPage() {
                   <h2 className="text-2xl font-bold text-white m-0">Cookies & Tracking</h2>
                 </div>
                 <p className="text-slate-300">
-                  We use cookies and similar tracking technologies to enhance your experience, analyze usage, and deliver
-                  personalized content. Necessary cookies enable core functionality like authentication, security, and
-                  payments. Analytics and marketing cookies require your explicit consent and are disabled by default.
+                  We use cookies and similar technologies to enhance your experience and deliver personalized content.
+                  We also collect anonymous first-party site-usage metrics, including visited page paths, session counts,
+                  referring host, device category, estimated browser resource transfer, and counts of searches for
+                  MaiTroll and #MaiTroll. These metrics do not include IP addresses, account IDs, or full search text.
+                  Google Analytics and marketing cookies require your explicit consent and are disabled by default.
                   You can manage your preferences at any time in your <Link to="/profile/privacy-settings" className="text-purple-400 hover:text-purple-300">Privacy Settings</Link>.
                 </p>
               </div>
