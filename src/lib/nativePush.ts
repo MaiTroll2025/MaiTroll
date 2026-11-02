@@ -7,6 +7,7 @@ import { supabase } from './supabase'
 import { openNotificationDestination } from './notificationDestination'
 
 let listenersRegistered = false
+let registrationInFlight: Promise<void> | null = null
 
 const nativePlatform = () => {
   try {
@@ -43,7 +44,22 @@ const saveToken = async (userId: string, token: string) => {
   }
 }
 
-export async function registerNativePush(_userId: string) {
+export async function registerNativePush(userId: string) {
+  if (!nativePlatform()) return
+  if (registrationInFlight) return registrationInFlight
+
+  const registration = registerNativePushForUser(userId)
+  registrationInFlight = registration
+  try {
+    await registration
+  } finally {
+    if (registrationInFlight === registration) {
+      registrationInFlight = null
+    }
+  }
+}
+
+async function registerNativePushForUser(_userId: string) {
   try {
     if (!nativePlatform()) return
 

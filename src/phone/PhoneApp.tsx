@@ -77,7 +77,6 @@ import { useAuthStore } from '@/lib/store'
 import { supabase, UserRole } from '@/lib/supabase'
 import { moderation } from '@/services/maitrollModeration'
 import { lazy, Suspense, useEffect, useState } from 'react'
-import { registerNativePush } from '@/lib/nativePush'
 import PhoneHeader from './PhoneHeader'
 import PhoneStore from './pages/PhoneStore'
 import PetFloatingButton from '../components/pets/PetFloatingButton'
@@ -195,13 +194,6 @@ export default function PhoneApp() {
     (location.pathname.startsWith('/broadcast/') &&
       location.pathname.split('/').filter(Boolean).length === 2 &&
       location.pathname !== '/broadcast/setup')
-
-  // Register native push notifications when user logs in
-  useEffect(() => {
-    if (authUser?.id) {
-      registerNativePush(authUser.id)
-    }
-  }, [authUser?.id])
 
   return (
     <PhoneErrorBoundary>

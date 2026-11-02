@@ -2,7 +2,6 @@ import { useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications, PushNotificationSchema } from '@capacitor/push-notifications';
-import { supabase } from '../lib/supabase';
 import { openNotificationDestination } from '../lib/notificationDestination';
 
 let nativeListenerRegistered = false;
@@ -142,28 +141,6 @@ export default function GlobalNotificationHandler() {
       window.removeEventListener('pwa-notification-action', notificationActionHandler as EventListener);
     };
   }, [handleNativePush, handleWebPush, handleNotificationAction]);
-
-  // Also register native push on app startup if user is logged in
-  useEffect(() => {
-    const initPush = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        try {
-          const platform = Capacitor.getPlatform();
-          if (platform === 'android' || platform === 'ios') {
-            // Check permission and register
-            const perm = await PushNotifications.checkPermissions();
-            if (perm.receive === 'granted') {
-              await PushNotifications.register();
-            }
-          }
-        } catch (e) {
-          console.error('[GlobalNotification] Push init failed:', e);
-        }
-      }
-    };
-    initPush();
-  }, []);
 
   return null; // This component doesn't render anything
 }
