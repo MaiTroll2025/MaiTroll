@@ -72,7 +72,7 @@ interface MaterialColors {
   isGlass: boolean
 }
 
-function getMaterialColors(
+function _getMaterialColors(
   material: Material,
   isDark: boolean,
 ): MaterialColors {
@@ -158,7 +158,7 @@ function getMaterialColors(
       }
 
     default:
-      return getMaterialColors('concrete', isDark)
+      return _getMaterialColors('concrete', isDark)
   }
 }
 
@@ -449,7 +449,7 @@ interface _Leaf {
   opacity: number
 }
 
-function generateTrees(
+function _generateTrees(
   width: number,
   _groundY: number,
 ): Tree[] {
@@ -739,7 +739,7 @@ function drawTree(
   ctx.fill()
 }
 
-function drawTrees(
+function _drawTrees(
   ctx: CanvasRenderingContext2D,
   trees: Tree[],
   groundY: number,
@@ -773,7 +773,7 @@ interface FlyingLeaf {
   opacity: number
 }
 
-function generateFlyingLeaves(
+function _generateFlyingLeaves(
   width: number,
   _height: number,
   trees: Tree[],
@@ -817,7 +817,7 @@ function generateFlyingLeaves(
   return leaves
 }
 
-function drawFlyingLeaves(
+function _drawFlyingLeaves(
   ctx: CanvasRenderingContext2D,
   leaves: FlyingLeaf[],
   width: number,
@@ -884,7 +884,7 @@ function drawFlyingLeaves(
   }
 }
 
-function spawnLeaf(
+function _spawnLeaf(
   trees: Tree[],
   groundY: number,
 ): FlyingLeaf | null {
@@ -938,7 +938,7 @@ interface Cloud {
   opacity: number
 }
 
-function generateClouds(
+function _generateClouds(
   width: number,
   height: number,
 ): Cloud[] {
@@ -1049,7 +1049,7 @@ function drawCloud(
   ctx.restore()
 }
 
-function drawClouds(
+function _drawClouds(
   ctx: CanvasRenderingContext2D,
   clouds: Cloud[],
   width: number,
@@ -1609,12 +1609,12 @@ function drawAirplanes(
 /* -------------------------------------------------------------------------- */
 
 function drawCity(
-  ctx: CanvasRenderingContext2D,
+  _ctx: CanvasRenderingContext2D,
   _buildings: Building[],
-  groundY: number,
+  _groundY: number,
   _isNight: boolean,
-  time: number,
-  isDark: boolean,
+  _time: number,
+  _isDark: boolean,
 ) {
 }
 
@@ -2823,7 +2823,7 @@ export default function DynamicWeatherBackground({
       precipCanvas.height =
         window.innerHeight
 
-      const groundY =
+      const _groundY =
         cityCanvas.height -
         80
 

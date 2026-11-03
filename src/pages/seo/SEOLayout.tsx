@@ -2,6 +2,7 @@ import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Eye, Home, Mail, HelpCircle, MessageCircle, ChevronRight, Share2 } from 'lucide-react';
 import useSEO from '@/hooks/useSEO'
+import { useAuthStore } from '@/lib/store'
 
 interface SEOPageProps {
   children: React.ReactNode
@@ -40,6 +41,7 @@ export default function SEOLayout({
   structuredData,
 }: SEOPageProps) {
   const location = useLocation()
+  const { user, isLoading } = useAuthStore()
 
   useSEO({
     title: titleIsExact ? title : `${title} | MaiTroll`,
@@ -72,7 +74,7 @@ export default function SEOLayout({
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
-      <header className="sticky top-0 z-50 bg-slate-950/80 backdrop-blur-lg border-b border-slate-800">
+      {!user && !isLoading && <header className="sticky top-0 z-50 bg-slate-950/80 backdrop-blur-lg border-b border-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link to="/" className="flex items-center gap-3">
@@ -124,7 +126,7 @@ export default function SEOLayout({
             </div>
           </div>
         </div>
-      </header>
+      </header>}
 
       <main>
         {children}

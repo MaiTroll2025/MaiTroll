@@ -1,29 +1,20 @@
 /**
- * HytroGaming — Premium standalone gaming broadcasts page
- *
- * Shows all active gaming broadcasts using LiveKit.
- * Public page: anyone can view.
- * Preserves:
- * - Supabase stream fetch logic
- * - category = gaming filter
- * - realtime stream refresh
- * - search + sort
- * - featured streams
- * - embedded Agora viewer when agora_channel exists
- * - fallback navigation to /watch/:streamId
+ * HytroGaming — MaiTroll neon live gaming arena.
+ * Standalone, full-viewport page (no application sidebar).
+ * Keeps the existing Supabase gaming-stream query, realtime refresh,
+ * search, sorting, featured streams, agency restrictions, game library,
+ * and /gaming/watch/:id navigation.
+ * The Tournaments tab is a truthful placeholder until tournament data
+ * and routes exist; the Arcade Games tab renders the real GamesSection.
  */
-
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Briefcase, ChevronRight, Clock3, Eye, Flame, Gamepad2, Loader2, Play, Radio, Search, ShieldCheck, Trophy, Users, ArrowUpRight } from 'lucide-react';
+import {
+  ArrowLeft, ArrowRight, Bell, ChevronLeft, ChevronRight, Clock3,
+  Eye, Flame, Gamepad2, Loader2, Play, Radio, Search,
+  ShieldCheck, Trophy, Users, X, MonitorPlay,
+} from 'lucide-react';
 import { toast } from 'sonner';
-
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { cn, formatCompactNumber } from '@/lib/utils';
@@ -34,7 +25,8 @@ import { isStandalone } from '@/pwa/install';
 import HytroGamingLanding from './HytroGamingLanding';
 import GamesSection from '@/components/home/GamesSection';
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+type SortMode = 'viewers' | 'featured' | 'recent';
+type ArenaTab = 'streams' | 'tournaments' | 'arcade' | 'share';
 
 interface GamingStream {
   id: string;
@@ -53,149 +45,38 @@ interface GamingStream {
   layout_mode: string;
 }
 
-type SortMode = 'viewers' | 'featured' | 'recent';
+const viewerTotal = (stream: GamingStream) =>
+  stream.current_viewers || stream.viewer_count || 0;
 
-// ─── Small UI Components ─────────────────────────────────────────────────────
-
-function HytroLogo({ compact = false }: { compact?: boolean }) {
-  return (
-    <div className="flex items-center gap-3">
-      <div
-        className={cn(
-          'relative grid place-items-center overflow-hidden rounded-2xl border border-cyan-300/30',
-          'bg-gradient-to-br from-cyan-400/25 via-blue-500/15 to-purple-600/25',
-          'shadow-[0_0_35px_rgba(34,211,238,0.25)]',
-          compact ? 'h-10 w-10' : 'h-12 w-12'
-        )}
-      >
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_20%,rgba(255,255,255,0.35),transparent_28%),radial-gradient(circle_at_80%_90%,rgba(168,85,247,0.35),transparent_38%)]" />
-        <Gamepad2 className={cn('relative text-cyan-100', compact ? 'h-5 w-5' : 'h-6 w-6')} />
-      </div>
-
-      <div className="leading-none">
-        <div
-          className={cn(
-            'font-black uppercase tracking-tight text-white',
-            compact ? 'text-base' : 'text-2xl sm:text-3xl'
-          )}
-        >
-          Hytro
-          <span className="bg-gradient-to-r from-cyan-300 via-blue-400 to-purple-400 bg-clip-text text-transparent">
-            Gaming
-          </span>
-        </div>
-        {!compact && (
-          <div className="mt-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-200/60">
-            Live Arena
-          </div>
-        )}
-      </div>
-    </div>
-  );
+function ago(date: string | null) {
+  if (!date) return 'Just now';
+  const timestamp = Date.parse(date);
+  if (!Number.isFinite(timestamp)) return 'Just now';
+  const minutes = Math.max(0, Math.floor((Date.now() - timestamp) / 60_000));
+  return minutes >= 60 ? `${Math.floor(minutes / 60)}h ${minutes % 60}m ago` : minutes ? `${minutes}m ago` : 'Just now';
 }
 
-function StatPill({
-  icon,
-  label,
-  value,
-  tone = 'cyan',
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  tone?: 'cyan' | 'purple' | 'green' | 'orange';
-}) {
-  const toneClass = {
-    cyan: 'border-cyan-400/30 bg-cyan-400/10 text-cyan-100 shadow-cyan-500/10',
-    purple: 'border-purple-400/30 bg-purple-400/10 text-purple-100 shadow-purple-500/10',
-    green: 'border-emerald-400/30 bg-emerald-400/10 text-emerald-100 shadow-emerald-500/10',
-    orange: 'border-orange-400/30 bg-orange-400/10 text-orange-100 shadow-orange-500/10',
-  }[tone];
-
-  return (
-    <div
-      className={cn(
-        'flex min-w-0 items-center gap-2 rounded-2xl border px-3 py-3 shadow-lg backdrop-blur-xl',
-        toneClass
-      )}
-    >
-      <div className="hidden h-10 w-10 shrink-0 place-items-center rounded-xl sm:grid bg-white/10">
-        {icon}
-      </div>
-      <div className="min-w-0">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/45">
-          {label}
-        </p>
-        <p className="truncate text-base font-black text-white sm:text-lg">{value}</p>
-      </div>
-    </div>
-  );
-}
-
-function SortChip({
-  mode,
-  active,
-  onClick,
-}: {
-  mode: SortMode;
-  active: boolean;
-  onClick: () => void;
-}) {
-  const label =
-    mode === 'viewers' ? 'Popular' : mode === 'featured' ? 'Featured' : 'Recent';
-
-  const Icon = mode === 'viewers' ? Users : mode === 'featured' ? Flame : Radio;
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        'inline-flex shrink-0 items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition-all',
-        active
-          ? 'border border-cyan-300/40 bg-cyan-400/15 text-cyan-100 shadow-[0_0_20px_rgba(34,211,238,0.18)]'
-          : 'border border-white/10 bg-white/[0.04] text-slate-400 hover:border-white/20 hover:bg-white/[0.08] hover:text-white'
-      )}
-    >
-      <Icon className="h-3.5 w-3.5" />
-      {label}
-    </button>
-  );
-}
-
-// ─── Gaming Stream Card ──────────────────────────────────────────────────────
-
-function GamingStreamCard({
-  stream,
-  onClick,
-  featured = false,
+function StreamCard({
+  stream, onOpen, featured = false,
 }: {
   stream: GamingStream;
-  onClick: () => void;
+  onOpen: () => void;
   featured?: boolean;
 }) {
-  const _viewers = getStreamViewers(stream);
-
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={onOpen}
       className={cn(
-        'group relative w-full overflow-hidden rounded-3xl text-left transition-all duration-300',
-        'border border-white/10 bg-slate-950/70 shadow-2xl shadow-black/30 backdrop-blur-xl',
-        'hover:-translate-y-1 hover:border-cyan-300/35 hover:shadow-[0_0_45px_rgba(34,211,238,0.16)]',
-        featured && 'xl:col-span-2'
+        'group min-w-0 overflow-hidden rounded-2xl border bg-[#080d21] text-left transition-all duration-200',
+        'hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300',
+        featured
+          ? 'border-fuchsia-400/60 shadow-[0_0_18px_rgba(217,70,239,.17)] hover:border-fuchsia-300'
+          : 'border-cyan-400/35 shadow-[0_0_18px_rgba(0,229,255,.08)] hover:border-cyan-300',
       )}
+      aria-label={`Watch ${stream.title} by ${stream.broadcaster_name}`}
     >
-      <div className="pointer-events-none absolute -inset-px rounded-3xl bg-gradient-to-br from-cyan-400/20 via-purple-500/10 to-emerald-400/10 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-
-      <div
-        className={cn(
-          'relative overflow-hidden bg-gradient-to-br from-slate-900 via-[#090117] to-cyan-950/40',
-          featured ? 'aspect-[16/9]' : 'aspect-[16/9]'
-        )}
-      >
-        {/* Lazy-loaded live thumbnail — loads preview on hover */}
+      <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-[#122341] via-[#261244] to-[#07182c]">
         <LazyLiveThumbnail
           streamId={stream.id}
           agoraChannel={stream.agora_channel}
@@ -204,444 +85,258 @@ function GamingStreamCard({
           avatarUrl={stream.broadcaster_avatar}
           title={stream.title}
           isLive={stream.is_live}
-          onClick={onClick}
+          onClick={onOpen}
         />
-
-        {/* Gradient overlay for text readability */}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/25 to-black/15" />
-
-        {/* Live + Gaming badges */}
-        <div className="pointer-events-none absolute left-3 top-3 flex flex-wrap items-center gap-2">
-          {stream.is_live && (
-            <div className="inline-flex items-center gap-1.5 rounded-xl bg-red-600 px-2.5 py-1.5 shadow-lg shadow-red-600/25">
-              <span className="h-2 w-2 rounded-full bg-white animate-pulse" />
-              <span className="text-[11px] font-black uppercase tracking-wide text-white">Live</span>
-            </div>
-          )}
-          <div className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-black/45 px-2.5 py-1.5 backdrop-blur-md">
-            <Gamepad2 className="h-3.5 w-3.5 text-cyan-200" />
-            <span className="text-[11px] font-bold text-white/85">Gaming</span>
-          </div>
-        </div>
-
-        {/* Featured badge */}
-        {stream.is_featured && (
-          <div className="pointer-events-none absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-orange-400 to-yellow-300 px-2.5 py-1.5 shadow-lg shadow-orange-500/20">
-            <Flame className="h-3.5 w-3.5 text-black" />
-            <span className="text-[11px] font-black uppercase text-black">Hot</span>
-          </div>
-        )}
-
-        {/* Viewer count */}
-        <div className="pointer-events-none absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-black/55 px-2.5 py-1.5 backdrop-blur-md">
-          <Eye className="h-3.5 w-3.5 text-white/65" />
-          <span className="text-xs font-bold text-white">{formatCompactNumber(getStreamViewers(stream))}</span>
-        </div>
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#030614]/60 via-transparent to-black/15" />
+        <span className="pointer-events-none absolute left-2.5 top-2.5 inline-flex items-center gap-1.5 rounded-md bg-rose-600 px-2 py-1 text-[10px] font-black uppercase text-white shadow-lg">
+          <span className="size-1.5 animate-pulse rounded-full bg-white" /> Live
+        </span>
+        <span className="pointer-events-none absolute right-2.5 top-2.5 inline-flex items-center gap-1 rounded-md bg-black/75 px-2 py-1 text-[10px] font-bold text-white">
+          <Eye size={12} /> {formatCompactNumber(viewerTotal(stream))}
+        </span>
+        {stream.is_featured && <span className="pointer-events-none absolute bottom-2.5 right-2.5 rounded-md bg-amber-300 px-2 py-0.5 text-[9px] font-black text-black">FEATURED</span>}
+        <div className="pointer-events-none absolute bottom-2.5 left-2.5 rounded-full border border-white/25 bg-black/65 p-2 opacity-0 transition-opacity group-hover:opacity-100"><Play size={14} fill="white" /></div>
       </div>
-
-      <div className="relative p-4">
-        <div className="flex items-start gap-3">
-          <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-2xl border border-cyan-300/25 bg-gradient-to-br from-purple-500 to-cyan-500">
-            {stream.broadcaster_avatar ? (
-              <img
-                src={stream.broadcaster_avatar}
-                alt={stream.broadcaster_name}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <div className="grid h-full w-full place-items-center">
-                <Gamepad2 className="h-5 w-5 text-white" />
-              </div>
-            )}
-
-            {stream.is_live && (
-              <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-slate-950 bg-emerald-400" />
-            )}
-          </div>
-
-          <div className="min-w-0 flex-1">
-            <h3 className="line-clamp-1 text-sm font-black text-white">
-              {stream.title || 'Untitled Gaming Stream'}
-            </h3>
-
-            <div className="mt-1 flex min-w-0 items-center gap-1.5">
-              <p className="truncate text-xs font-semibold text-slate-400">
-                {stream.broadcaster_name || 'Unknown Gamer'}
-              </p>
-              <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-cyan-300" />
-            </div>
-
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1 rounded-lg bg-purple-400/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-purple-200">
-                <Trophy className="h-3 w-3" />
-                Arena
-              </span>
-
-              <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-400/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-200">
-                <Radio className="h-3 w-3" />
-                {getTimeAgo(stream.started_at)}
-              </span>
-            </div>
-          </div>
-
-          <ChevronRight className="mt-1 h-5 w-5 shrink-0 text-white/25 transition-transform group-hover:translate-x-1 group-hover:text-cyan-200" />
+      <div className="flex min-w-0 items-center gap-2.5 p-2.5 sm:p-3">
+        <div className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-full border border-cyan-300/45 bg-violet-800">
+          {stream.broadcaster_avatar ? <img src={stream.broadcaster_avatar} alt="" className="size-full object-cover" /> : <Gamepad2 size={18} />}
         </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[12px] font-black text-white">{stream.title}</p>
+          <p className="mt-0.5 flex items-center gap-1 truncate text-[11px] font-medium text-slate-300">
+            <span className="truncate">{stream.broadcaster_name}</span> <ShieldCheck size={12} className="shrink-0 text-cyan-300" />
+          </p>
+          <p className="mt-0.5 truncate text-[10px] text-slate-500">{ago(stream.started_at)}</p>
+        </div>
+        <ChevronRight size={16} className="shrink-0 text-slate-500 transition-transform group-hover:translate-x-1" />
       </div>
     </button>
   );
 }
 
-// ─── Main Page ───────────────────────────────────────────────────────────────
+function EmptyStreamState({ searching }: { searching: boolean }) {
+  return <div className="flex min-h-48 flex-col items-center justify-center rounded-2xl border border-dashed border-cyan-400/20 bg-[#0b1430]/45 px-5 text-center">
+    <Radio className="mb-3 size-9 text-cyan-400/60" />
+    <h3 className="font-bold">{searching ? 'No matching game streams' : 'No gaming streams are live yet'}</h3>
+    <p className="mt-1 max-w-sm text-xs text-slate-400">{searching ? 'Try another streamer or broadcast title.' : 'The arena will populate as broadcasters go live.'}</p>
+  </div>;
+}
 
 export default function HytroGaming() {
   const navigate = useNavigate();
   const { user, profile, isLoading } = useAuthStore();
   const { isMobile } = useIsMobile();
-  const isPWA = isStandalone();
-  const isMobileOrPWA = isMobile || isPWA;
-
-  // ── Agency status check ──────────────────────────────────────────────────
+  const isMobileOrPWA = isMobile || isStandalone();
   const [agencyStatus, setAgencyStatus] = useState<'loading' | 'approved' | 'pending' | 'none' | 'exempt'>('loading');
-
-  useEffect(() => {
-    if (!user?.id) {
-      setAgencyStatus('none');
-      return;
-    }
-
-    // Admins and certain roles are exempt from agency requirement
-    const exemptRoles = ['admin', 'moderator', 'staff', 'troll_officer', 'lead_troll_officer'];
-    if (exemptRoles.includes(profile?.role || '') || exemptRoles.includes((profile as any)?.troll_role || '')) {
-      setAgencyStatus('exempt');
-      return;
-    }
-
-    const checkAgency = async () => {
-      try {
-        // Check if user has an active agency membership
-        const { data: agencyMember } = await supabase
-          .from('agency_members')
-          .select('id, status, agency_id')
-          .eq('user_id', user.id)
-          .eq('status', 'active')
-          .maybeSingle();
-
-        if (agencyMember) {
-          setAgencyStatus('approved');
-          return;
-        }
-
-        // Check the latest agency application status
-        const { data: latestApp } = await supabase
-          .from('agency_applications')
-          .select('id, status')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        if (latestApp?.status === 'approved') {
-          setAgencyStatus('approved');
-          return;
-        }
-
-        if (latestApp?.status === 'pending') {
-          setAgencyStatus('pending');
-          return;
-        }
-
-        setAgencyStatus('none');
-      } catch (err) {
-        console.warn('[HytroGaming] Failed to check agency status:', err);
-        setAgencyStatus('none');
-      }
-    };
-
-    void checkAgency();
-  }, [user?.id, profile?.role, profile]);
-
-  useSEO({
-    title: 'HydroGaming | Live Game Streaming & Screen Sharing | Mai Troll',
-    description: 'Watch live gaming streams on HydroGaming by Mai Troll. Stream games online, share your screen, and join the ultimate gaming community. Live game broadcasts and esports.',
-    keywords: [
-      'game streaming', 'screen sharing', 'live gaming', 'game broadcasts',
-      'gaming community', 'stream games online', 'watch gamers live',
-      'HydroGaming', 'esports streaming', 'video game streaming',
-      'gaming platform', 'live game streaming', 'broadcast gaming'
-    ]
-  });
-
   const [streams, setStreams] = useState<GamingStream[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [sortMode, setSortMode] = useState<SortMode>('viewers');
-  const [activeArcadeTab, setActiveArcadeTab] = useState<'games' | 'share'>('games');
+  const [query, setQuery] = useState('');
+  const [sort, setSort] = useState<SortMode>('viewers');
+  const [tab, setTab] = useState<ArenaTab>('streams');
+  const [featuredOffset, setFeaturedOffset] = useState(0);
+  const streamsSectionRef = useRef<HTMLDivElement>(null);
 
-  const streamsSectionRef = useRef<HTMLDivElement | null>(null);
+  useSEO({
+    title: 'HytroGaming | Live Game Streaming & Arcade | MaiTroll',
+    description: 'Play arcade games, watch live gaming broadcasts, and game share on the HytroGaming arena at MaiTroll.',
+    keywords: ['HytroGaming', 'MaiTroll', 'live gaming', 'game sharing', 'arcade games', 'stream gaming'],
+  });
+
+  const trollRole = (profile as any)?.troll_role;
+  useEffect(() => {
+    if (!user?.id) { setAgencyStatus('none'); return; }
+    const exempt = ['admin', 'moderator', 'staff', 'troll_officer', 'lead_troll_officer'];
+    if (exempt.includes(profile?.role || '') || exempt.includes(trollRole || '')) {
+      setAgencyStatus('exempt'); return;
+    }
+    let cancelled = false;
+    const check = async () => {
+      try {
+        const { data: membership } = await supabase.from('agency_members')
+          .select('id').eq('user_id', user.id).eq('status', 'active').maybeSingle();
+        if (membership) { if (!cancelled) setAgencyStatus('approved'); return; }
+        const { data: application } = await supabase.from('agency_applications')
+          .select('status').eq('user_id', user.id).order('created_at', { ascending: false }).limit(1).maybeSingle();
+        if (!cancelled) setAgencyStatus(application?.status === 'approved' ? 'approved' : application?.status === 'pending' ? 'pending' : 'none');
+      } catch (error) {
+        console.warn('[HytroGaming] Agency check failed', error);
+        if (!cancelled) setAgencyStatus('none');
+      }
+    };
+    void check();
+    return () => { cancelled = true; };
+  }, [user?.id, profile?.role, trollRole]);
 
   const fetchStreams = useCallback(async () => {
     try {
-      const { data: streamsData, error } = await supabase
-        .from('streams')
-        .select(`
-          id,
-          title,
-          broadcaster_id,
-          category,
-          is_live,
-          is_featured,
-          viewer_count,
-          current_viewers,
-          started_at,
-          agora_channel,
-          layout_mode,
-          thumbnail_url
-        `)
-        .eq('category', 'gaming')
-        .eq('is_live', true)
+      const { data, error } = await supabase.from('streams')
+        .select('id,title,broadcaster_id,category,is_live,is_featured,viewer_count,current_viewers,started_at,agora_channel,layout_mode,thumbnail_url')
+        .eq('category', 'gaming').eq('is_live', true)
         .order('is_featured', { ascending: false })
-        .order('current_viewers', { ascending: false })
-        .limit(50);
-
+        .order('current_viewers', { ascending: false }).limit(50);
       if (error) throw error;
-
-      const broadcasterIds = Array.from(
-        new Set((streamsData || []).map((s: any) => s.broadcaster_id).filter(Boolean))
-      );
-
-      let broadcasterMap = new Map<string, any>();
-
-      if (broadcasterIds.length > 0) {
-        const { data: profiles, error: profilesError } = await supabase
-          .from('user_profiles')
-          .select('id, username, avatar_url')
-          .in('id', broadcasterIds);
-
-        if (profilesError) {
-          console.warn('[HytroGaming] Failed to fetch broadcaster profiles:', profilesError);
-        }
-
-        if (profiles) {
-          broadcasterMap = new Map(profiles.map((p: any) => [p.id, p]));
-        }
+      const ids = Array.from(new Set((data || []).map((s: any) => s.broadcaster_id).filter(Boolean))) as string[];
+      const map = new Map<string, { username: string | null; avatar_url: string | null }>();
+      if (ids.length) {
+        const { data: profiles, error: profileError } = await supabase.from('user_profiles')
+          .select('id,username,avatar_url').in('id', ids);
+        if (profileError) console.warn('[HytroGaming] Profile lookup failed', profileError);
+        profiles?.forEach((p: any) => map.set(p.id, p));
       }
-
-      const gamingStreams: GamingStream[] = (streamsData || []).map((s: any) => {
-        const broadcaster = broadcasterMap.get(s.broadcaster_id);
-
-        return {
-          id: s.id,
-          title: s.title || 'Untitled Gaming Stream',
-          broadcaster_id: s.broadcaster_id,
-          broadcaster_name: broadcaster?.username || 'Unknown Gamer',
-          broadcaster_avatar: broadcaster?.avatar_url || null,
-          thumbnail_url: s.thumbnail_url || null,
-          viewer_count: s.viewer_count || 0,
-          current_viewers: s.current_viewers || 0,
-          is_live: Boolean(s.is_live),
-          is_featured: Boolean(s.is_featured),
-          category: s.category || 'gaming',
-          started_at: s.started_at || null,
-          agora_channel: s.agora_channel || null,
-          layout_mode: s.layout_mode || 'grid',
-        };
-      });
-
-      setStreams(gamingStreams);
-    } catch (err) {
-      console.error('[HytroGaming] Failed to fetch streams:', err);
-      toast.error('Failed to load gaming streams');
-    } finally {
-      setLoading(false);
-    }
+      setStreams((data || []).map((s: any) => ({
+        id: s.id,
+        title: s.title || 'Untitled Gaming Stream',
+        broadcaster_id: s.broadcaster_id,
+        broadcaster_name: map.get(s.broadcaster_id)?.username || 'Unknown Gamer',
+        broadcaster_avatar: map.get(s.broadcaster_id)?.avatar_url || null,
+        thumbnail_url: s.thumbnail_url || null,
+        viewer_count: s.viewer_count || 0,
+        current_viewers: s.current_viewers || 0,
+        is_live: Boolean(s.is_live),
+        is_featured: Boolean(s.is_featured),
+        category: s.category || 'gaming',
+        started_at: s.started_at || null,
+        agora_channel: s.agora_channel || null,
+        layout_mode: s.layout_mode || 'grid',
+      })));
+    } catch (error) {
+      console.error('[HytroGaming] Stream fetch failed', error);
+      toast.error('Could not load gaming broadcasts');
+    } finally { setLoading(false); }
   }, []);
 
   useEffect(() => {
-    fetchStreams();
+    if (!user?.id) return;
+    void fetchStreams();
+    const timer = window.setInterval(() => { void fetchStreams(); }, 30_000);
+    const channel = supabase.channel('hytrogaming-streams').on('postgres_changes', {
+      event: '*', schema: 'public', table: 'streams', filter: 'category=eq.gaming',
+    }, () => { void fetchStreams(); }).subscribe();
+    return () => { window.clearInterval(timer); void supabase.removeChannel(channel); };
+  }, [fetchStreams, user?.id]);
 
-    const interval = window.setInterval(fetchStreams, 30_000);
+  const totalViewers = useMemo(() => streams.reduce((sum, stream) => sum + viewerTotal(stream), 0), [streams]);
+  const featured = useMemo(() => streams.filter(s => s.is_featured), [streams]);
+  const shownFeatured = useMemo(() => {
+    const pool = featured.length ? featured : streams;
+    if (pool.length <= 4) return pool;
+    return [...pool.slice(featuredOffset), ...pool.slice(0, featuredOffset)].slice(0, 4);
+  }, [featured, streams, featuredOffset]);
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return streams.filter(s => !q || s.title.toLowerCase().includes(q) || s.broadcaster_name.toLowerCase().includes(q))
+      .sort((a, b) => sort === 'recent'
+        ? Date.parse(b.started_at || '') - Date.parse(a.started_at || '') || 0
+        : sort === 'featured'
+          ? Number(b.is_featured) - Number(a.is_featured) || viewerTotal(b) - viewerTotal(a)
+          : viewerTotal(b) - viewerTotal(a));
+  }, [streams, query, sort]);
+  const canShare = agencyStatus === 'approved' || agencyStatus === 'exempt';
+  const openStream = (stream: GamingStream) => navigate(`/gaming/watch/${stream.id}`);
+  const selectTab = (selected: ArenaTab) => { setTab(selected); };
 
-    return () => {
-      window.clearInterval(interval);
-    };
-  }, [fetchStreams]);
-
-  useEffect(() => {
-    const channel = supabase
-      .channel('hytrogaming-streams')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'streams',
-          filter: 'category=eq.gaming',
-        },
-        () => {
-          fetchStreams();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [fetchStreams]);
-
-  const totalViewers = useMemo(() => {
-    return streams.reduce((sum, stream) => sum + getStreamViewers(stream), 0);
-  }, [streams]);
-
-  const featuredStreams = useMemo(() => {
-    return streams.filter((stream) => stream.is_featured);
-  }, [streams]);
-
-  const filteredStreams = useMemo(() => {
-    const normalizedQuery = searchQuery.trim().toLowerCase();
-
-    return streams
-      .filter((stream) => {
-        if (!normalizedQuery) return true;
-
-        return (
-          stream.title.toLowerCase().includes(normalizedQuery) ||
-          stream.broadcaster_name.toLowerCase().includes(normalizedQuery)
-        );
-      })
-      .sort((a, b) => {
-        if (sortMode === 'featured') {
-          if (a.is_featured !== b.is_featured) return a.is_featured ? -1 : 1;
-          return getStreamViewers(b) - getStreamViewers(a);
-        }
-
-        if (sortMode === 'recent') {
-          return (
-            new Date(b.started_at || 0).getTime() -
-            new Date(a.started_at || 0).getTime()
-          );
-        }
-
-        return getStreamViewers(b) - getStreamViewers(a);
-      });
-  }, [streams, searchQuery, sortMode]);
-
-  const handleStreamClick = useCallback(
-    (stream: GamingStream) => {
-      navigate(`/gaming/watch/${stream.id}`);
-    },
-    [navigate]
-  );
-
-  const scrollToStreams = useCallback(() => {
-    streamsSectionRef.current?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start',
-    });
-  }, []);
-
-  // Session still being restored: loading shell, never user data.
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#050714] text-white">
-        <div className="animate-pulse px-6 py-3 rounded bg-[#0a0c16] border border-white/10">
-          Loading HytroGaming…
-        </div>
-      </div>
-    );
-  }
-
-  // Signed out: public HytroGaming landing page. No user-specific data loaded.
-  if (!user) {
-    return <HytroGamingLanding />;
-  }
-
-  const canSeeStreams = isMobileOrPWA || agencyStatus === 'approved' || agencyStatus === 'exempt';
+  if (isLoading) return <div className="fixed inset-0 z-[90] grid place-items-center bg-[#050816] text-white"><Loader2 className="size-8 animate-spin text-cyan-300" /></div>;
+  if (!user) return <HytroGamingLanding />;
 
   return (
-    <div className="relative flex min-h-[100dvh] flex-col overflow-x-hidden bg-[#070812] text-white md:h-[100dvh] md:overflow-hidden">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_15%_5%,rgba(124,58,237,.25),transparent_40%),radial-gradient(ellipse_at_95%_70%,rgba(6,182,212,.13),transparent_40%)]" />
-      {/* One toolbar, not a stack of landing-page sections */}
-      <header className="relative z-20 shrink-0 border-b border-violet-400/15 bg-[#0b0e20]/95 px-3 py-3 backdrop-blur-xl sm:px-6">
-        <div className="mx-auto flex max-w-[1600px] flex-wrap items-center gap-3">
-          <button type="button" onClick={() => navigate(-1)} aria-label="Go back" className="grid size-9 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/5 hover:bg-white/10"><ArrowLeft className="size-4" /></button>
-          <HytroLogo compact />
-          <div className="ml-auto flex items-center gap-2 text-[11px] font-bold text-slate-400">
-            <span className="hidden rounded-lg border border-white/10 px-3 py-2 sm:inline-flex"><Radio className="mr-2 size-3.5 text-red-400" />{streams.length} live</span>
-            <span className="hidden rounded-lg border border-white/10 px-3 py-2 md:inline-flex"><Users className="mr-2 size-3.5 text-cyan-400" />{formatCompactNumber(totalViewers)} watching</span>
-          </div>
+    <div className="fixed inset-0 z-[90] flex flex-col overflow-hidden bg-[#050918] text-white" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_30%_0%,rgba(54,27,135,.27),transparent_42%),radial-gradient(ellipse_at_95%_25%,rgba(0,229,255,.1),transparent_40%)]" />
+
+      {/* Custom fullscreen header: the app's sidebar does not render inside this view. */}
+      <header className="relative z-20 flex shrink-0 items-center gap-2 border-b border-cyan-400/20 bg-[#070b1d]/95 px-3 py-2.5 shadow-[0_4px_18px_rgba(0,0,0,.24)] sm:gap-4 sm:px-6">
+        <button type="button" onClick={() => navigate(-1)} aria-label="Go back" className="grid size-10 shrink-0 place-items-center rounded-xl border border-white/10 bg-white/5 hover:border-cyan-300/50"><ArrowLeft size={17} /></button>
+        <div className="flex shrink-0 items-center gap-2">
+          <span className="grid size-10 place-items-center rounded-xl border border-fuchsia-400/45 bg-gradient-to-br from-fuchsia-600/35 to-cyan-500/20 text-fuchsia-200"><Gamepad2 size={21} /></span>
+          <div className="leading-tight"><p className="text-sm font-black tracking-wider sm:text-lg">MAITROLL</p><p className="text-[8px] font-bold tracking-[.16em] text-slate-400 sm:text-[10px]">YOUR CITY. YOUR WORLD.</p></div>
         </div>
+        <nav className="ml-2 hidden items-center gap-1 md:flex" aria-label="HytroGaming navigation">
+          {([['streams','Live Arena',Radio],['tournaments','Tournaments',Trophy],['arcade','Arcade Games',Gamepad2],['share','Game Share',MonitorPlay]] as const).map(([id,label,Icon]) => (
+            <button key={id} type="button" aria-current={tab === id ? 'page' : undefined} onClick={() => selectTab(id)}
+              className={cn('inline-flex items-center gap-1.5 rounded-xl px-3 py-2.5 text-xs font-bold transition', tab === id ? 'border border-fuchsia-400/65 bg-fuchsia-500/20 text-white shadow-[0_0_18px_rgba(217,70,239,.25)]' : 'border border-transparent text-slate-300 hover:bg-white/10')}>
+              <Icon size={15} />{label}
+            </button>
+          ))}
+        </nav>
+        <div className="ml-auto hidden min-w-0 max-w-[285px] flex-1 items-center gap-2 rounded-xl border border-white/15 bg-[#111b36] px-3 py-2 lg:flex">
+          <Search size={16} className="shrink-0 text-cyan-300" />
+          <input value={query} onChange={e => { setQuery(e.target.value); setTab('streams'); }} placeholder="Search gaming streams..." aria-label="Search gaming streams" className="min-w-0 w-full bg-transparent text-xs text-white outline-none placeholder:text-slate-400" />
+          {query && <button onClick={() => setQuery('')} aria-label="Clear search"><X size={14} /></button>}
+        </div>
+        <span className="hidden items-center gap-1.5 text-xs font-bold text-cyan-100 xl:inline-flex"><Users size={15} className="text-cyan-400" /> {formatCompactNumber(totalViewers)} watching</span>
+        <span className="grid size-9 shrink-0 place-items-center rounded-full border border-violet-400/40 bg-violet-500/15"><Bell size={17} className="text-violet-200" /></span>
       </header>
 
-      <main className="relative z-10 mx-auto flex min-h-0 w-full max-w-[1600px] flex-1 flex-col gap-3 px-3 py-3 sm:px-6 sm:py-4">
-        {/* Arcade marquee and single horizontal navigation */}
-        <div className="shrink-0 overflow-hidden rounded-2xl border border-fuchsia-400/20 bg-gradient-to-r from-[#221038] via-[#12152d] to-[#092a39] p-3 shadow-[inset_0_0_35px_rgba(168,85,247,.09)] sm:p-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="grid size-11 place-items-center rounded-xl border border-fuchsia-400/30 bg-fuchsia-400/15 shadow-[0_0_28px_rgba(217,70,239,.17)]"><Gamepad2 className="size-6 text-fuchsia-300" /></div>
-              <div><p className="text-[10px] font-black uppercase tracking-[.25em] text-fuchsia-300">MaiTroll Arcade</p><h1 className="text-lg font-black leading-tight sm:text-2xl">Play games. Share gameplay. Compete.</h1></div>
-            </div>
-            <div role="tablist" aria-label="Arcade areas" className="flex w-full items-center gap-1 rounded-xl border border-white/10 bg-black/35 p-1 sm:w-auto">
-              <button role="tab" aria-selected={activeArcadeTab === 'games'} onClick={() => setActiveArcadeTab('games')} className={cn('flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 py-2.5 text-xs font-black transition sm:flex-none',activeArcadeTab === 'games' ? 'bg-gradient-to-r from-fuchsia-600 to-violet-600 text-white shadow-lg':'text-slate-300 hover:bg-white/10')}><Gamepad2 className="size-4" /> Arcade Games</button>
-              <button role="tab" aria-selected={activeArcadeTab === 'share'} onClick={() => setActiveArcadeTab('share')} className={cn('flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 py-2.5 text-xs font-black transition sm:flex-none',activeArcadeTab === 'share' ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-lg':'text-slate-300 hover:bg-white/10')}><MonitorPlayIcon /> Game Share</button>
-            </div>
-          </div>
-        </div>
-
-        {/* Only one primary arcade area is displayed at a time. */}
-        {activeArcadeTab === 'games' ? (
-          <section role="tabpanel" aria-label="Arcade Games" className="min-h-0 flex-1 overflow-y-auto rounded-2xl border border-white/10 bg-[#0d1228]/90 p-3 sm:p-5">
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
-              <div><h2 className="flex items-center gap-2 text-base font-black"><Trophy className="size-5 text-amber-300" /> Game Library & Rankings</h2><p className="text-xs text-slate-400">Choose a game and challenge the leaderboard.</p></div>
-              <span className="rounded-full border border-fuchsia-400/20 bg-fuchsia-400/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-fuchsia-200">Insert coin • Press play</span>
-            </div>
-            {/* GamesSection retains ALL existing game, coin, multiplayer and leaderboard logic. */}
-            <div className="min-w-0 [&_table]:w-full [&_th]:text-left [&_td]:border-b [&_td]:border-white/5"><GamesSection /></div>
-          </section>
-        ) : (
-          <section role="tabpanel" aria-label="Game Share" className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
-            {isMobileOrPWA && <div className="rounded-xl border border-cyan-400/20 bg-cyan-400/5 px-4 py-2 text-xs text-cyan-100">Desktop is required to start game sharing; you can watch streams here.</div>}
-            {!isMobileOrPWA && agencyStatus === 'loading' && <div className="flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 p-7 text-sm text-slate-300"><Loader2 className="size-5 animate-spin" /> Checking agency status...</div>}
-            {!isMobileOrPWA && agencyStatus === 'pending' && <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-400/25 bg-amber-400/10 p-4"><div><h2 className="font-black text-amber-100">Agency application pending</h2><p className="text-xs text-slate-300">Your application is under review.</p></div><button onClick={() => navigate('/hytrogaming/apply')} className="rounded-xl bg-amber-300 px-4 py-2 text-xs font-black text-slate-950">View Application</button></div>}
-            {!isMobileOrPWA && agencyStatus === 'none' && <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-cyan-400/25 bg-cyan-400/10 p-4"><div><h2 className="font-black">Apply to Game Share</h2><p className="max-w-2xl text-xs text-slate-300">Agency membership is required to stream. The monthly fee is 5,000 Troll Coins; startup fees match regular agencies. Loans may be available.</p></div><div className="flex gap-2"><button onClick={() => navigate('/hytrogaming/apply')} className="rounded-xl bg-cyan-400 px-4 py-2 text-xs font-black text-slate-950">Apply</button><button onClick={() => navigate('/agencies')} className="rounded-xl border border-white/20 px-4 py-2 text-xs font-bold">Learn More</button></div></div>}
-            {canSeeStreams && <>
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-[#0d132a] p-3 sm:p-4">
-                <div><h2 className="flex items-center gap-2 text-lg font-black"><Radio className="size-5 text-red-400" /> Game Share Arena</h2><p className="text-xs text-slate-400">Watch creators broadcast their gameplay live.</p></div>
-                <div className="flex flex-wrap gap-2">
-                  <span className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-bold">{streams.length} Live</span>
-                  <span className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-bold">{formatCompactNumber(totalViewers)} Viewers</span>
-                  {!isMobileOrPWA && <button onClick={() => navigate('/broadcast/setup/gaming')} className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-cyan-400 to-blue-500 px-4 py-2 text-xs font-black text-slate-950"><Radio className="size-4" /> Start Game Share</button>}
+      {/* All content scrolls; desktop remains a single fullscreen arena, not a long page of stacked tabs. */}
+      <main className="relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-contain [scrollbar-width:thin] [scrollbar-color:#47538b_transparent]">
+        <div className="mx-auto w-full max-w-[1720px] px-3 pb-8 pt-3 sm:px-5">
+          <section className="relative overflow-hidden rounded-[22px] border border-cyan-400/25 bg-[#081129] shadow-[0_0_35px_rgba(0,229,255,.09)]">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_28%_30%,rgba(38,77,186,.48),transparent_45%),radial-gradient(ellipse_at_80%_70%,rgba(120,36,202,.39),transparent_40%),linear-gradient(135deg,#0c1534,#070a1f_55%,#101639)]" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-[repeating-linear-gradient(90deg,transparent_0px,transparent_70px,rgba(0,229,255,.06)_71px,transparent_72px)]" />
+            <div className="relative grid gap-4 p-4 sm:p-6 lg:grid-cols-[1fr_auto] lg:items-center">
+              <div className="flex items-center gap-4">
+                <div className="grid size-16 shrink-0 place-items-center rounded-2xl border border-cyan-300/65 bg-cyan-500/15 shadow-[0_0_30px_rgba(0,229,255,.25)] sm:size-24"><Gamepad2 className="size-9 text-cyan-200 sm:size-14" /></div>
+                <div><p className="text-[10px] font-black uppercase tracking-[.35em] text-cyan-200">MaiTroll City Presents</p>
+                  <h1 className="mt-1 text-2xl font-black italic tracking-tight sm:text-5xl"><span className="text-white">HYTRO</span><span className="text-[#5DFF6A] [text-shadow:0_0_22px_rgba(93,255,106,.45)]">GAMING</span></h1>
+                  <p className="mt-1 text-xs font-black uppercase tracking-[.55em] text-slate-200 sm:text-lg">Live Arena</p>
                 </div>
               </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="relative min-w-[170px] flex-1"><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-500" /><input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Find streams or gamers" className="w-full rounded-xl border border-white/10 bg-[#121a31] py-2.5 pl-9 pr-3 text-sm outline-none focus:border-cyan-400/50" /></div>
-                {(['viewers','featured','recent'] as SortMode[]).map(mode => <SortChip key={mode} mode={mode} active={sortMode === mode} onClick={() => setSortMode(mode)} />)}
+              <div className="grid grid-cols-2 gap-2 text-[11px] font-bold text-slate-100 lg:grid-cols-1">
+                {['LIVE GAME STREAMS','GAME SHARING','ARCADE GAMES','TOURNAMENTS'].map(label => <div key={label} className="flex items-center gap-2"><span className="grid size-4 place-items-center rounded-full border border-[#5DFF6A] text-[#5DFF6A]">✓</span>{label}</div>)}
               </div>
-              <div ref={streamsSectionRef} className="min-h-0 flex-1 overflow-y-auto rounded-2xl border border-white/10 bg-[#0d1228]/70 p-3">
-                {loading ? <div className="flex min-h-36 items-center justify-center gap-2 text-slate-400"><Loader2 className="size-5 animate-spin" /> Loading game shares...</div> : filteredStreams.length === 0 ? <div className="grid min-h-40 place-items-center text-center"><div><Gamepad2 className="mx-auto mb-3 size-8 text-slate-500" /><p className="font-bold">No live gaming streams</p><p className="mt-1 text-xs text-slate-400">{searchQuery.trim() ? 'Try a different search.' : 'No one is game sharing right now.'}</p></div></div> : <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{filteredStreams.map(stream => <GamingStreamCard key={stream.id} stream={stream} onClick={() => handleStreamClick(stream)} />)}</div>}
-              </div>
-            </>}
+            </div>
+            <div className="relative grid grid-cols-2 gap-2 border-t border-cyan-300/15 bg-[#070c1c]/65 p-3 sm:grid-cols-4 sm:p-4">
+              {[
+                { label:'Live Now',value:String(streams.length),icon:Radio,tone:'rose' },
+                { label:'Start Gaming',value:'Game Share',icon:MonitorPlay,tone:'cyan' },
+                { label:'Active Streamers',value:String(streams.length),icon:Gamepad2,tone:'violet' },
+                { label:'Arcade Games',value:'Play Now',icon:Trophy,tone:'green' },
+              ].map(item => <button key={item.label} type="button" onClick={() => selectTab(item.label === 'Arcade Games' ? 'arcade' : item.label === 'Start Gaming' ? 'share' : 'streams')}
+                className={cn('flex min-w-0 items-center gap-3 rounded-xl border bg-[#0d1330]/90 px-3 py-3 text-left transition hover:brightness-125', item.tone==='rose'?'border-rose-500/45':item.tone==='cyan'?'border-cyan-400/45':item.tone==='violet'?'border-violet-400/45':'border-lime-400/45')}>
+                <item.icon size={24} className={item.tone==='rose'?'text-rose-400':item.tone==='cyan'?'text-cyan-300':item.tone==='violet'?'text-violet-300':'text-lime-400'} />
+                <span className="min-w-0"><span className="block text-[9px] font-bold uppercase tracking-wide text-slate-400">{item.label}</span><span className="block truncate text-lg font-black text-white sm:text-xl">{item.value}</span></span>
+              </button>)}
+            </div>
           </section>
-        )}
+
+          {/* Mobile navbar mirrors desktop; Arcade Games is beside Tournaments. */}
+          <div className="mt-3 flex gap-2 overflow-x-auto pb-1 md:hidden" role="tablist" aria-label="HytroGaming sections">
+            {([['streams','Live Arena',Radio],['tournaments','Tournaments',Trophy],['arcade','Arcade Games',Gamepad2],['share','Game Share',MonitorPlay]] as const).map(([id,label,Icon]) => <button key={id} role="tab" aria-selected={tab===id} onClick={() => selectTab(id)} className={cn('flex shrink-0 items-center gap-2 rounded-xl border px-3 py-2.5 text-xs font-black',tab===id?'border-fuchsia-400/65 bg-fuchsia-500/20 text-white':'border-white/15 bg-white/5 text-slate-300')}><Icon size={15} />{label}</button>)}
+          </div>
+
+          {tab === 'streams' && <div className="mt-4 space-y-4" role="tabpanel" aria-label="Live Arena">
+            <section className="rounded-2xl border border-violet-400/35 bg-[#070c1e]/85 p-3 shadow-[0_0_22px_rgba(139,92,246,.08)] sm:p-4">
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <div><h2 className="flex items-center gap-2 text-base font-black sm:text-xl"><Flame className="text-rose-400" size={21} /> FEATURED STREAMS</h2><p className="text-xs text-slate-400">Top live gaming broadcasts in HytroGaming</p></div>
+                {(featured.length || streams.length) > 4 && <div className="flex gap-1.5"><button type="button" aria-label="Previous featured streams" onClick={() => setFeaturedOffset(i => (i - 1 + (featured.length || streams.length)) % (featured.length || streams.length))} className="rounded-full border border-cyan-500/30 bg-[#10203a] p-2"><ChevronLeft size={16}/></button><button type="button" aria-label="Next featured streams" onClick={() => setFeaturedOffset(i => (i + 1) % (featured.length || streams.length))} className="rounded-full border border-cyan-500/30 bg-[#10203a] p-2"><ChevronRight size={16}/></button></div>}
+              </div>
+              {loading ? <div className="grid min-h-40 place-items-center"><Loader2 className="animate-spin text-cyan-400" /></div> : shownFeatured.length ? <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">{shownFeatured.map(s => <StreamCard key={s.id} stream={s} onOpen={() => openStream(s)} featured />)}</div> : <EmptyStreamState searching={false} />}
+            </section>
+
+            <section ref={streamsSectionRef} className="rounded-2xl border border-cyan-400/15 bg-[#081022]/80 p-3 sm:p-4">
+              <div className="mb-4 flex flex-wrap items-center gap-2.5">
+                <h2 className="mr-2 flex items-center gap-2 text-base font-black sm:text-lg"><Radio className="text-[#61FF64]" size={20} /> LIVE STREAMS</h2>
+                {([['viewers','Popular',Users],['featured','Featured',Flame],['recent','Recent',Clock3]] as const).map(([id,label,Icon]) => <button key={id} type="button" onClick={() => setSort(id)} aria-pressed={sort===id} className={cn('inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold',sort===id?'border-cyan-300/75 bg-cyan-500/25 text-cyan-100':'border-white/15 bg-[#141a34] text-slate-300')}><Icon size={14}/>{label}</button>)}
+                <div className="relative ml-auto flex min-w-[180px] flex-1 items-center gap-2 rounded-xl border border-cyan-400/35 bg-[#10213c] px-3 py-2 sm:max-w-xs"><Search size={15} className="text-cyan-300" /><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search gaming streams..." className="w-full min-w-0 bg-transparent text-xs outline-none placeholder:text-slate-400" aria-label="Search gaming streams" /></div>
+              </div>
+              {loading ? <div className="grid min-h-40 place-items-center"><Loader2 className="animate-spin text-cyan-300" /></div> : filtered.length ? <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{filtered.map(s => <StreamCard key={s.id} stream={s} onOpen={() => openStream(s)} />)}</div> : <EmptyStreamState searching={Boolean(query.trim())} />}
+            </section>
+          </div>}
+
+          {tab === 'arcade' && <section role="tabpanel" aria-label="Arcade Games" className="mt-4 rounded-2xl border border-fuchsia-400/35 bg-[#0b0f27]/95 p-3 sm:p-5">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4"><div><p className="text-[10px] font-black uppercase tracking-[.25em] text-fuchsia-300">MaiTroll Arcade</p><h2 className="mt-1 flex items-center gap-2 text-xl font-black"><Gamepad2 className="text-cyan-300" /> ARCADE GAMES</h2><p className="text-xs text-slate-400">Choose your game, compete, and climb the leaderboard.</p></div><span className="rounded-full border border-lime-400/35 bg-lime-400/10 px-3 py-2 text-[10px] font-black text-lime-300">INSERT COIN • PRESS PLAY</span></div>
+            {/* Existing implementation owns coin, game, multiplayer and leaderboard flows. */}
+            <div className="min-w-0 [&_table]:w-full [&_th]:text-left"><GamesSection /></div>
+          </section>}
+
+          {tab === 'tournaments' && <section role="tabpanel" aria-label="Tournaments" className="mt-4 flex min-h-[280px] flex-col items-center justify-center rounded-2xl border border-lime-400/30 bg-[#0b1426]/90 p-6 text-center"><Trophy className="mb-3 size-12 text-lime-400" /><h2 className="text-2xl font-black">TOURNAMENTS</h2><p className="mt-2 max-w-md text-sm text-slate-400">Tournament registration and brackets are not connected in this page yet. Browse live streams or play arcade games in the meantime.</p><button type="button" onClick={()=>selectTab('arcade')} className="mt-5 flex items-center gap-2 rounded-xl bg-gradient-to-r from-lime-400 to-cyan-400 px-5 py-3 text-xs font-black text-[#061321]">Open Arcade Games <ArrowRight size={16}/></button></section>}
+
+          {tab === 'share' && <section role="tabpanel" aria-label="Game Share" className="mt-4 rounded-2xl border border-cyan-400/25 bg-[#0b1428]/90 p-4 sm:p-6">
+            <div className="mb-4 flex items-center gap-3"><MonitorPlay className="size-8 text-cyan-300" /><div><h2 className="text-xl font-black">GAME SHARE ARENA</h2><p className="text-xs text-slate-400">Share your gameplay live or watch active gaming broadcasts.</p></div></div>
+            {isMobileOrPWA ? <p className="rounded-xl border border-cyan-400/25 bg-cyan-500/10 p-4 text-sm text-cyan-100">Desktop is required to start game sharing. You can still watch broadcasts on this device.</p> : agencyStatus==='loading' ? <p className="flex items-center gap-2 text-sm"><Loader2 className="animate-spin" size={18}/> Checking agency membership...</p> : agencyStatus==='pending' ? <div className="rounded-xl border border-amber-400/25 bg-amber-400/10 p-4"><p className="font-bold">Agency application pending</p><button onClick={()=>navigate('/hytrogaming/apply')} className="mt-3 rounded-lg bg-amber-300 px-4 py-2 text-xs font-black text-black">View Application</button></div> : !canShare ? <div className="rounded-xl border border-cyan-400/25 bg-cyan-400/10 p-4"><h3 className="font-bold">Apply to Game Share</h3><p className="mt-1 text-xs text-slate-300">Agency membership is required to stream. The monthly fee is 5,000 Troll Coins; startup fees match regular agencies. Loans may be available.</p><div className="mt-3 flex gap-2"><button onClick={()=>navigate('/hytrogaming/apply')} className="rounded-lg bg-cyan-400 px-4 py-2 text-xs font-black text-black">Apply</button><button onClick={()=>navigate('/agencies')} className="rounded-lg border border-white/20 px-4 py-2 text-xs font-bold">Learn More</button></div></div> : <button onClick={()=>navigate('/broadcast/setup/gaming')} className="rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 px-5 py-3 text-xs font-black text-black"><Radio className="mr-2 inline size-4" /> Start Game Share</button>}
+            <div className="mt-5 border-t border-white/10 pt-4"><div className="mb-3 flex items-center justify-between"><h3 className="font-black">Live Gaming Broadcasts</h3><button onClick={()=>selectTab('streams')} className="text-xs font-bold text-cyan-300">Browse arena →</button></div>{streams.length ? <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">{streams.slice(0,8).map(s=><StreamCard key={s.id} stream={s} onOpen={()=>openStream(s)} />)}</div> : <EmptyStreamState searching={false} />}</div>
+          </section>}
+        </div>
       </main>
     </div>
   );
-}
-
-function MonitorPlayIcon() { return <Gamepad2 className="size-4" />; }
-
-function getStreamViewers(stream: GamingStream) {
-  return stream.current_viewers || stream.viewer_count || 0;
-}
-
-function getTimeAgo(startedAt: string | null): string {
-  if (!startedAt) return 'Just now'
-  const start = new Date(startedAt).getTime()
-  if (!Number.isFinite(start)) return 'Just now'
-  const elapsedMs = Math.max(0, Date.now() - start)
-  const totalSeconds = Math.floor(elapsedMs / 1000)
-  const hours = Math.floor(totalSeconds / 3600)
-  const minutes = Math.floor((totalSeconds % 3600) / 60)
-  if (hours > 0) return `${hours}h ${minutes}m ago`
-  if (minutes > 0) return `${minutes}m ago`
-  return 'Just now'
 }

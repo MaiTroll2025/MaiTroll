@@ -92,6 +92,41 @@ for (const path of ['/sitemap.xml', '/sitemap-dynamic.xml']) {
   } else ok(`robots.txt — 200, declares both sitemaps`)
 }
 
+// Blog collection and published articles must be discoverable as real URLs,
+// with route-specific metadata in the first HTML response.
+{
+  const { res, body } = await get('/blog')
+  const title = /<title>(.*?)<\/title>/i.exec(body)?.[1]
+  const canonical = /<link rel="canonical" href="([^"]+)"/i.exec(body)?.[1]
+  const robots = /<meta name="robots" content="([^"]+)"/i.exec(body)?.[1]
+  if (res.status === 200 && title === 'MaiTroll Blog | Creator Broadcasting and Community'
+    && canonical === 'https://www.maitroll.com/blog' && robots === 'index, follow'
+    && body.includes('<div id="root"><main>')) {
+    ok('/blog — indexable collection with server-rendered HTML')
+  } else {
+    fail('/blog is missing indexable collection metadata or server-rendered content')
+  }
+
+  const { res: sitemapRes, body: sitemap } = await get('/sitemap-dynamic.xml')
+  const articleUrl = /<loc>(https:\/\/www\.maitroll\.com\/blog\/[^<]+)<\/loc>/.exec(sitemap)?.[1]
+  if (sitemapRes.status !== 200 || !articleUrl) {
+    fail('/sitemap-dynamic.xml does not list a published blog article URL')
+  } else {
+    const articlePath = new URL(articleUrl).pathname
+    const { res: articleRes, body: articleHtml } = await get(articlePath)
+    const articleTitle = /<title>(.*?)<\/title>/i.exec(articleHtml)?.[1]
+    const articleCanonical = /<link rel="canonical" href="([^"]+)"/i.exec(articleHtml)?.[1]
+    const articleRobots = /<meta name="robots" content="([^"]+)"/i.exec(articleHtml)?.[1]
+    if (articleRes.status === 200 && articleTitle && articleTitle !== 'MaiTroll | The Live Broadcasting App & Social Media Network'
+      && articleCanonical === articleUrl && articleRobots === 'index, follow'
+      && articleHtml.includes('"@type":"BlogPosting"') && articleHtml.includes('<div id="root"><main>')) {
+      ok(`${articlePath} — sitemap-listed article has canonical, indexable metadata, and BlogPosting schema`)
+    } else {
+      fail(`${articlePath} is missing sitemap-backed, indexable article HTML`)
+    }
+  }
+}
+
 // Deep links must return route-specific metadata in the initial HTML response.
 {
   for (const route of ['/terms', '/terms-of-service', '/legal/terms']) {

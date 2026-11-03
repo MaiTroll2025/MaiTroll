@@ -207,7 +207,7 @@ export default function PhoneBroadcastPage() {
 
   const msgBoxRef = useRef<HTMLDivElement>(null)
 
-  const [msgBoxHeight, setMsgBoxHeight] = useState(0)
+  const [, setMsgBoxHeight] = useState(0)
 
   useEffect(() => {
     const el = msgBoxRef.current
@@ -2594,28 +2594,52 @@ export default function PhoneBroadcastPage() {
             REMOTE SEATS ROW (bottom, compact like PhoneViewerPage)
         ====================================================== */}
         {!areBroadcastSeatsDisabled() && phoneSeatSlots.length > 0 && (
-          <div className="pointer-events-none absolute right-[2%] top-[112px] z-40 grid h-[min(39dvh,340px)] w-[49%] grid-cols-2 grid-rows-2 gap-1.5 transition-all duration-300">
-            {phoneSeatSlots.map((seat) => (
-              seat.userId ? (
-                <RemoteSeatThumbnail
-                  key={`phone-seat-${seat.index}`}
-                  userId={seat.userId}
-                  username={seat.username}
-                  avatarUrl={seat.avatarUrl}
-                  remoteUsers={Array.from(session.remoteParticipants.values())}
-                  streamId={streamId}
-                />
-              ) : (
+          <div
+            className="pointer-events-none absolute inset-x-[2%] top-[112px] bottom-0 z-40 touch-pan-y overflow-y-auto overscroll-contain transition-all duration-300"
+            style={{ scrollbarWidth: 'none' }}
+          >
+            <div
+              className="pointer-events-none grid w-full grid-cols-4 gap-1.5"
+              style={{
+                height: 'calc(min(39dvh, 340px) + min(32dvh, 240px) + 18px)',
+                gridTemplateRows: 'repeat(2, minmax(0, calc(min(39dvh, 340px) / 2))) repeat(2, minmax(0, calc(min(32dvh, 240px) / 2)))',
+              }}
+            >
+            {phoneSeatSlots.map((seat) => {
+              const gridColumn = seat.index <= 4
+                ? 3 + ((seat.index - 1) % 2)
+                : ((seat.index - 5) % 4) + 1
+              const gridRow = seat.index <= 4
+                ? Math.ceil(seat.index / 2)
+                : seat.index <= 8 ? 3 : 4
+
+              return (
                 <div
                   key={`phone-seat-${seat.index}`}
-                  aria-label={`Guest seat ${seat.index} available`}
-                  className="pointer-events-auto flex h-full min-h-0 min-w-0 flex-col items-center justify-center overflow-hidden rounded-xl border border-dashed border-purple-400/60 bg-[#1a102e]/90 text-purple-100 shadow-lg backdrop-blur-sm"
+                  className="pointer-events-auto h-full min-h-0 min-w-0 overflow-hidden rounded-xl"
+                  style={{ gridColumn, gridRow }}
                 >
-                  <span className="text-lg leading-none">+</span>
-                  <span className="mt-1 text-[9px] font-bold">Seat {seat.index}</span>
+                  {seat.userId ? (
+                    <RemoteSeatThumbnail
+                      userId={seat.userId}
+                      username={seat.username}
+                      avatarUrl={seat.avatarUrl}
+                      remoteUsers={Array.from(session.remoteParticipants.values())}
+                      streamId={streamId}
+                    />
+                  ) : (
+                    <div
+                      aria-label={`Guest seat ${seat.index} available`}
+                      className="pointer-events-auto flex h-full min-h-0 min-w-0 flex-col items-center justify-center overflow-hidden rounded-xl border border-dashed border-purple-400/60 bg-[#1a102e]/90 text-purple-100 shadow-lg backdrop-blur-sm"
+                    >
+                      <span className="text-lg leading-none">+</span>
+                      <span className="mt-1 text-[9px] font-bold">Seat {seat.index}</span>
+                    </div>
+                  )}
                 </div>
               )
-            ))}
+            })}
+            </div>
           </div>
         )}
 

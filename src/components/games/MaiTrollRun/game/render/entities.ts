@@ -1,7 +1,7 @@
 import { POWER_COLORS, WORLD_WIDTH } from '@/components/games/MaiTrollRun/game/config';
 import { hazardBox } from '@/components/games/MaiTrollRun/game/engine';
 import { MAITROLL_LETTERS } from '@/components/games/MaiTrollRun/game/config';
-import type { Hazard, Particle, Pickup } from '@/components/games/MaiTrollRun/game/types';
+import type { Hazard, Particle, Pickup, ShotEffect } from '@/components/games/MaiTrollRun/game/types';
 
 function inView(sx: number, margin = 80): boolean {
   return sx > -margin && sx < WORLD_WIDTH + margin;
@@ -246,4 +246,20 @@ export function drawParticles(ctx: CanvasRenderingContext2D, particles: Particle
     ctx.fill();
   }
   ctx.globalAlpha = 1;
+}
+
+export function drawShots(ctx: CanvasRenderingContext2D, shots: ShotEffect[], cam: number) {
+  for (const shot of shots) {
+    ctx.save();
+    ctx.globalAlpha = Math.min(1, shot.life / 0.12);
+    ctx.strokeStyle = '#fde047';
+    ctx.shadowColor = '#f59e0b';
+    ctx.shadowBlur = 12;
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(shot.x1 - cam + 20, shot.y);
+    ctx.lineTo(shot.x2 - cam, shot.y);
+    ctx.stroke();
+    ctx.restore();
+  }
 }

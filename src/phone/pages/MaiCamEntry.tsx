@@ -1,11 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Camera, Mic, MicOff, Play, RefreshCw, Send, Smartphone, Video, VideoOff, X } from 'lucide-react';
-import { toast } from 'sonner';
-
+import { ArrowLeft, Camera } from 'lucide-react';
 import { useAuthStore } from '@/lib/store';
 import { MaiCamConnectionManager } from '@/lib/maicam/MaiCamConnectionManager';
-import { maicamSessionService } from '@/lib/maicam/MaiCamSessionService';
 import PhoneMaiCamCamera from './MaiCamCamera';
 
 export default function PhoneMaiCamEntry() {
@@ -14,8 +11,8 @@ export default function PhoneMaiCamEntry() {
   const managerRef = useRef<MaiCamConnectionManager | null>(null);
   const [stage, setStage] = useState<'intro' | 'pairing' | 'connected' | 'camera'>('intro');
   const [code, setCode] = useState('');
-  const [generatedCode, setGeneratedCode] = useState<string | null>(null);
-  const [codeExpiresAt, setCodeExpiresAt] = useState<string | null>(null);
+  const [_generatedCode, setGeneratedCode] = useState<string | null>(null);
+  const [_codeExpiresAt, setCodeExpiresAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -44,9 +41,9 @@ export default function PhoneMaiCamEntry() {
       mgr.destroy();
       managerRef.current = null;
     };
-  }, [user?.id, navigate]);
+  }, [user?.id, profile?.display_name, profile?.username, navigate]);
 
-  const handleGenerate = useCallback(async () => {
+  const _handleGenerate = useCallback(async () => {
     if (!user?.id) return;
     setLoading(true);
     setError('');
@@ -115,7 +112,7 @@ export default function PhoneMaiCamEntry() {
               Turn your phone into a wireless camera and microphone for MaiTroll on your computer.
             </p>
             <div className="space-y-3">
-              <label className="text-[10px] font-bold text-slate-300 mb-1">Enter your PC's pairing code</label>
+              <label className="text-[10px] font-bold text-slate-300 mb-1">Enter your PC&apos;s pairing code</label>
               <input
                 autoFocus
                 value={code}

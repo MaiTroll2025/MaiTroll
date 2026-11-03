@@ -125,15 +125,11 @@ export default function PhoneGoLive() {
     viewerCapEnabled,
     viewerCapMax,
     viewerCapHours,
-    seatCapEnabled,
-    seatCapMax,
     allRestrictionsDisabled,
     loading: capLoading,
   } = useBroadcastViewerCap()
 
-  const maxGuestSeats = seatCapEnabled
-    ? Math.max(0, Math.min(MAX_GUEST_SEATS, seatCapMax))
-    : MAX_GUEST_SEATS
+  const maxGuestSeats = MAX_GUEST_SEATS
   const configuredSeatCount = Math.max(0, Math.min(seatCount, maxGuestSeats))
 
   /*
@@ -1213,19 +1209,17 @@ export default function PhoneGoLive() {
                     </div>
                   )}
 
-                  {seatCapEnabled && (
-                    <div className="rounded-2xl border border-cyan-500/10 bg-cyan-500/5 px-3 py-2.5">
-                      <p className="text-[9px] font-black uppercase tracking-wider text-cyan-400/80">
-                        Seat Cap
-                      </p>
-                      <p className="mt-1 text-sm font-black text-cyan-300">
-                        {seatCapMax} boxes
-                      </p>
-                      <p className="text-[9px] text-zinc-500">
-                        Max seats per broadcast
-                      </p>
-                    </div>
-                  )}
+                  <div className="rounded-2xl border border-cyan-500/10 bg-cyan-500/5 px-3 py-2.5">
+                    <p className="text-[9px] font-black uppercase tracking-wider text-cyan-400/80">
+                      Seat Cap
+                    </p>
+                    <p className="mt-1 text-sm font-black text-cyan-300">
+                      {MAX_GUEST_SEATS} guest seats
+                    </p>
+                    <p className="text-[9px] text-zinc-500">
+                      Max seats per broadcast
+                    </p>
+                  </div>
                 </div>
               </section>
             )}

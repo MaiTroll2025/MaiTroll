@@ -1,7 +1,5 @@
 import {
   Room,
-  RemoteVideoTrack,
-  RemoteAudioTrack,
   Track,
   RemoteTrackPublication,
 } from 'livekit-client';
@@ -82,10 +80,10 @@ export class MaiCamReceiver {
       this.room.on('reconnecting', () => this.emitState('reconnecting'));
       this.room.on('reconnected', () => this.emitState('connected'));
 
-      this.room.on('trackSubscribed', (track, publication, participant) => {
+      this.room.on('trackSubscribed', (track, publication, _participant) => {
         this.handleTrackSubscribed(track, publication);
       });
-      this.room.on('trackUnsubscribed', (track, publication, participant) => {
+      this.room.on('trackUnsubscribed', (track, _publication, _participant) => {
         this.handleTrackUnsubscribed(track);
       });
 
@@ -108,7 +106,7 @@ export class MaiCamReceiver {
     }
   }
 
-  private handleTrackSubscribed(track: any, publication: RemoteTrackPublication) {
+  private handleTrackSubscribed(track: any, _publication: RemoteTrackPublication) {
     if (track.kind === Track.Kind.Video) {
       this.videoTrack = track.mediaStreamTrack;
     } else if (track.kind === Track.Kind.Audio) {

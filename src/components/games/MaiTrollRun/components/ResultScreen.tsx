@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { DIFFICULTIES } from '@/components/games/MaiTrollRun/game/config';
 import { finishRun, type ActiveRun } from '@/components/games/MaiTrollRun/lib/trollApi';
-import type { RunSummary } from '@/components/games/MaiTrollRun/game/types';
+import type { RunCheckpoint, RunSummary } from '@/components/games/MaiTrollRun/game/types';
 
 interface ResultScreenProps {
   run: ActiveRun;
@@ -9,12 +9,17 @@ interface ResultScreenProps {
   playerId: string;
   onPlayAgain: () => void;
   onOpenLeaderboard: () => void;
+  checkpoints: number;
+  allowCheckpoints: boolean;
+  onUseCheckpoint: (checkpoint: RunCheckpoint) => Promise<void>;
+  isPublic?: boolean;
 }
 
 type Settlement =
   | { status: 'saving' }
   | { status: 'saved'; balance: number }
-  | { status: 'error'; message: string };
+  | { status: 'error'; message: string }
+  | { status: 'choice' };
 
 const HEADLINES: Record<RunSummary['outcome'], { title: string; body: string }> = {
   won: { title: 'MAITROLL is complete', body: 'You claimed every letter and conquered the throne.' },
@@ -28,12 +33,31 @@ export function ResultScreen({
   playerId,
   onPlayAgain,
   onOpenLeaderboard,
+  checkpoints,
+  allowCheckpoints,
+  onUseCheckpoint,
+  isPublic = false,
 }: ResultScreenProps) {
   const [settlement, setSettlement] = useState<Settlement>({ status: 'saving' });
   const [attempt, setAttempt] = useState(0);
+  const [ending, setEnding] = useState(false);
+  const [continuing, setContinuing] = useState(false);
   const settledRef = useRef(false);
 
   useEffect(() => {
+    if (isPublic) {
+      setSettlement({ status: 'saved', balance: 0 });
+      return;
+    }
+    const canContinue = summary.outcome === 'dead'
+      && allowCheckpoints
+      && checkpoints > 0
+      && summary.levelsCleared > 0
+      && !ending;
+    if (canContinue) {
+      setSettlement({ status: 'choice' });
+      return;
+    }
     if (settledRef.current) return;
     settledRef.current = true;
     setSettlement({ status: 'saving' });
@@ -54,13 +78,32 @@ export function ResultScreen({
           message: err instanceof Error ? err.message : 'Could not save this run.',
         });
       });
-  }, [attempt, playerId, run.runId, summary]);
+  }, [allowCheckpoints, attempt, checkpoints, ending, isPublic, playerId, run.runId, summary]);
 
   const headline = HEADLINES[summary.outcome];
 
   const retry = () => {
+    if (summary.outcome === 'dead' && allowCheckpoints && checkpoints > 0 && summary.levelsCleared > 0 && !ending) {
+      setSettlement({ status: 'choice' });
+      return;
+    }
     settledRef.current = false;
+    setEnding(true);
     setAttempt((value) => value + 1);
+  };
+
+  const handleCheckpoint = async () => {
+    setContinuing(true);
+    try {
+      await onUseCheckpoint(summary.checkpoint);
+    } catch (err) {
+      setSettlement({
+        status: 'error',
+        message: err instanceof Error ? err.message : 'Could not use a checkpoint.',
+      });
+    } finally {
+      setContinuing(false);
+    }
   };
 
   return (
@@ -74,14 +117,38 @@ export function ResultScreen({
         <Stat label="Levels" value={`${summary.levelsCleared} / 8`} />
         <Stat label="Letters" value={`${summary.lettersCollected} / 8`} />
         <Stat label="Game coins collected" value={String(summary.coins)} />
+        <Stat label="Troll Coins earned" value={String(summary.levelsCleared * 100)} />
       </dl>
 
       <div className="mt-8 rounded-xl bg-stone-950 px-5 py-4">
         {settlement.status === 'saving' && <p className="text-sm text-stone-400">Saving your run...</p>}
+        {settlement.status === 'choice' && (
+          <div className="space-y-3">
+            <p className="text-sm text-stone-200">
+              You have {checkpoints} checkpoint{checkpoints === 1 ? '' : 's'}. Use one to restart at level {summary.checkpoint.levelIndex + 1}.
+              Failed attempts do not earn level coins.
+            </p>
+            <button
+              type="button"
+              disabled={continuing}
+              onClick={() => void handleCheckpoint()}
+              className="rounded-full bg-cyan-400 px-5 py-2 font-semibold text-stone-950 disabled:opacity-50"
+            >
+              {continuing ? 'Using checkpoint...' : 'Use checkpoint and continue'}
+            </button>
+            <button
+              type="button"
+              disabled={continuing}
+              onClick={() => setEnding(true)}
+              className="ml-3 rounded-full border border-stone-600 px-5 py-2 text-sm text-stone-200 disabled:opacity-50"
+            >
+              End this run
+            </button>
+          </div>
+        )}
         {settlement.status === 'saved' && (
           <p className="text-sm text-stone-200">
-            Troll Coins balance (no unverified winnings paid): <span className="font-mono text-lg font-bold text-amber-300">{settlement.balance}</span>{' '}
-            troll_coins
+            Current Troll Coins balance: <span className="font-mono text-lg font-bold text-amber-300">{settlement.balance}</span>
           </p>
         )}
         {settlement.status === 'error' && (
@@ -100,7 +167,7 @@ export function ResultScreen({
         )}
       </div>
 
-      <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
+      {settlement.status === 'saved' && <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
         <button
           type="button"
           onClick={onPlayAgain}
@@ -115,7 +182,7 @@ export function ResultScreen({
         >
           View leaderboard
         </button>
-      </div>
+      </div>}
     </div>
   );
 }

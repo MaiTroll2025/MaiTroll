@@ -258,22 +258,52 @@ export default function MaiBag({ streamId, className, compact = false, phone = f
     <>
       <div
         className={cn(
-          'relative flex flex-col items-center gap-1.5 rounded-2xl border border-white/10 bg-black/30 backdrop-blur-xl',
-          phone ? 'w-16 p-1.5' : compact ? 'w-28 p-2.5' : 'w-36 p-2.5',
+          'relative flex items-center border border-white/10 bg-black/30 backdrop-blur-xl',
+          phone
+            ? 'h-8 w-auto flex-row gap-1.5 rounded-full px-2 py-1'
+            : 'flex-col gap-1.5 rounded-2xl',
+          !phone && (compact ? 'w-28 p-2.5' : 'w-36 p-2.5'),
           className,
         )}
       >
+        {phone ? (
+          <>
+            <button
+              type="button"
+              disabled={!isBroadcaster}
+              onClick={() => void openConfiguration()}
+              aria-label={isBroadcaster ? 'Configure Mai Bag gifts' : 'Mai Bag status'}
+              className={cn(
+                'flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-white/15 bg-black/20',
+                displayTier.textClass,
+                isBroadcaster && 'cursor-pointer',
+              )}
+            >
+              <ShoppingBag className="h-3.5 w-3.5" />
+            </button>
+            <span className={cn('max-w-12 truncate text-[8px] font-black uppercase', displayTier.textClass)}>
+              {Math.round(fillPercent)}%
+            </span>
+            <div className="w-10">
+              <MaiBagProgress fillPercent={fillPercent} tier={displayTier} compact />
+            </div>
+            <span className="max-w-12 truncate text-[7px] font-mono text-white/65">
+              {bagState.current_value?.toLocaleString() || 0}/{bagState.capacity?.toLocaleString() || 0}
+            </span>
+          </>
+        ) : (
+          <>
         <div className="flex w-full items-center justify-between px-1">
-          <div className={cn('text-[8px] font-black uppercase tracking-[0.18em]', phone ? 'text-[7px]' : '', displayTier.textClass)}>
+          <div className={cn('text-[8px] font-black uppercase tracking-[0.18em]', displayTier.textClass)}>
             Mai Bag
           </div>
-          <div className={cn('text-[7px] font-mono font-bold', phone ? 'text-[6px]' : '', displayTier.textClass)}>
+          <div className={cn('text-[7px] font-mono font-bold', displayTier.textClass)}>
             {isBroadcaster ? 'HOST' : 'LIVE'}
           </div>
         </div>
 
         <div className="relative mt-2 w-full">
-          <div className={cn('absolute left-1/2 top-[-10px] h-6 w-10 -translate-x-1/2 rounded-t-full border-2 border-b-0', phone ? 'h-4 w-8 top-[-8px]' : '', displayTier.borderClass)} />
+          <div className={cn('absolute left-1/2 top-[-10px] h-6 w-10 -translate-x-1/2 rounded-t-full border-2 border-b-0', displayTier.borderClass)} />
           <button
             type="button"
             disabled={!isBroadcaster}
@@ -290,29 +320,31 @@ export default function MaiBag({ streamId, className, compact = false, phone = f
           >
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-black/25" />
             <div className="relative z-10 flex h-full w-full flex-col items-center justify-center gap-0.5 rounded-md border border-white/15 bg-black/10 px-1">
-              <ShoppingBag className={cn('h-4 w-4', phone ? 'h-3.5 w-3.5' : 'h-6 w-6', displayTier.textClass)} />
-              <div className={cn('text-[9px] font-black uppercase tracking-[0.16em]', phone ? 'text-[8px]' : '', displayTier.textClass)}>
+              <ShoppingBag className={cn('h-6 w-6', displayTier.textClass)} />
+              <div className={cn('text-[9px] font-black uppercase tracking-[0.16em]', displayTier.textClass)}>
                 MAI
               </div>
-              <div className={cn('text-[6px] font-black uppercase tracking-[0.14em] text-white/75', phone ? 'text-[5px]' : '')}>
+              <div className="text-[6px] font-black uppercase tracking-[0.14em] text-white/75">
                 {displayTier.name} Bag
               </div>
-              <div className={cn('mt-0.5 text-lg font-black', phone ? 'text-base' : 'text-xl', displayTier.textClass)}>
+              <div className={cn('mt-0.5 text-xl font-black', displayTier.textClass)}>
                 ×{formatMultiplier(displayTier.multiplier)}
               </div>
               <div className="mt-0.5 w-[82%]">
                 <MaiBagProgress fillPercent={fillPercent} tier={displayTier} compact />
               </div>
-              <div className={cn('text-[7px] font-mono font-bold text-white/75', phone ? 'text-[6px]' : 'text-[8px]')}>
+              <div className="text-[8px] font-mono font-bold text-white/75">
                 {Math.round(fillPercent)}% FULL
               </div>
             </div>
           </button>
         </div>
 
-        <div className={cn('text-[7px] font-mono text-white/45', phone ? 'text-[6px]' : 'text-[8px]')}>
+        <div className="text-[8px] font-mono text-white/45">
           {bagState.current_value?.toLocaleString() || 0}/{bagState.capacity?.toLocaleString() || 0} coins
         </div>
+          </>
+        )}
       </div>
 
       {configurationOpen && isBroadcaster && (

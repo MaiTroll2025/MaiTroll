@@ -4,6 +4,7 @@ import type { Difficulty, HudSnapshot, PowerKind } from '@/components/games/MaiT
 interface HudProps {
   hud: HudSnapshot;
   difficulty: Difficulty;
+  walletBalance?: number;
 }
 
 const ACTIVE_POWERS: PowerKind[] = ['shield', 'magnet', 'slow'];
@@ -14,7 +15,7 @@ function powerRemaining(hud: HudSnapshot, kind: PowerKind): number {
   return hud.power.slow;
 }
 
-export function Hud({ hud, difficulty }: HudProps) {
+export function Hud({ hud, difficulty, walletBalance }: HudProps) {
   const progressPercent = Math.round(hud.progress * 100);
 
   return (
@@ -41,7 +42,8 @@ export function Hud({ hud, difficulty }: HudProps) {
         <div className="rounded-xl bg-black/60 px-3 py-2 text-right backdrop-blur-sm">
           <p className="text-[10px] uppercase tracking-[0.2em] text-stone-400">Score</p>
           <p className="font-mono text-sm font-semibold text-stone-100">{hud.score.toLocaleString()}</p>
-          <p className="font-mono text-xs text-amber-300">{hud.coins} troll_coins</p>
+          <p className="font-mono text-xs text-amber-300">{walletBalance ?? hud.coins} Troll Coins</p>
+          <p className="font-mono text-[10px] text-stone-400">Run pickups: {hud.coins}</p>
         </div>
       </div>
 

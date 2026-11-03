@@ -31,6 +31,7 @@ import {
   supabase,
   getBlockedUserIds,
 } from '@/lib/supabase'
+import { MAX_GUEST_SEATS } from '@/config/broadcastCategories'
 import { recordSignalEventInBackground } from '@/lib/signalEngine'
 import { awardInvitePoint } from '@/lib/weeklyPointsService'
 
@@ -157,8 +158,8 @@ interface PhoneSeatCard {
   isOccupied: boolean
   isMine: boolean
   isLocked: boolean
+  isOpen: boolean
   canJoin: boolean
-  seatPrice: number
 }
 
 /* ============================================================================
@@ -516,31 +517,7 @@ function getAudioTrackFromParticipant(
   return audioPub?.track || null
 }
 
-function getSeatPrice(
-  stream: Stream | null,
-  index: number,
-) {
-  if (!stream) {
-    return 0
-  }
-
-  if (
-    Array.isArray(
-      (stream as any).seat_prices,
-    ) &&
-    typeof (stream as any).seat_prices[index] === 'number'
-  ) {
-    return Number(
-      (stream as any).seat_prices[index],
-    )
-  }
-
-  return Number(
-    (stream as any).seat_price ?? 0,
-  )
-}
-
-/* ============================================================================
+/* ============================================================================ 
    REMOTE VIDEO
 ============================================================================ */
 
@@ -1940,12 +1917,7 @@ const canClickFloatingChatUsername =
         return
       }
 
-      if (getSeatPrice(stream, seatIndex) !== 0) {
-        clearRequest()
-        toast.info('That seat is no longer free. No coins were charged.')
-        return
-      }
-
+    
       clearRequest()
       void joinSeat(seatIndex, 0, viewerIdentityRef.current || viewerIdentity)
     }, [joinSeat, location.pathname, location.search, navigate, resolvedStreamId, stream, user?.id, viewerIdentity])
@@ -2294,7 +2266,7 @@ const canClickFloatingChatUsername =
     audienceJoinAttemptedKeyRef.current = null
     currentRoomKeyRef.current = null
     await liveKitRoom.suspendRoom()
-  }, [liveKitRoom.suspendRoom])
+  }, [liveKitRoom])
   const resumeOriginalRoomAfterBattle = useCallback(() => {
     hasJoinedAudienceRef.current = false
     joiningAudienceRef.current = false
@@ -2399,7 +2371,7 @@ const canClickFloatingChatUsername =
      joinAsAudience,
      viewerError,
      battleRoomSuspended,
-     mySeat?.id,
+     mySeat,
      mySeat?.status,
      mySeat?.user_id,
      mySeat?.guest_id,
@@ -3530,32 +3502,22 @@ useEffect(() => {
   const seatCards =
     useMemo<PhoneSeatCard[]>(
       () => {
-        const configuredCount =
-          Number(
-            (stream as any)
-              ?.seat_count ?? 0,
-          )
-
-        const priceCount =
-          Array.isArray(
-            (stream as any)
-              ?.seat_prices,
-          )
-            ? (
-                stream as any
-              ).seat_prices.length
-            : 0
-
-        const count =
-          Math.max(
-            0,
-            Math.min(
-              6,
-              configuredCount ||
-                priceCount ||
-                0,
-            ),
-          )
+        const streamSeatCount = (stream as any)?.seat_count
+        const configuredSeatCount = streamSeatCount !== undefined
+          ? Number(streamSeatCount)
+          : (stream as any)?.box_count !== undefined
+            ? Number((stream as any).box_count) - 1
+            : Array.isArray((stream as any)?.seat_prices)
+              ? (stream as any).seat_prices.length - 1
+              : 0
+        const enabledSeatCount = Math.max(
+          0,
+          Math.min(
+            MAX_GUEST_SEATS,
+            configuredSeatCount,
+          ),
+        )
+        const count = MAX_GUEST_SEATS
 
         const cards:
           PhoneSeatCard[] = []
@@ -3615,6 +3577,7 @@ useEffect(() => {
               )
                 ?.are_seats_locked,
             )
+          const isOpen = index <= enabledSeatCount
 
           const amAlreadySeated =
             Boolean(
@@ -3650,15 +3613,8 @@ useEffect(() => {
             isOccupied,
             isMine,
             isLocked,
-            canJoin:
-              !isLocked &&
-              !isOccupied &&
-              !amAlreadySeated,
-            seatPrice:
-              getSeatPrice(
-                stream,
-                index,
-              ),
+            isOpen,
+            canJoin: isOpen && !isLocked && !isOccupied && !amAlreadySeated,
           })
         }
 
@@ -4039,15 +3995,9 @@ useEffect(() => {
         }
 
         try {
-          const price =
-            getSeatPrice(
-              stream,
-              seatIndex,
-            )
-
           await joinSeat(
             seatIndex,
-            price,
+            0,
             viewerIdentity,
           )
         } catch (err) {
@@ -4643,7 +4593,7 @@ useEffect(() => {
         )}
 
         {/* ================================================================
-            FULL-SCREEN BROADCASTER VIDEO
+            BROADCASTER VIDEO BOX
         ================================================================= */}
 
         <div
@@ -4652,48 +4602,46 @@ useEffect(() => {
           onTouchStart={handleStreamSwipeStart}
           onTouchEnd={handleStreamSwipeEnd}
         >
-          <PhoneRemoteVideo
-            participant={
-              broadcasterState.participant
-            }
-            room={
-              room
-            }
-            className="h-full w-full"
-            fallback={
-              <div className="flex h-full w-full flex-col items-center justify-center bg-[#050711]">
-                <div className="relative grid h-20 w-20 place-items-center rounded-[28px] border border-cyan-300/20 bg-cyan-500/10 shadow-[0_0_50px_rgba(34,211,238,0.12)]">
-                  <Radio className="h-8 w-8 animate-pulse text-cyan-300/70" />
+          <div className="absolute left-[2%] top-[112px] z-10 h-[min(39dvh,340px)] w-[46%] overflow-hidden rounded-[18px] border border-fuchsia-400/60 bg-black shadow-[0_0_24px_rgba(168,85,247,0.20)]">
+            <div className="pointer-events-none absolute left-2 top-2 z-20 rounded-full bg-purple-950/85 px-2 py-1 text-[10px] font-bold text-white">♛ Host</div>
+            <PhoneRemoteVideo
+              participant={broadcasterState.participant}
+              room={room}
+              className="h-full w-full"
+              fallback={
+                <div className="flex h-full w-full flex-col items-center justify-center bg-[#050711]">
+                  <div className="relative grid h-20 w-20 place-items-center rounded-[28px] border border-cyan-300/20 bg-cyan-500/10 shadow-[0_0_50px_rgba(34,211,238,0.12)]">
+                    <Radio className="h-8 w-8 animate-pulse text-cyan-300/70" />
+                  </div>
+
+                  <p className="relative mt-5 text-sm font-black">
+                    {hostName}
+                  </p>
+
+                  <p className="relative mt-2 text-[10px] font-bold uppercase tracking-[0.2em] text-white/35">
+                    Camera connecting
+                  </p>
                 </div>
-
-                <p className="relative mt-5 text-sm font-black">
-                  {hostName}
-                </p>
-
-                <p className="relative mt-2 text-[10px] font-bold uppercase tracking-[0.2em] text-white/35">
-                  Camera connecting
-                </p>
+              }
+            />
+            {/* Camera-off image fallback */}
+            {!broadcasterState.videoTrack &&
+              !(broadcasterState.participant?.videoStream instanceof MediaStream) &&
+              (broadcasterProfile as any)?.camera_off_image_url && (
+              <div className="pointer-events-none absolute inset-0 z-[1] h-full w-full overflow-hidden bg-black">
+                <img
+                  src={(broadcasterProfile as any).camera_off_image_url}
+                  alt={`${broadcasterProfile?.username || 'Broadcaster'} camera off`}
+                  className="h-full w-full object-cover"
+                />
               </div>
-            }
-          />
-          {/* Camera-off image fallback */}
-          {!broadcasterState.videoTrack &&
-            !(broadcasterState.participant?.videoStream instanceof MediaStream) &&
-            (broadcasterProfile as any)?.camera_off_image_url && (
-            <div className="pointer-events-none absolute inset-0 z-[1] h-full w-full overflow-hidden bg-black">
-              <img
-                src={(broadcasterProfile as any).camera_off_image_url}
-                alt={`${broadcasterProfile?.username || 'Broadcaster'} camera off`}
-                className="h-full w-full object-cover"
-              />
-            </div>
-          )}
-
+            )}
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black-70" />
+          </div>
           <div
-            className="absolute inset-0 z-[2]"
+            className="absolute inset-0 z-20"
             onClick={handleVideoTap}
           />
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black-70" />
 
           {mySeat && !shouldShowRandomBattleArena && (
             <CashoutProgressBanner
@@ -4767,7 +4715,8 @@ useEffect(() => {
                   hostUserId={stream?.user_id}
                   viewerCount={viewerCount}
                   likes={stream?.total_likes ?? 0}
-                  maxVisible={7}
+                  maxVisible={4}
+                  phone
                   onViewerCountClick={() => setShowViewerList(true)}
                 />
               </div>
@@ -4810,6 +4759,7 @@ useEffect(() => {
               <div className="ml-auto flex items-center gap-1.5 rounded-2xl border border-white/10 bg-[#070B18]/55 p-1.5 shadow-[0_8px_28px_rgba(0,0,0,0.25)] backdrop-blur-xl">
                 <button
                   type="button"
+                  aria-label="Like stream"
                   onClick={() => {
                     setLiked(true)
                     void handleLike()
@@ -4845,6 +4795,7 @@ useEffect(() => {
 
                 <button
                   type="button"
+                  aria-label="Send a gift"
                   onClick={handleGift}
                   className="grid h-10 w-10 place-items-center rounded-full border border-[#8B5CFF]/45 bg-gradient-to-br from-[#20163B]/95 to-[#090D1A]/95 shadow-[0_0_13px_rgba(139,92,255,0.16)] backdrop-blur-xl transition duration-200 hover:border-[#8B5CFF]/80 active:scale-90"
                 >
@@ -4856,6 +4807,7 @@ useEffect(() => {
 
                 <button
                   type="button"
+                  aria-label="Share stream"
                   onClick={handleOpenShareModal}
                   className="grid h-10 w-10 place-items-center rounded-full border border-[#00E5FF]/40 bg-gradient-to-br from-[#10283A]/95 to-[#080D1B]/95 shadow-[0_0_13px_rgba(0,229,255,0.14)] backdrop-blur-xl transition duration-200 hover:border-[#00E5FF]/75 active:scale-90"
                 >
@@ -4946,41 +4898,20 @@ useEffect(() => {
         {!battleActive &&
           seatCards.length > 0 && (
             <div
-              className="absolute left-0 right-0 z-40 px-2"
-              style={{
-                bottom: `calc(176px + env(safe-area-inset-bottom))`,
-              }}
+              className="pointer-events-none absolute inset-x-[2%] top-[112px] bottom-[calc(env(safe-area-inset-bottom,0px)+170px)] z-40 touch-pan-y overflow-y-auto overscroll-contain"
+              style={{ scrollbarWidth: 'none' }}
               onClick={event =>
                 event.stopPropagation()
               }
             >
-              <div className="mx-auto max-w-[720px]">
-
-                <div className="mb-1.5 flex items-center justify-between px-1">
-                  <div className="flex items-center gap-1.5">
-                    <div className="h-1.5 w-1.5 rounded-full bg-violet-300 shadow-[0_0_8px_rgba(196,181,253,0.9)]" />
-
-                    <span className="text-[8px] font-black uppercase tracking-[0.2em] text-white/60">
-                      Live Seats
-                    </span>
-                  </div>
-
-                  <span className="rounded-full border border-white/10 bg-black/40 px-2 py-1 text-[7px] font-black text-white/45 backdrop-blur-xl">
-                    {
-                      seatCards.filter(
-                        seat =>
-                          seat.isOccupied,
-                      ).length
-                    }
-                    /
-                    {
-                      seatCards.length
-                    }
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-3 gap-1.5">
-                  {seatCards.map(
+              <div
+                className="pointer-events-none grid w-full grid-cols-4 gap-1.5"
+                style={{
+                  height: 'calc(min(39dvh, 340px) + min(32dvh, 240px) + 18px)',
+                  gridTemplateRows: 'repeat(2, minmax(0, calc(min(39dvh, 340px) / 2))) repeat(2, minmax(0, calc(min(32dvh, 240px) / 2)))',
+                }}
+              >
+              {seatCards.map(
                     seat => {
                       const state =
                         seatTracks[
@@ -5000,7 +4931,7 @@ useEffect(() => {
                             seat.seatIndex
                           }
                           className={cn(
-                            'relative aspect-[1.18] overflow-hidden rounded-xl border bg-[#060711]/90 shadow-[0_0_22px_rgba(0,0,0,0.4)] backdrop-blur-xl',
+                            'pointer-events-auto relative h-full min-h-0 overflow-hidden rounded-xl border bg-[#060711]/90 shadow-[0_0_22px_rgba(0,0,0,0.4)] backdrop-blur-xl',
                             seat.isMine
                               ? 'border-emerald-300/45 shadow-[0_0_22px_rgba(16,185,129,0.12)]'
                               : seat.isOccupied
@@ -5009,6 +4940,14 @@ useEffect(() => {
                             isFocused &&
                               'ring-1 ring-cyan-300/70 shadow-[0_0_25px_rgba(34,211,238,0.2)]',
                           )}
+                          style={{
+                            gridColumn: seat.seatIndex <= 4
+                              ? 3 + ((seat.seatIndex - 1) % 2)
+                              : ((seat.seatIndex - 5) % 4) + 1,
+                            gridRow: seat.seatIndex <= 4
+                              ? Math.ceil(seat.seatIndex / 2)
+                              : seat.seatIndex <= 8 ? 3 : 4,
+                          }}
                           onClick={() => {
                             if (seat.isMine) window.dispatchEvent(new Event('open-pet-shelter'))
                           }}
@@ -5074,12 +5013,7 @@ useEffect(() => {
                               </span>
 
                               <span className="text-[6px] font-bold uppercase tracking-wider text-white/30">
-                                {seat.isLocked
-                                  ? 'Locked'
-                                  : seat.seatPrice ===
-                                      0
-                                    ? 'Free'
-                                    : `${seat.seatPrice} Coins`}
+                                {seat.isLocked ? 'Locked' : seat.isOpen ? 'Open' : 'Unavailable'}
                               </span>
                             </button>
                           )}
@@ -5194,7 +5128,6 @@ useEffect(() => {
                       )
                     },
                   )}
-                </div>
               </div>
             </div>
           )}

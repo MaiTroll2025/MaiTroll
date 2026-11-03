@@ -1,34 +1,35 @@
 import { useEffect, useState } from 'react';
 import { DIFFICULTY_ORDER, DIFFICULTIES } from '@/components/games/MaiTrollRun/game/config';
-import { openWallet, startRun, type ActiveRun } from '@/components/games/MaiTrollRun/lib/trollApi';
+import { getRunInventory, startRun, type ActiveRun, type RunInventory } from '@/components/games/MaiTrollRun/lib/trollApi';
 import type { Difficulty, Gender } from '@/components/games/MaiTrollRun/game/types';
 
 interface SetupScreenProps {
   playerId: string;
   onStart: (run: ActiveRun) => void;
   onOpenLeaderboard: () => void;
+  onOpenStore: () => void;
 }
 
 const NAME_MAX = 16;
 
-export function SetupScreen({ playerId, onStart, onOpenLeaderboard }: SetupScreenProps) {
+export function SetupScreen({ playerId, onStart, onOpenLeaderboard, onOpenStore }: SetupScreenProps) {
   const [name, setName] = useState('');
   useEffect(() => { let active=true; import('../lib/trollApi').then(({getProfile}) => getProfile(playerId)).then((profile)=>{if(active)setName(profile.display_name || profile.username || 'Troll');}).catch(()=>{if(active)setLoadError('Could not retrieve MaiTroll profile.');});return()=>{active=false};},[playerId]);
   const [gender, setGender] = useState<Gender>('female');
   const [difficulty, setDifficulty] = useState<Difficulty>('normal');
-  const [balance, setBalance] = useState<number | null>(null);
+  const [inventory, setInventory] = useState<RunInventory | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [startError, setStartError] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    openWallet(playerId)
+    getRunInventory()
       .then((value) => {
-        if (!cancelled) setBalance(value);
+        if (!cancelled) setInventory(value);
       })
       .catch((err: unknown) => {
-        if (!cancelled) setLoadError(err instanceof Error ? err.message : 'Could not load your troll_coins.');
+        if (!cancelled) setLoadError(err instanceof Error ? err.message : 'Could not load your game inventory.');
       });
     return () => {
       cancelled = true;
@@ -37,6 +38,7 @@ export function SetupScreen({ playerId, onStart, onOpenLeaderboard }: SetupScree
 
   const fee = DIFFICULTIES[difficulty].entryFee;
   const trimmedName = name.trim();
+  const balance = inventory?.trollCoins ?? null;
   const canAfford = balance !== null && balance >= fee;
   const canStart = trimmedName.length > 0 && canAfford && !starting;
 
@@ -52,6 +54,8 @@ export function SetupScreen({ playerId, onStart, onOpenLeaderboard }: SetupScree
         gender,
         difficulty,
         seed: Math.floor(Math.random() * 2_147_483_647),
+        gunKey: inventory?.equippedGun ?? null,
+        walletBalance: Math.max(0, (inventory?.trollCoins ?? 0) - fee),
       });
     } catch (err) {
       setStartError(err instanceof Error ? err.message : 'Could not start the run.');
@@ -70,13 +74,22 @@ export function SetupScreen({ playerId, onStart, onOpenLeaderboard }: SetupScree
             MAITROLL. Every run costs troll_coins.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={onOpenLeaderboard}
-          className="self-start rounded-full border border-stone-700 px-4 py-2 text-sm font-medium text-stone-200 transition hover:border-amber-400 hover:text-amber-300 sm:self-auto"
-        >
-          Leaderboard
-        </button>
+        <div className="flex gap-2 self-start sm:self-auto">
+          <button
+            type="button"
+            onClick={onOpenLeaderboard}
+            className="rounded-full border border-stone-700 px-4 py-2 text-sm font-medium text-stone-200 transition hover:border-amber-400 hover:text-amber-300"
+          >
+            Leaderboard
+          </button>
+          <button
+            type="button"
+            onClick={onOpenStore}
+            className="rounded-full border border-amber-500 px-4 py-2 text-sm font-medium text-amber-200 transition hover:bg-amber-500/10"
+          >
+            Game Store
+          </button>
+        </div>
       </header>
 
       <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
@@ -151,13 +164,15 @@ export function SetupScreen({ playerId, onStart, onOpenLeaderboard }: SetupScree
             {balance !== null ? balance : '...'}
           </p>
           <p className="text-sm text-stone-400">troll_coins</p>
+          <p className="mt-2 text-sm text-cyan-300">{inventory?.checkpoints ?? '...'} checkpoints available</p>
+          {inventory?.equippedGun && <p className="mt-1 text-xs text-stone-400">Weapon equipped: {inventory.equippedGun.replace(/_/g, ' ')}</p>}
 
           <div className="mt-6 rounded-xl bg-stone-950 p-4 text-sm leading-relaxed text-stone-300">
             <p>
               Entry fee: <span className="font-mono text-amber-300">{fee}</span> troll_coins
             </p>
             <p className="mt-2 text-xs text-stone-500">
-              Entry fees use your actual MaiTroll Troll Coins. Collected game coins are recorded as a score only; payouts require server-verified gameplay.
+              Clear a level for 100 Troll Coins. Each weapon shot costs 1 Troll Coin. You start with 20 account-wide checkpoints.
             </p>
           </div>
 

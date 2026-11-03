@@ -173,16 +173,6 @@ function isKickBanActive(kickData: any) {
   return Date.now() - kickData.timestamp < KICK_BAN_DURATION_MS
 }
 
-function getSeatPriceForIndex(stream: Stream | null, seatIndex: number) {
-  if (!stream) return 0
-
-  if (Array.isArray((stream as any)?.seat_prices) && typeof (stream as any).seat_prices[seatIndex] === 'number') {
-    return Number((stream as any).seat_prices[seatIndex])
-  }
-
-  return Number((stream as any)?.seat_price ?? 0)
-}
-
 /**
  * ViewerPage must NOT render BroadcastGrid.
  *
@@ -1794,12 +1784,6 @@ const [broadcasterProfileLoaded, setBroadcasterProfileLoaded] = useState(false)
         return
       }
 
-      if (getSeatPriceForIndex(stream as Stream, seatIndex) !== 0) {
-        clearRequest()
-        toast.info('That seat is no longer free. No coins were charged.')
-        return
-      }
-
       clearRequest()
       void joinSeat(seatIndex, 0, viewerIdentityRef.current)
     }, [joinSeat, location.pathname, location.search, navigate, stream, streamId, user?.id])
@@ -1996,22 +1980,14 @@ const [broadcasterProfileLoaded, setBroadcasterProfileLoaded] = useState(false)
     return mapping;
   }, [seats]);
 
-  const availableSeatPrice = useMemo(() => {
-    if (typeof availableSeatIndex !== 'number') return 0
-
-    return Array.isArray((stream as any)?.seat_prices)
-      ? (stream as any).seat_prices[availableSeatIndex]
-      : (stream as any)?.seat_price ?? 0
-  }, [availableSeatIndex, stream])
-
   const _handleJoinAvailableSeat = useCallback(async () => {
     if (typeof availableSeatIndex !== 'number') return
     if ((stream as any)?.are_seats_locked) {
       toast.error('Seats are currently locked')
       return
     }
-    await joinSeat(availableSeatIndex, availableSeatPrice, viewerIdentityRef.current)
-  }, [availableSeatIndex, availableSeatPrice, joinSeat, stream])
+    await joinSeat(availableSeatIndex, 0, viewerIdentityRef.current)
+  }, [availableSeatIndex, joinSeat, stream])
 
   const joinSeatThrottleRef = useRef<{ lastTime: number; count: number }>({ lastTime: 0, count: 0 })
 
@@ -2032,8 +2008,7 @@ const [broadcasterProfileLoaded, setBroadcasterProfileLoaded] = useState(false)
       toast.error('Please slow down — you are joining seats too quickly.')
       return
     }
-    const seatPrice = getSeatPriceForIndex(stream as Stream | null, seatIndex)
-    await joinSeat(seatIndex, seatPrice, viewerIdentityRef.current)
+    await joinSeat(seatIndex, 0, viewerIdentityRef.current)
   }, [joinSeat, stream])
 
   const handleAddSeat = useCallback(async () => {
@@ -2046,19 +2021,11 @@ const [broadcasterProfileLoaded, setBroadcasterProfileLoaded] = useState(false)
       const currentGuestSeats = Math.max(0, currentBoxCount - 1)
       const desiredGuestSeats = Math.min(MAX_TOTAL_BOXES - 1, currentGuestSeats + 1)
       const desiredBoxCount = desiredGuestSeats + 1
-      const currentSeatPrices = Array.isArray((stream as any)?.seat_prices)
-        ? (stream as any).seat_prices
-        : []
-      const newSeatPrices = [...currentSeatPrices]
-      while (newSeatPrices.length < desiredBoxCount) {
-        newSeatPrices.push(0)
-      }
       const { error: updateError } = await supabase
         .from('streams')
         .update({
           box_count: desiredBoxCount,
           seat_count: desiredGuestSeats,
-          seat_prices: newSeatPrices,
         })
         .eq('id', streamId)
       if (updateError) throw updateError
@@ -2066,7 +2033,6 @@ const [broadcasterProfileLoaded, setBroadcasterProfileLoaded] = useState(false)
         ...current,
         box_count: desiredBoxCount,
         seat_count: desiredGuestSeats,
-        seat_prices: newSeatPrices,
       } : current)
       toast.success('Seat added to stage')
     } catch (err: any) {
@@ -2227,14 +2193,15 @@ const roomId = String(getLiveKitRoomName(stream as Stream | null, streamId) || '
   const joinAsAudience = liveKitRoom.joinAsAudience
   const leaveRoom = liveKitRoom.leaveRoom
   const [battleRoomSuspended, setBattleRoomSuspended] = useState(false)
+  const suspendRoom = liveKitRoom.suspendRoom
   const suspendOriginalRoomForBattle = useCallback(async () => {
     setBattleRoomSuspended(true)
     hasJoinedAudienceRef.current = false
     joiningAudienceRef.current = false
     currentRoomKeyRef.current = null
     audienceJoinAttemptedKeyRef.current = null
-    await liveKitRoom.suspendRoom()
-  }, [liveKitRoom.suspendRoom])
+    await suspendRoom()
+  }, [suspendRoom])
   const resumeOriginalRoomAfterBattle = useCallback(() => {
     hasJoinedAudienceRef.current = false
     joiningAudienceRef.current = false
@@ -3910,7 +3877,6 @@ useStreamRealtime(
           isSeatActiveStatus(seatStatus),
       )
       const isLocked = Boolean((stream as any)?.are_seats_locked)
-      const seatPrice = getSeatPriceForIndex(stream as Stream | null, seatIndex)
       const displayName = getDisplayName(seat?.user_profile || null, 'Viewer')
       // A user already seated in any seat cannot join another seat until they leave it.
       const amAlreadySeated = Boolean(
@@ -3927,7 +3893,6 @@ useStreamRealtime(
         isOccupied,
         isLocked,
         canJoin,
-        seatPrice,
         displayName,
       }
     })
@@ -4797,9 +4762,7 @@ useStreamRealtime(
                         ? seat.displayName
                         : seat.isLocked
                           ? 'Locked'
-                          : seat.seatPrice === 0
-                            ? 'Free Seat'
-                            : `${seat.seatPrice} Coins`
+                          : 'Open Seat'
 
                     // Any occupied seat is clickable to open CityStatusPanel
                     const canClickSeat = seat.isOccupied && seatUserId;
@@ -4986,9 +4949,7 @@ useStreamRealtime(
                   ? seat.displayName
                   : seat.isLocked
                     ? 'Locked'
-                    : seat.seatPrice === 0
-                      ? 'Free Seat'
-                      : `${seat.seatPrice} Coins`
+                    : 'Open Seat'
 
               const canClickSeat = seat.isOccupied && seatUserId;
               const seatClickProps = canClickSeat
@@ -5116,7 +5077,7 @@ useStreamRealtime(
                         'font-bold',
                         seat.canJoin ? 'text-slate-200' : 'text-slate-500'
                       )}>
-                        {seat.isLocked ? 'Locked' : seat.seatPrice === 0 ? 'Free' : `${seat.seatPrice}◈`}
+                        {seat.isLocked ? 'Locked' : seat.canJoin ? 'Open' : 'Unavailable'}
                       </div>
                     </button>
                   )}
@@ -5278,7 +5239,7 @@ useStreamRealtime(
                             </div>
                             <div className="text-[11px] font-black text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">Seat {seat.seatIndex}</div>
                             <div className="text-[10px] font-bold text-white/60 drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">
-                              {seat.isLocked ? 'Locked' : seat.seatPrice === 0 ? 'Free' : `${seat.seatPrice} ◈`}
+                              {seat.isLocked ? 'Locked' : seat.canJoin ? 'Open' : 'Unavailable'}
                             </div>
                           </button>
                         )}

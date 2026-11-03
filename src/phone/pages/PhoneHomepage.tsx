@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Link } from 'react-router-dom'
-import { ArrowRight, Building2, ChevronLeft, ChevronRight, Coins, Gavel, Mail, Play, Radio, Sparkles, Trophy, Users, Shield, Gamepad2, Mic, BriefcaseBusiness, Landmark, Church, RefreshCw } from 'lucide-react';
+import { ArrowRight, Building2, ChevronLeft, ChevronRight, Coins, Gavel, Mail, Play, Radio, Trophy, Users, Shield, Gamepad2, Mic, BriefcaseBusiness, Landmark, Church, RefreshCw } from 'lucide-react';
 
 import PhoneHeader from '../PhoneHeader'
 import DynamicWeatherBackground from '@/components/home/DynamicWeatherBackground'
@@ -10,12 +10,7 @@ import { supabase } from '@/lib/supabase'
 import { useLiveContent } from '@/hooks/useLiveContent'
 import type { LiveItem } from '@/contexts/LiveContentContext'
 import { useRandomFreeSeat } from '@/hooks/useRandomFreeSeat'
-import { PhoneButton } from '../components/PhoneButton'
-import TreelzHomeRow from '@/components/home/TreelzHomeRow'
 import MaiTrollRulesPopup from '@/components/MaiTrollRulesPopup'
-
-const glass =
-  'border border-[#39FF14]/10 bg-[#0D0814]/85 backdrop-blur-2xl shadow-[0_15px_50px_rgba(0,0,0,0.40)]'
 
 const _neonGradient =
   'bg-gradient-to-br from-[#39FF14] via-[#a855f7] to-[#A855F7]'
@@ -62,7 +57,6 @@ function PhoneCityBuildings({ onOpen }: { onOpen: (path: string) => void }) {
       <div className="relative overflow-hidden bg-[linear-gradient(180deg,#100719_0%,#190B22_47%,#0C1713_68%,#090711_100%)]">
         <div ref={stripRef} onScroll={(event) => { const el = event.currentTarget; setIndex(Math.min(Math.ceil(PHONE_CITY_BUILDINGS.length / 4) - 1, Math.round(el.scrollLeft / Math.max(el.clientWidth, 1)))) }} className="relative flex snap-x snap-mandatory overflow-x-auto overscroll-x-contain scroll-smooth px-2 pt-2 pb-0 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
           {PHONE_CITY_BUILDINGS.map((building) => {
-            const Icon = building.icon
             return (
               <button key={building.title} onClick={() => onOpen(building.path)} title={building.title} className="group flex min-w-0 shrink-0 basis-1/4 snap-start flex-col items-center justify-end px-[2px] text-center active:scale-[.98]">
                 <div className="relative flex h-[75px] w-full max-w-[95px] items-end justify-center">
@@ -228,7 +222,7 @@ function PhoneSection({
 /* Live Now                                                                    */
 /* -------------------------------------------------------------------------- */
 
-function PhoneLiveNow({
+function _PhoneLiveNow({
   items,
   loading,
   onItemClick,
@@ -291,82 +285,6 @@ function PhoneLiveNow({
 }
 
 /* -------------------------------------------------------------------------- */
-/* Quick Links                                                                 */
-/* -------------------------------------------------------------------------- */
-
-function PhoneQuickLinks() {
-  const navigate = useNavigate()
-
-  const links = [
-    {
-      label: 'Battles',
-      icon: Sparkles,
-      path: '/battles',
-    },
-    {
-      label: 'T League',
-      icon: Trophy,
-      path: '/leagues',
-    },
-  ]
-
-  return (
-    <section>
-      <div className="mb-2.5 flex items-center justify-between px-1">
-        <div>
-          <h2 className="text-[12px] font-black tracking-tight text-white">
-            Explore MaiTroll
-          </h2>
-
-          <p className="text-[9px] font-bold text-[#39FF14]/45">
-            More ways to connect, compete and create
-          </p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-4 gap-2">
-        {links.map((link, index) => {
-          const Icon = link.icon
-
-          return (
-            <button
-              key={link.label}
-              type="button"
-              onClick={() => navigate(link.path)}
-              className="group relative flex min-h-[78px] flex-col items-center justify-center gap-2 overflow-hidden rounded-2xl border border-[#00BFFF]/65 bg-[#0B0711] px-1 text-center transition-all active:scale-95 hover:border-[#39FF14]/25"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-[#00BFFF]/20 via-[#39FF14]/10 to-[#BF00FF]/20 opacity-70 transition-opacity group-hover:opacity-100" />
-              <span className="absolute right-1 top-1 text-[9px] opacity-70">{index % 2 === 0 ? '🦇' : '🕸️'}</span>
-
-              <div
-                className={`relative flex h-9 w-9 items-center justify-center rounded-xl border border-[#39FF14]/15 bg-gradient-to-br ${
-                  index % 2 === 0
-                    ? 'from-[#39FF14]/15 to-[#A855F7]/10'
-                    : 'from-[#A855F7]/15 to-[#39FF14]/10'
-                }`}
-              >
-                <Icon
-                  size={16}
-                  className={
-                    index % 2 === 0
-                      ? 'text-[#39FF14]'
-                      : 'text-[#A855F7]'
-                  }
-                />
-              </div>
-
-              <span className="relative text-[8px] font-black leading-tight text-zinc-400">
-                {link.label}
-              </span>
-            </button>
-          )
-        })}
-      </div>
-    </section>
-  )
-}
-
-/* -------------------------------------------------------------------------- */
 /* Homepage                                                                    */
 /* -------------------------------------------------------------------------- */
 
@@ -420,7 +338,7 @@ export default function PhoneHomepage({
     [liveItems],
   )
 
-  const courtItems = useMemo(
+  const _courtItems = useMemo(
     () => liveItems.filter((item) => item.category === 'court'),
     [liveItems],
   )

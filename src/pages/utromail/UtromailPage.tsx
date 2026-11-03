@@ -14,10 +14,7 @@ import {
   ArrowLeft,
   Send,
   Smile,
-  Image,
   Loader2,
-  Phone,
-  Video,
   CheckCheck,
   Check,
   Ban,
@@ -47,6 +44,8 @@ import UtromailCompose from "./UtromailCompose";
 import PostOfficeLanding from "./PostOfficeLanding";
 import { toast } from "sonner";
 
+const QUICK_EMOJIS = ["😀", "😂", "🥰", "👍", "❤️", "🎉", "🙏", "🔥"];
+
 function formatTime(dateStr: string): string {
   const d = new Date(dateStr);
   const now = new Date();
@@ -72,6 +71,28 @@ function formatMessageTime(dateStr: string): string {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+function formatDaySeparator(dateStr: string): string {
+  const date = new Date(dateStr);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+
+  if (date.toDateString() === today.toDateString()) return "Today";
+  if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
+
+  return date.toLocaleDateString([], {
+    month: "long",
+    day: "numeric",
+    year: date.getFullYear() === today.getFullYear() ? undefined : "numeric",
+  });
+}
+
+function isSameMessageGroup(a: UtromailMessage, b: UtromailMessage): boolean {
+  return a.sender_id === b.sender_id
+    && new Date(a.sent_at).toDateString() === new Date(b.sent_at).toDateString()
+    && Math.abs(new Date(b.sent_at).getTime() - new Date(a.sent_at).getTime()) <= 5 * 60 * 1000;
 }
 
 function getOtherParticipant(thread: UtromailThread, userId: string) {
@@ -167,11 +188,26 @@ export default function UtromailPage() {
   const [replyText, setReplyText] = useState("");
   const [sending, setSending] = useState(false);
   const [isOtherTyping, setIsOtherTyping] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sentMessageIdsRef = useRef<Set<string>>(new Set());
+
+  const insertEmoji = (emoji: string) => {
+    const input = inputRef.current;
+    const start = input?.selectionStart ?? replyText.length;
+    const end = input?.selectionEnd ?? replyText.length;
+    const nextText = `${replyText.slice(0, start)}${emoji}${replyText.slice(end)}`;
+
+    setReplyText(nextText);
+    setShowEmojiPicker(false);
+    requestAnimationFrame(() => {
+      inputRef.current?.focus();
+      inputRef.current?.setSelectionRange(start + emoji.length, start + emoji.length);
+    });
+  };
 
   // ============================================================
   // ACCOUNT
@@ -1119,22 +1155,6 @@ export default function UtromailPage() {
         <div className="flex shrink-0 items-center gap-1">
           <button
             type="button"
-            className="grid h-10 w-10 place-items-center rounded-xl text-slate-400 transition hover:bg-white/[0.06] hover:text-white"
-            aria-label="Start voice call"
-          >
-            <Phone className="h-[17px] w-[17px]" />
-          </button>
-
-          <button
-            type="button"
-            className="grid h-10 w-10 place-items-center rounded-xl text-slate-400 transition hover:bg-white/[0.06] hover:text-white"
-            aria-label="Start video call"
-          >
-            <Video className="h-[17px] w-[17px]" />
-          </button>
-
-          <button
-            type="button"
             onClick={handleDeleteConversation}
             className="grid h-10 w-10 place-items-center rounded-xl text-slate-500 transition hover:bg-red-500/10 hover:text-red-400"
             aria-label="Delete conversation"
@@ -1185,167 +1205,113 @@ export default function UtromailPage() {
             </div>
           ) : (
             <div className="mx-auto flex w-full max-w-3xl flex-col">
-              <div className="mb-7 flex items-center gap-3">
-                <div className="h-px flex-1 bg-white/[0.06]" />
-
-                <span className="rounded-full border border-white/[0.07] bg-white/[0.025] px-3 py-1 text-[10px] font-medium text-slate-500">
-                  Today
-                </span>
-
-                <div className="h-px flex-1 bg-white/[0.06]" />
-              </div>
-
               {messages.map((msg, idx) => {
                 const isOwn =
                   msg.sender_id === user?.id;
 
                 const previous = messages[idx - 1];
                 const next = messages[idx + 1];
+                const startsNewDay = !previous
+                  || new Date(previous.sent_at).toDateString() !== new Date(msg.sent_at).toDateString();
 
                 const startsGroup =
-                  !previous ||
-                  previous.sender_id !==
-                    msg.sender_id;
+                  !previous || !isSameMessageGroup(previous, msg);
 
                 const endsGroup =
-                  !next ||
-                  next.sender_id !==
-                    msg.sender_id;
+                  !next || !isSameMessageGroup(msg, next);
 
                 return (
-                  <div
-                    key={msg.id}
-                    className={`flex items-end gap-2.5 ${
-                      isOwn
-                        ? "justify-end"
-                        : "justify-start"
-                    } ${
-                      startsGroup && idx > 0
-                        ? "mt-5"
-                        : ""
-                    }`}
-                  >
-                    {!isOwn && (
-                      <div className="w-8 shrink-0 self-end">
-                        {endsGroup &&
-                          (msg.sender_avatar ? (
-                            <img
-                              src={msg.sender_avatar}
-                              alt=""
-                              className="h-8 w-8 rounded-full border border-white/10 object-cover"
-                            />
-                          ) : (
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#5965f2] to-[#8056d9] text-[10px] font-bold text-white">
-                              {getInitials(
-                                msg.sender_name ||
-                                  msg.sender_username,
-                              )}
-                            </div>
-                          ))}
+                  <React.Fragment key={msg.id}>
+                    {startsNewDay && (
+                      <div className="my-6 flex items-center gap-3 first:mt-0" aria-label={formatDaySeparator(msg.sent_at)}>
+                        <div className="h-px flex-1 bg-white/[0.06]" />
+                        <span className="rounded-full border border-white/[0.07] bg-white/[0.025] px-3 py-1 text-[10px] font-medium text-slate-500">
+                          {formatDaySeparator(msg.sent_at)}
+                        </span>
+                        <div className="h-px flex-1 bg-white/[0.06]" />
                       </div>
                     )}
-
                     <div
-                      className={`flex max-w-[84%] flex-col sm:max-w-[72%] ${
-                        isOwn
-                          ? "items-end"
-                          : "items-start"
-                      }`}
+                      className={`flex items-end gap-2 ${
+                        isOwn ? "justify-end" : "justify-start"
+                      } ${startsGroup && previous ? "mt-4" : ""}`}
                     >
-                      {startsGroup && !isOwn && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const senderUsername =
-                              msg.sender_username ||
-                              activeThread?.other_username;
-
-                            if (senderUsername) {
-                              navigate(
-                                `/profile/${encodeURIComponent(
-                                  senderUsername,
-                                )}`,
-                              );
-                            }
-                          }}
-                          className="mb-1.5 ml-1 flex items-center gap-1.5 text-left text-[11px] font-medium text-slate-400 transition hover:text-white"
-                        >
-                          {msg.sender_name ||
-                            msg.sender_username ||
-                            activeThread?.other_username ||
-                            "Member"}
-
-                          {msg.sender_is_jailed && (
-                            <Lock className="h-3 w-3 text-red-400" />
-                          )}
-                        </button>
-                      )}
-
-                      <div
-                        className={`relative px-4 py-2.5 text-[14px] leading-[1.55] ${
-                          isOwn
-                            ? [
-                                "bg-gradient-to-br",
-                                "from-[#5965f2]",
-                                "to-[#6d57c9]",
-                                "text-white",
-                                "shadow-[0_6px_22px_rgba(55,65,170,0.18)]",
-                                startsGroup
-                                  ? "rounded-2xl"
-                                  : "rounded-t-2xl",
-                                endsGroup
-                                  ? "rounded-bl-2xl rounded-br-md"
-                                  : "rounded-b-2xl",
-                              ].join(" ")
-                            : [
-                                "border",
-                                "border-white/[0.07]",
-                                "bg-[#151922]",
-                                "text-slate-200",
-                                startsGroup
-                                  ? "rounded-2xl"
-                                  : "rounded-t-2xl",
-                                endsGroup
-                                  ? "rounded-br-2xl rounded-bl-md"
-                                  : "rounded-b-2xl",
-                              ].join(" ")
-                        }`}
-                      >
-                        <p className="whitespace-pre-wrap break-words">
-                          {msg.body}
-                        </p>
-                      </div>
-
-                      {endsGroup && (
-                        <div
-                          className={`mt-1.5 flex items-center gap-1.5 px-1 text-[10px] text-slate-600 ${
-                            isOwn
-                              ? "justify-end"
-                              : "justify-start"
-                          }`}
-                        >
-                          <span>
-                            {formatMessageTime(
-                              msg.sent_at,
-                            )}
-                          </span>
-
-                          {isOwn &&
-                            (msg.is_read ? (
-                              <CheckCheck
-                                className="h-3.5 w-3.5 text-[#8290ff]"
-                                aria-label="Read"
+                      {!isOwn && (
+                        <div className="w-8 shrink-0 self-end">
+                          {endsGroup &&
+                            (msg.sender_avatar ? (
+                              <img
+                                src={msg.sender_avatar}
+                                alt=""
+                                className="h-8 w-8 rounded-full border border-white/10 object-cover"
                               />
                             ) : (
-                              <Check
-                                className="h-3.5 w-3.5 text-slate-600"
-                                aria-label="Sent"
-                              />
+                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#5965f2] to-[#8056d9] text-[10px] font-bold text-white">
+                                {getInitials(msg.sender_name || msg.sender_username)}
+                              </div>
                             ))}
                         </div>
                       )}
+
+                      <div
+                        className={`flex max-w-[84%] flex-col sm:max-w-[72%] ${
+                          isOwn ? "items-end" : "items-start"
+                        }`}
+                      >
+                        {startsGroup && !isOwn && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const senderUsername =
+                                msg.sender_username || activeThread?.other_username;
+                              if (senderUsername) {
+                                navigate(`/profile/${encodeURIComponent(senderUsername)}`);
+                              }
+                            }}
+                            className="mb-1.5 ml-1 flex items-center gap-1.5 text-left text-[11px] font-medium text-slate-400 transition hover:text-white"
+                          >
+                            {msg.sender_name || msg.sender_username || activeThread?.other_username || "Member"}
+                            {msg.sender_is_jailed && <Lock className="h-3 w-3 text-red-400" />}
+                          </button>
+                        )}
+
+                        <div
+                          className={`relative px-4 py-2.5 text-[14px] leading-[1.55] ${
+                            isOwn
+                              ? [
+                                  "bg-gradient-to-br from-[#5965f2] to-[#6d57c9] text-white",
+                                  "shadow-[0_6px_22px_rgba(55,65,170,0.18)]",
+                                  startsGroup ? "rounded-2xl" : "rounded-t-2xl",
+                                  endsGroup ? "rounded-bl-2xl rounded-br-md" : "rounded-b-2xl",
+                                ].join(" ")
+                              : [
+                                  "border border-white/[0.07] bg-[#151922] text-slate-200",
+                                  startsGroup ? "rounded-2xl" : "rounded-t-2xl",
+                                  endsGroup ? "rounded-br-2xl rounded-bl-md" : "rounded-b-2xl",
+                                ].join(" ")
+                          }`}
+                        >
+                          <p className="whitespace-pre-wrap break-words">{msg.body}</p>
+                        </div>
+
+                        {endsGroup && (
+                          <div
+                            className={`mt-1.5 flex items-center gap-1.5 px-1 text-[10px] text-slate-600 ${
+                              isOwn ? "justify-end" : "justify-start"
+                            }`}
+                          >
+                            <span>{formatMessageTime(msg.sent_at)}</span>
+                            {isOwn &&
+                              (msg.is_read ? (
+                                <CheckCheck className="h-3.5 w-3.5 text-[#8290ff]" aria-label="Read" />
+                              ) : (
+                                <Check className="h-3.5 w-3.5 text-slate-600" aria-label="Sent" />
+                              ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  </React.Fragment>
                 );
               })}
 
@@ -1371,23 +1337,34 @@ export default function UtromailPage() {
           COMPOSER
       ====================================================== */}
 
-      <footer className="shrink-0 border-t border-white/[0.07] bg-[#0d1018]/95 px-3 py-3 backdrop-blur-xl sm:px-5 sm:py-4">
+      <footer className="shrink-0 border-t border-white/[0.07] bg-[#0d1018]/95 px-3 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] backdrop-blur-xl sm:px-5 sm:py-4">
         <div className="mx-auto flex max-w-3xl items-end gap-1.5 rounded-2xl border border-white/[0.08] bg-[#141821] p-1.5 transition focus-within:border-[#6672f2]/40 focus-within:bg-[#171b25]">
-          <button
-            type="button"
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-slate-500 transition hover:bg-white/[0.05] hover:text-slate-200"
-            aria-label="Attach image"
-          >
-            <Image className="h-[18px] w-[18px]" />
-          </button>
-
-          <button
-            type="button"
-            className="hidden h-10 w-10 shrink-0 place-items-center rounded-xl text-slate-500 transition hover:bg-white/[0.05] hover:text-slate-200 sm:grid"
-            aria-label="Add emoji"
-          >
-            <Smile className="h-[18px] w-[18px]" />
-          </button>
+          <div className="relative shrink-0">
+            <button
+              type="button"
+              onClick={() => setShowEmojiPicker((shown) => !shown)}
+              className="grid h-10 w-10 place-items-center rounded-xl text-slate-500 transition hover:bg-white/[0.05] hover:text-slate-200"
+              aria-label="Add emoji"
+              aria-expanded={showEmojiPicker}
+            >
+              <Smile className="h-[18px] w-[18px]" />
+            </button>
+            {showEmojiPicker && (
+              <div className="absolute bottom-full left-0 z-30 mb-2 grid grid-cols-4 gap-1 rounded-2xl border border-white/10 bg-[#151922] p-2 shadow-2xl">
+                {QUICK_EMOJIS.map((emoji) => (
+                  <button
+                    key={emoji}
+                    type="button"
+                    onClick={() => insertEmoji(emoji)}
+                    className="grid h-10 w-10 place-items-center rounded-xl text-xl transition hover:bg-white/10"
+                    aria-label={`Insert ${emoji}`}
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
           <textarea
             ref={inputRef}
@@ -1724,7 +1701,7 @@ export default function UtromailPage() {
                   </button>
                 </div>
               ) : (
-                <div className="space-y-0.5">
+                <div className="space-y-1">
                   {filteredThreads.map(
                     (thread) => {
                       const lastMsg =
@@ -1842,14 +1819,16 @@ export default function UtromailPage() {
                               },
                             );
                           }}
-                          className={`group relative flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition ${
+                          className={`group relative flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition ${
                             selectedThreadIds.has(
                               thread.id,
                             )
                               ? "bg-red-500/[0.08]"
                               : isActive
-                                ? "bg-[#5965f2]/[0.10]"
-                                : "hover:bg-white/[0.035]"
+                                ? "bg-[#5965f2]/[0.14] ring-1 ring-inset ring-[#5965f2]/20"
+                                : isUnread
+                                  ? "bg-white/[0.025] hover:bg-white/[0.055]"
+                                  : "hover:bg-white/[0.035]"
                           }`}
                         >
                           {isActive && (
@@ -1941,13 +1920,15 @@ export default function UtromailPage() {
                                     : "text-slate-600"
                                 }`}
                               >
-                                {lastMsg?.body ||
+                                {lastMsg
+                                  ? `${lastMsg.sender_id === user?.id ? "You: " : ""}${lastMsg.body}`
+                                  :
                                   "No messages yet"}
                               </p>
 
                               {isUnread && (
-                                <span className="grid min-w-[18px] place-items-center rounded-full bg-[#5965f2] px-1.5 py-0.5 text-[9px] font-bold text-white">
-                                  {thread.unread_count}
+                                <span className="grid h-5 min-w-5 shrink-0 place-items-center rounded-full bg-[#5965f2] px-1.5 text-[10px] font-bold text-white">
+                                  {(thread.unread_count || 0) > 99 ? "99+" : thread.unread_count}
                                 </span>
                               )}
                             </div>
@@ -2085,29 +2066,6 @@ export default function UtromailPage() {
                     </div>
                   </section>
 
-                  <section className="mt-3 rounded-xl border border-white/[0.07] bg-white/[0.018] p-4">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-600">
-                      Actions
-                    </p>
-
-                    <div className="mt-3 grid grid-cols-2 gap-2">
-                      <button
-                        type="button"
-                        className="flex flex-col items-center justify-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 text-xs font-medium text-slate-400 transition hover:bg-white/[0.05] hover:text-white"
-                      >
-                        <Phone className="h-4 w-4" />
-                        Call
-                      </button>
-
-                      <button
-                        type="button"
-                        className="flex flex-col items-center justify-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 text-xs font-medium text-slate-400 transition hover:bg-white/[0.05] hover:text-white"
-                      >
-                        <Video className="h-4 w-4" />
-                        Video
-                      </button>
-                    </div>
-                  </section>
                 </div>
 
                 <div className="border-t border-white/[0.07] p-4">

@@ -1,7 +1,7 @@
 // Service Worker for MaiTroll — production-ready stub
 // Registers successfully without external dependencies that could fail evaluation.
 
-self.addEventListener('install', (event) => {
+self.addEventListener('install', (_event) => {
   console.log('[SW] Installing');
   if (self.skipWaiting) {
     self.skipWaiting();
@@ -23,7 +23,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-self.addEventListener('fetch', (event) => {
+self.addEventListener('fetch', (_event) => {
   // No-op fetch handler — allows the browser to handle all network requests directly.
   // This SW exists to provide a valid registration target without external imports.
 });

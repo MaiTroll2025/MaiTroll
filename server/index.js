@@ -407,6 +407,7 @@ app.locals.supabase = supabase;
 app.locals.notifyIndexNow = notifyIndexNow;
 
 app.get('/api/site-updates', async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
   if (!supabase) return res.status(503).json({ error: 'Site updates are unavailable until server database credentials are configured' });
 
   try {
@@ -1176,8 +1177,9 @@ function replaceMetaTag(html, selector, tag) {
 }
 
 async function renderSeoIndex(req, res, next) {
-  if (!process.argv.includes('--render')) return next();
   const pathname = req.path || '/';
+  const isSiteContentPath = /^\/(?:blog|updates)(?:\/|$)/i.test(pathname);
+  if (!process.argv.includes('--render') && !isSiteContentPath) return next();
   if (pathname.startsWith('/api/') || /\.[a-z0-9]{1,12}$/i.test(pathname)) return next();
 
   let title;
@@ -1221,8 +1223,9 @@ async function renderSeoIndex(req, res, next) {
 
   const contentPathMatch = normalizedPath.match(/^\/(blog|updates)\/([a-z0-9]+(?:-[a-z0-9]+)*)$/i);
   const listPathMatch = normalizedPath.match(/^\/(blog|updates)$/);
-  const postType = contentPathMatch ? (contentPathMatch[1] === 'blog' ? 'blog' : 'update') : null;
-  const collectionType = listPathMatch ? (listPathMatch[1] === 'blog' ? 'blog' : 'update') : null;
+  const postType = contentPathMatch ? (contentPathMatch[1].toLowerCase() === 'blog' ? 'blog' : 'update') : null;
+  const collectionType = listPathMatch ? (listPathMatch[1].toLowerCase() === 'blog' ? 'blog' : 'update') : null;
+  let structuredData;
 
   try {
     if (postType) {
@@ -1235,6 +1238,24 @@ async function renderSeoIndex(req, res, next) {
         bodyHtml = makeSEOBody(post.title, paragraphs, [
           { href: `/${postType === 'blog' ? 'blog' : 'updates'}`, label: `More ${postType === 'blog' ? 'articles' : 'updates'}` },
         ]);
+        if (postType === 'blog') {
+          structuredData = {
+            '@context': 'https://schema.org',
+            '@type': 'BlogPosting',
+            headline: post.title,
+            description: post.summary,
+            datePublished: post.published_at,
+            dateModified: post.updated_at || post.published_at,
+            mainEntityOfPage: new URL(pathname, APP_URL).toString(),
+            author: { '@type': 'Organization', name: 'MaiTroll' },
+            publisher: {
+              '@type': 'Organization',
+              name: 'MaiTroll',
+              url: APP_URL,
+              logo: { '@type': 'ImageObject', url: `${APP_URL}/assets/maitrolllogo.png` },
+            },
+          };
+        }
       } else {
         title = 'Page Not Found | MaiTroll';
         description = 'This MaiTroll article or update could not be found.';
@@ -1278,13 +1299,24 @@ async function renderSeoIndex(req, res, next) {
     html = replaceMetaTag(html, /<meta\s+name=["']description["'][^>]*>/i, `<meta name="description" content="${escapeHtml(description)}" />`);
     html = replaceMetaTag(html, /<meta\s+property=["']og:title["'][^>]*>/i, `<meta property="og:title" content="${escapeHtml(title)}" />`);
     html = replaceMetaTag(html, /<meta\s+property=["']og:description["'][^>]*>/i, `<meta property="og:description" content="${escapeHtml(description)}" />`);
+    if (postType) {
+      html = replaceMetaTag(html, /<meta\s+property=["']og:type["'][^>]*>/i, `<meta property="og:type" content="${postType === 'blog' ? 'article' : 'website'}" />`);
+    }
     html = replaceMetaTag(html, /<link\s+rel=["']canonical["'][^>]*>/i, `<link rel="canonical" href="${escapeHtml(pageUrl)}" />`);
     html = html.replace(/<meta\s+property=["']og:url["'][^>]*>/i, `<meta property="og:url" content="${escapeHtml(pageUrl)}" />`);
     const noindexPathPrefixes = ['/admin', '/account', '/settings', '/wallet', '/profile/settings', '/profile/setup', '/profile/delete'];
-    if (noindexPathPrefixes.some((prefix) => normalizedPath === prefix || normalizedPath.startsWith(`${prefix}/`))) {
-      html = html.replace('</head>', '<meta name="robots" content="noindex, nofollow" />\n  </head>');
+    const shouldNoindex = statusCode >= 400
+      || noindexPathPrefixes.some((prefix) => normalizedPath === prefix || normalizedPath.startsWith(`${prefix}/`));
+    const robotsMeta = `<meta name="robots" content="${shouldNoindex ? 'noindex, nofollow' : 'index, follow'}" />`;
+    if (/<meta\s+name=["']robots["'][^>]*>/i.test(html)) {
+      html = html.replace(/<meta\s+name=["']robots["'][^>]*>/i, robotsMeta);
+    } else {
+      html = html.replace('</head>', `${robotsMeta}\n  </head>`);
     }
     if (bodyHtml) html = html.replace('<div id="root"></div>', `<div id="root">${bodyHtml}</div>`);
+    if (structuredData) {
+      html = html.replace('</head>', `<script type="application/ld+json">${JSON.stringify(structuredData).replace(/</g, '\\u003c')}</script>\n  </head>`);
+    }
     return res.status(statusCode).type('html').send(html);
   } catch (error) {
     if (error.code === 'ENOENT') {
@@ -1304,6 +1336,8 @@ if (process.argv.includes('--render')) {
     return next();
   });
   app.get('*', renderSeoIndex);
+} else {
+  app.get(/^\/(blog|updates)(?:\/.*)?$/i, renderSeoIndex);
 }
 
 const server = app.listen(PORT, '0.0.0.0', () => {

@@ -28,7 +28,7 @@ export function useBroadcastViewerCap() {
     startCapEnabled: false,
     startCapMax: 2,
     seatCapEnabled: true,
-    seatCapMax: 2,
+    seatCapMax: 4,
     allRestrictionsDisabled: false,
     loading: true,
   });
@@ -99,7 +99,7 @@ export function useBroadcastViewerCap() {
           startCapEnabled: map.broadcast_start_cap_enabled?.enabled === true,
           startCapMax: Number(map.broadcast_start_cap_max?.value ?? 2),
           seatCapEnabled: map.broadcast_seat_cap_enabled?.enabled === true,
-          seatCapMax: Number(map.broadcast_seat_cap_max?.value ?? 2),
+          seatCapMax: Number(map.broadcast_seat_cap_max?.value ?? 4),
           allRestrictionsDisabled: map.broadcast_all_restrictions_disabled?.enabled === true,
           loading: false,
         }));

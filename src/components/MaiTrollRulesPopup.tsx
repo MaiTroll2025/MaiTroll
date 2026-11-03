@@ -1,37 +1,83 @@
 import React, { useEffect, useState } from 'react'
 import { X } from 'lucide-react'
+import { useAuthStore } from '../lib/store'
 
-const RULES_STORAGE_KEY = 'maitroll_rules_dismissed_at'
-const RULES_TTL_MS = 3 * 24 * 60 * 60 * 1000 // 3 days
+const RULES_STORAGE_KEY = 'maitroll_rules_cadence_v1'
+const DAILY_INTERVAL_MS = 24 * 60 * 60 * 1000
+const WEEKLY_INTERVAL_MS = 7 * DAILY_INTERVAL_MS
 
-function shouldShowRules(): boolean {
+type RulesDismissal = {
+  dismissedAt: number
+  dismissalCount: number
+}
+
+function getStorageKey(userId: string): string {
+  return `${RULES_STORAGE_KEY}:${userId}`
+}
+
+function readDismissal(userId: string): RulesDismissal | null {
   try {
-    const raw = localStorage.getItem(RULES_STORAGE_KEY)
-    if (!raw) return true
-    const dismissedAt = Number(raw)
-    if (isNaN(dismissedAt)) return true
-    return Date.now() - dismissedAt < RULES_TTL_MS
-  } catch {
-    return true
+    const raw = localStorage.getItem(getStorageKey(userId))
+    if (!raw) return null
+    const parsed: unknown = JSON.parse(raw)
+    if (
+      typeof parsed !== 'object'
+      || parsed === null
+      || !('dismissedAt' in parsed)
+      || !('dismissalCount' in parsed)
+      || typeof parsed.dismissedAt !== 'number'
+      || typeof parsed.dismissalCount !== 'number'
+      || !Number.isFinite(parsed.dismissedAt)
+      || !Number.isInteger(parsed.dismissalCount)
+      || parsed.dismissalCount < 1
+    ) return null
+    return { dismissedAt: parsed.dismissedAt, dismissalCount: parsed.dismissalCount }
+  } catch (error) {
+    console.warn('[MaiTrollRulesPopup] Unable to read dismissal history.', error)
+    return null
   }
 }
 
-function dismissRules(): void {
+function shouldShowRules(userId: string): boolean {
+  const dismissal = readDismissal(userId)
+  if (!dismissal) return true
+  const interval = dismissal.dismissalCount < 2 ? DAILY_INTERVAL_MS : WEEKLY_INTERVAL_MS
+  return Date.now() - dismissal.dismissedAt >= interval
+}
+
+function dismissRules(userId: string): void {
+  const dismissal = readDismissal(userId)
   try {
-    localStorage.setItem(RULES_STORAGE_KEY, Date.now().toString())
-  } catch {
-    // ignore
+    localStorage.setItem(getStorageKey(userId), JSON.stringify({
+      dismissedAt: Date.now(),
+      dismissalCount: (dismissal?.dismissalCount || 0) + 1,
+    }))
+  } catch (error) {
+    console.warn('[MaiTrollRulesPopup] Unable to save dismissal history.', error)
   }
 }
 
 export default function MaiTrollRulesPopup({ onDismiss }: { onDismiss?: () => void }) {
+  const userId = useAuthStore((state) => state.user?.id)
+  const isAuthLoading = useAuthStore((state) => state.isLoading)
   const [show, setShow] = useState<boolean>(false)
+  const storageUserId = userId || 'anonymous'
 
   useEffect(() => {
-    setShow(shouldShowRules())
-  }, [])
+    if (isAuthLoading) {
+      setShow(false)
+      return
+    }
+    setShow(shouldShowRules(storageUserId))
+  }, [isAuthLoading, storageUserId])
 
   if (!show) return null
+
+  const handleDismiss = () => {
+    dismissRules(storageUserId)
+    setShow(false)
+    onDismiss?.()
+  }
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
@@ -46,7 +92,7 @@ export default function MaiTrollRulesPopup({ onDismiss }: { onDismiss?: () => vo
             <p className="text-[11px] text-[#bf00ff]/80 font-bold uppercase tracking-widest mt-1">City Ordinance • Bulletin</p>
           </div>
           <button
-            onClick={() => { dismissRules(); setShow(false); onDismiss?.() }}
+            onClick={handleDismiss}
             className="flex items-center gap-1 rounded-full border border-white/20 bg-white/5 px-2 py-1 text-[10px] font-bold text-white hover:bg-white/10 transition"
             title="Close"
           >

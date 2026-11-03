@@ -1,29 +1,42 @@
 import { useEffect, useRef, useState } from 'react';
 import { useGameInput } from '@/components/games/MaiTrollRun/hooks/useGameInput';
-import { createGameState, isRunOver, snapshotGame, stepGame, summarizeRun } from '@/components/games/MaiTrollRun/game/engine';
+import { createGameState, fireWeapon as applyWeaponShot, isRunOver, snapshotGame, stepGame, summarizeRun } from '@/components/games/MaiTrollRun/game/engine';
 import { drawScene } from '@/components/games/MaiTrollRun/game/render/scene';
 import { WORLD_WIDTH, WORLD_HEIGHT } from '@/components/games/MaiTrollRun/game/config';
-import type { ActiveRun } from '@/components/games/MaiTrollRun/lib/trollApi';
+import { chargeShot, completeLevel, type ActiveRun } from '@/components/games/MaiTrollRun/lib/trollApi';
 import type { HudSnapshot, RunSummary } from '@/components/games/MaiTrollRun/game/types';
 import { Hud } from '@/components/games/MaiTrollRun/components/Hud';
 import { supabase } from '@/lib/supabase';
 import type { GameState } from '../game/types';
 import { playCoin, playDie, playLevelComplete } from '@/components/games/MaiTrollRun/lib/gameSound';
+import { getWeapon } from '@/components/games/MaiTrollRun/game/weapons';
 
 interface GameViewProps {
   run: ActiveRun;
   onFinished: (summary: RunSummary) => void;
   lobbyId?: string;
   opponentName?: string;
+  isPublic?: boolean;
+  publicBalance?: number;
+  onPublicBalanceChange?: (balance: number) => void;
+  embedded?: boolean;
 }
 
 const MAX_FRAME_SECONDS = 1 / 30;
 const HUD_INTERVAL_MS = 80;
 
-export function GameView({ run, onFinished, lobbyId, opponentName }: GameViewProps) {
+export function GameView({ run, onFinished, lobbyId, opponentName, isPublic = false, publicBalance, onPublicBalanceChange, embedded = false }: GameViewProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rivalCanvasRef=useRef<HTMLCanvasElement>(null);
   const [rivalHud,setRivalHud]=useState<HudSnapshot|null>(null);
+  const [walletBalance, setWalletBalance] = useState(isPublic ? (publicBalance ?? run.walletBalance) : run.walletBalance);
+  const walletBalanceRef = useRef(walletBalance);
+  walletBalanceRef.current = walletBalance;
+  const publicModeRef = useRef(isPublic);
+  publicModeRef.current = isPublic;
+  const publicBalanceChangeRef = useRef(onPublicBalanceChange);
+  publicBalanceChangeRef.current = onPublicBalanceChange;
+  const [combatError, setCombatError] = useState('');
   const channelRef=useRef<ReturnType<typeof supabase.channel>|null>(null);
   const opponentFrame=useRef<GameState|null>(null);
   useEffect(()=>{
@@ -52,7 +65,15 @@ export function GameView({ run, onFinished, lobbyId, opponentName }: GameViewPro
     const ctx = canvas?.getContext('2d');
     if (!canvas || !ctx) return;
 
-    const state = createGameState(run.difficulty, run.gender, run.seed);
+    const state = createGameState(run.difficulty, run.gender, run.seed, run.checkpoint);
+    walletBalanceRef.current = run.walletBalance;
+    setWalletBalance(run.walletBalance);
+    setCombatError('');
+    let rewardQueue = Promise.resolve();
+    let reportedLevels = run.checkpoint?.levelIndex ?? 0;
+    let confirmedLevels = reportedLevels;
+    let lastShotAt = 0;
+    let shotInFlight = false;
     let frame = 0;
     let last = performance.now();
     let lastHud = 0;
@@ -62,7 +83,57 @@ export function GameView({ run, onFinished, lobbyId, opponentName }: GameViewPro
       const dt = Math.min(MAX_FRAME_SECONDS, (now - last) / 1000);
       last = now;
 
-      stepGame(state, dt, inputRef.current.read());
+      const input = inputRef.current.read();
+      stepGame(state, dt, input);
+
+      const weapon = getWeapon(run.gunKey);
+      if (weapon && state.status === 'playing' && input.shootHeld && !shotInFlight && now - lastShotAt >= weapon.cooldownMs) {
+        shotInFlight = true;
+        lastShotAt = now;
+        if (publicModeRef.current) {
+          const next = Math.max(0, walletBalanceRef.current - 1);
+          walletBalanceRef.current = next;
+          setWalletBalance(next);
+          publicBalanceChangeRef.current?.(next);
+          applyWeaponShot(state, weapon);
+          shotInFlight = false;
+        } else {
+          void chargeShot(run.runId)
+            .then((balance) => {
+              walletBalanceRef.current = balance;
+              setWalletBalance(balance);
+              if (!isRunOver(state.status)) applyWeaponShot(state, weapon);
+            })
+            .catch((cause: unknown) => {
+              setCombatError(cause instanceof Error ? cause.message : 'Could not fire this weapon.');
+              inputRef.current.setShoot(false);
+            })
+            .finally(() => {
+              shotInFlight = false;
+            });
+        }
+      }
+
+      if (state.levelsCleared > reportedLevels) {
+        const completedLevel = reportedLevels;
+        reportedLevels += 1;
+        if (publicModeRef.current) {
+          const next = walletBalanceRef.current + 100;
+          walletBalanceRef.current = next;
+          setWalletBalance(next);
+          publicBalanceChangeRef.current?.(next);
+        } else {
+          rewardQueue = rewardQueue.then(async () => {
+            const balance = await completeLevel(run.runId, completedLevel);
+            confirmedLevels = completedLevel + 1;
+            walletBalanceRef.current = balance;
+            setWalletBalance(balance);
+          }).catch((cause: unknown) => {
+            setCombatError(cause instanceof Error ? cause.message : 'Could not save your level reward.');
+          });
+        }
+      }
+
       drawScene(ctx, state);
       if(lobbyId && now-lastBroadcast>180){
         lastBroadcast=now;
@@ -85,7 +156,12 @@ export function GameView({ run, onFinished, lobbyId, opponentName }: GameViewPro
       if (isRunOver(state.status)) {
         if (!finishedRef.current) {
           finishedRef.current = true;
-          onFinishedRef.current(summarizeRun(state));
+          void rewardQueue.finally(() => {
+            const summary = summarizeRun(state);
+            summary.levelsCleared = confirmedLevels;
+            summary.checkpoint.levelIndex = confirmedLevels;
+            onFinishedRef.current(summary);
+          });
         }
         return;
       }
@@ -94,7 +170,7 @@ export function GameView({ run, onFinished, lobbyId, opponentName }: GameViewPro
 
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [run]);
+  }, [lobbyId, run]);
 
   const holdControl = (
     setter: (held: boolean) => void,
@@ -125,7 +201,7 @@ export function GameView({ run, onFinished, lobbyId, opponentName }: GameViewPro
   };
 
   return (
-    <div className={`relative mx-auto w-full max-w-5xl select-none ${isMobileView ? 'fixed inset-0 z-50 bg-black max-w-none h-screen' : ''}`}>
+    <div className={`relative mx-auto w-full max-w-5xl select-none ${isMobileView && !embedded ? 'fixed inset-0 z-50 bg-black max-w-none h-screen' : ''}`}>
       <div className={lobbyId ? 'grid gap-3 lg:grid-cols-2' : ''}>
         <div
           className="relative overflow-hidden rounded-2xl border border-stone-800 bg-black shadow-2xl"
@@ -139,9 +215,24 @@ export function GameView({ run, onFinished, lobbyId, opponentName }: GameViewPro
             ref={canvasRef}
             width={WORLD_WIDTH}
             height={WORLD_HEIGHT}
-            className={`block h-auto w-full ${isMobileView ? 'h-[85vh] w-[90vw] max-h-[85vh] max-w-[90vw] mx-auto object-contain' : ''}`}
+            className={`block h-auto w-full ${isMobileView && !embedded ? 'h-[85vh] w-[90vw] max-h-[85vh] max-w-[90vw] mx-auto object-contain' : embedded ? 'max-h-[62dvh] object-contain' : ''}`}
           />
-          {hud && <Hud hud={hud} difficulty={run.difficulty} />}
+          {hud && <Hud hud={hud} difficulty={run.difficulty} walletBalance={walletBalance} />}
+          {run.gunKey && (
+            <button
+              type="button"
+              onPointerDown={(event) => {
+                event.preventDefault();
+                inputRef.current.setShoot(true);
+              }}
+              onPointerUp={() => inputRef.current.setShoot(false)}
+              onPointerLeave={() => inputRef.current.setShoot(false)}
+              onPointerCancel={() => inputRef.current.setShoot(false)}
+              className="absolute bottom-16 right-3 z-20 rounded-full border border-amber-300 bg-amber-500/90 px-4 py-3 text-sm font-bold text-stone-950 shadow-lg"
+            >
+              Fire · 1 coin
+            </button>
+          )}
         </div>
         {lobbyId && <div className="relative overflow-hidden rounded-2xl border border-cyan-700 bg-black shadow-2xl">
           <div className="absolute left-2 top-2 z-20 rounded bg-black/80 px-3 py-1 text-sm font-bold text-cyan-200">OPPONENT · {opponentName || 'Rival'}</div>
@@ -150,6 +241,7 @@ export function GameView({ run, onFinished, lobbyId, opponentName }: GameViewPro
           {!rivalHud && <div className="absolute inset-0 flex items-center justify-center bg-black/70 text-sm text-white">Waiting for opponent game feed…</div>}
         </div>}
       </div>
+      {combatError && <p role="alert" className="mt-3 rounded-lg bg-red-950 p-3 text-sm text-red-200">{combatError}</p>}
       {!isMobileView && (
         <div className="mt-4 grid grid-cols-3 gap-3 sm:hidden">
           <button
@@ -176,7 +268,7 @@ export function GameView({ run, onFinished, lobbyId, opponentName }: GameViewPro
         </div>
       )}
       <p className={`mt-3 text-center text-xs text-stone-400 ${isMobileView ? 'block' : 'hidden sm:block'}`}>
-        {isMobileView ? 'Tap to jump (tap twice in air for a high jump) · swipe down to crouch · runner never stops' : 'Space or W to jump (tap twice for a high jump), hold W or Up to climb, hold S or Down to crouch or descend ladders.'}
+        {isMobileView ? 'Tap to jump (tap twice in air for a high jump) · swipe down to crouch · hold Fire to shoot · runner never stops' : 'Space or W to jump (tap twice for a high jump), hold W or Up to climb, hold S or Down to crouch or descend ladders, hold F to fire.'}
       </p>
     </div>
   );

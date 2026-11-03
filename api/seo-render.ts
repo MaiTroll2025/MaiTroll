@@ -144,6 +144,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   let bodyHtml: string | undefined
   let statusCode = 200
   let noindex = /^\/(admin|account|settings|wallet)(\/|$)/i.test(pathname)
+  let articleStructuredData: Record<string, unknown> | null = null
 
   const staticPage = STATIC_PAGES[pathname]
   if (staticPage) {
@@ -226,6 +227,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         bodyHtml = renderBody(post.title, paragraphs, [
           { href: postType === 'blog' ? '/blog' : '/updates', label: `More ${postType === 'blog' ? 'articles' : 'updates'}` },
         ])
+        if (postType === 'blog') {
+          articleStructuredData = {
+            '@context': 'https://schema.org',
+            '@type': 'BlogPosting',
+            headline: post.title,
+            description: post.summary,
+            datePublished: post.published_at,
+            dateModified: post.updated_at || post.published_at,
+            mainEntityOfPage: new URL(pathname, APP_URL).toString(),
+            author: { '@type': 'Organization', name: 'MaiTroll' },
+            publisher: {
+              '@type': 'Organization',
+              name: 'MaiTroll',
+              url: APP_URL,
+              logo: { '@type': 'ImageObject', url: `${APP_URL}/assets/maitrolllogo.png` },
+            },
+          }
+        }
       }
     } else if (collectionMatch) {
       const type = collectionMatch[1].toLowerCase() === 'blog' ? 'blog' : 'update'
@@ -260,6 +279,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     html = html.replace(/<meta\s+name=["']description["'][^>]*>/i, `<meta name="description" content="${escapeHtml(description)}" />`)
     html = html.replace(/<meta\s+property=["']og:title["'][^>]*>/i, `<meta property="og:title" content="${escapeHtml(title)}" />`)
     html = html.replace(/<meta\s+property=["']og:description["'][^>]*>/i, `<meta property="og:description" content="${escapeHtml(description)}" />`)
+    if (contentMatch) {
+      html = html.replace(/<meta\s+property=["']og:type["'][^>]*>/i, `<meta property="og:type" content="${contentMatch[1].toLowerCase() === 'blog' ? 'article' : 'website'}" />`)
+    }
     html = html.replace(/<link\s+rel=["']canonical["'][^>]*>/i, `<link rel="canonical" href="${escapeHtml(pageUrl)}" />`)
     html = html.replace(/<meta\s+property=["']og:url["'][^>]*>/i, `<meta property="og:url" content="${escapeHtml(pageUrl)}" />`)
     html = html.replace(/<meta\s+name=["']twitter:title["'][^>]*>/i, `<meta name="twitter:title" content="${escapeHtml(title)}" />`)
@@ -280,6 +302,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         logo: 'https://www.maitroll.com/assets/maitrolllogo.png',
       }
       html = html.replace('</head>', `<script type="application/ld+json">${JSON.stringify(organizationSchema)}</script>\n  </head>`)
+    }
+    if (articleStructuredData) {
+      html = html.replace('</head>', `<script type="application/ld+json">${JSON.stringify(articleStructuredData).replace(/</g, '\\u003c')}</script>\n  </head>`)
     }
     if (bodyHtml) html = html.replace('<div id="root"></div>', `<div id="root">${bodyHtml}</div>`)
     res.setHeader('Content-Type', 'text/html; charset=utf-8')

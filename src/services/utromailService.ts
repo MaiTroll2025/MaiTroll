@@ -352,7 +352,7 @@ export const getThreadMessages = async (threadId: string): Promise<UtromailMessa
   return result;
 };
 
-export const sendMessage = async (params: {
+type SendUtromailMessageParams = {
   senderId: string;
   senderMail: string;
   recipientId?: string;
@@ -363,12 +363,17 @@ export const sendMessage = async (params: {
   parentMessageId?: string;
   threadId?: string;
   attachments?: { file_name: string; file_url: string; file_size?: number; mime_type?: string }[];
-}): Promise<UtromailMessage> => {
+};
+
+const sendUtromailMessage = async (
+  params: SendUtromailMessageParams,
+  options: { skipRecipientPermissionCheck?: boolean } = {},
+): Promise<UtromailMessage> => {
 
   if (import.meta.env.DEV) console.log('[sendMessage] params:', { senderId: params.senderId, recipientId: params.recipientId });
 
    // Check permission
-  if (params.recipientId) {
+  if (params.recipientId && !options.skipRecipientPermissionCheck) {
     const { data: canSend, error: _rpcError } = await supabase.rpc('can_send_utromail', {
       sender_id: params.senderId,
       recipient_id: params.recipientId,
@@ -480,6 +485,69 @@ export const sendMessage = async (params: {
   }
 
   return message;
+};
+
+export const sendMessage = (params: SendUtromailMessageParams): Promise<UtromailMessage> =>
+  sendUtromailMessage(params);
+
+export const sendContactMessage = async (params: {
+  senderId: string;
+  subject: string;
+  body: string;
+}): Promise<UtromailMessage> => {
+  const subject = params.subject.trim();
+  const body = params.body.trim();
+  if (!subject || subject.length > 200) throw new Error('Subject is required and must be 200 characters or fewer');
+  if (!body || body.length > 5000) throw new Error('Message is required and must be 5,000 characters or fewer');
+
+  const { data: senderAccount, error: senderAccountError } = await supabase
+    .from('utromail_accounts')
+    .select('mail_address')
+    .eq('user_id', params.senderId)
+    .maybeSingle();
+  if (senderAccountError) throw senderAccountError;
+  let senderMailAddress = senderAccount?.mail_address;
+  if (!senderMailAddress) {
+    const { data: profile, error: profileError } = await supabase
+      .from('user_profiles')
+      .select('username, utromail_address')
+      .eq('id', params.senderId)
+      .maybeSingle();
+    if (profileError) throw profileError;
+    senderMailAddress = profile?.utromail_address
+      || (profile?.username ? `${profile.username.toLowerCase().replace(/[^a-z0-9]/g, '')}@utromail` : undefined);
+  }
+  if (!senderMailAddress) throw new Error('Your Utromail account is not ready. Please try again later.');
+
+  const { data: admins, error: adminError } = await supabase
+    .from('user_profiles')
+    .select('id, username, utromail_address, is_admin, role, troll_role')
+    .or('is_admin.eq.true,role.eq.admin,role.eq.superadmin,role.eq.ceo,role.eq.secretary,role.eq.lead_troll_officer,role.eq.troll_officer,role.eq.prosecutor,troll_role.eq.admin,troll_role.eq.superadmin,troll_role.eq.ceo')
+    .limit(50);
+  if (adminError) throw adminError;
+
+  const recipient = (admins || [])
+    .filter((admin) => admin.id !== params.senderId)
+    .sort((a, b) => {
+      const rank = (admin: typeof a) => {
+        const roles = [admin.role, admin.troll_role].map((role) => String(role || '').toLowerCase());
+        if (roles.includes('ceo')) return 0;
+        if (admin.is_admin || roles.includes('admin')) return 1;
+        if (roles.includes('superadmin')) return 2;
+        return 3;
+      };
+      return rank(a) - rank(b);
+    })[0];
+  if (!recipient) throw new Error('The support mailbox is unavailable. Please try again later.');
+
+  return sendUtromailMessage({
+    senderId: params.senderId,
+    senderMail: senderMailAddress,
+    recipientId: recipient.id,
+    recipientMail: recipient.utromail_address || `${recipient.username || 'admin'}@utromail`,
+    subject,
+    body,
+  }, { skipRecipientPermissionCheck: true });
 };
 
 export const markAsRead = async (messageId: string, userId: string): Promise<void> => {
@@ -691,4 +759,3 @@ export const reportMessage = async (reportedId: string, threadId: string, reason
   });
   if (error) throw error;
 };
-

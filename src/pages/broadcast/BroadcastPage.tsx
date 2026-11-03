@@ -82,30 +82,6 @@ import WishlistMiniBrowserButton from '../../components/broadcast/WishlistMiniBr
 // const guestLabel = 'rounded-lg bg-cyan-500/20 px-2.5 py-1 text-[11px] font-black text-cyan-300 shadow-[0_0_12px_rgba(45,212,191,0.25)]'
 // const sectionLabel = 'inline-flex items-center gap-2 rounded-xl border border-white/10 bg-black/35 px-3 py-2 text-sm font-bold text-white/70 backdrop-blur'
 
-type SeatModalPrice = number | ''
-
-function normalizeSeatPrice(value: unknown): SeatModalPrice {
-  if (value === undefined || value === null || value === '') return ''
-
-  if (typeof value === 'number') {
-    return Number.isFinite(value) && value > 0 ? value : ''
-  }
-
-  if (typeof value === 'string') {
-    const trimmed = value.trim()
-    if (!trimmed) return ''
-
-    const parsed = Number(trimmed)
-    return Number.isFinite(parsed) && parsed > 0 ? parsed : ''
-  }
-
-  return ''
-}
-
-function seatPriceToNumber(value: SeatModalPrice): number {
-  return value === '' ? 0 : Math.max(0, Number(value) || 0)
-}
-
 function getRemoteParticipantIdentity(participant: any): string {
   const metadata = getRemoteParticipantMetadata(participant)
   return String(
@@ -1024,9 +1000,6 @@ const { seats, mySeat, leaveSeat, refreshSeats, removeSeat, removeSeatByUserId }
       const seat = seats?.[seatIndex]
       const seatUserId = seat?.user_id || seat?.guest_id || null
       const seatIdentity = seat?.livekit_participant_identity || seat?.participant_identity || seat?.livekit_identity || seatUserId || null
-      const seatPrice = Array.isArray(stream?.seat_prices)
-        ? Number(stream.seat_prices[seatIndex] ?? stream?.seat_price ?? 0)
-        : Number(stream?.seat_price ?? 0)
       const seatStatus = normalizeSeatStatus(seat?.status)
       const isOccupied = Boolean(
         isSeatActiveStatus(seatStatus) &&
@@ -1054,7 +1027,6 @@ const { seats, mySeat, leaveSeat, refreshSeats, removeSeat, removeSeatByUserId }
       return {
         seatIndex,
         seatUserId,
-        seatPrice,
         isOccupied,
         displayName,
         avatarUrl,
@@ -1065,7 +1037,7 @@ const { seats, mySeat, leaveSeat, refreshSeats, removeSeat, removeSeatByUserId }
         remoteParticipantSnapshot: matchedSnapshot,
       }
     })
-  }, [currentViewerSeatCount, seats, stream, remoteParticipants, remoteParticipantSnapshots])
+  }, [currentViewerSeatCount, seats, remoteParticipants, remoteParticipantSnapshots])
 
   useEffect(() => {
     if (!import.meta.env.DEV) return
@@ -1875,8 +1847,6 @@ useEffect(() => {
    const [isSeatsModalOpen, setIsSeatsModalOpen] = useState(false)
   const [, setSmokeEvent] = useState<any>(null)
    const [seatModalCount, setSeatModalCount] = useState(1)
-   const [seatModalPrices, setSeatModalPrices] = useState<SeatModalPrice[]>([])
-   const [selectedSeatIndex, setSelectedSeatIndex] = useState(0)
     const [isMoreControlsOpen, setIsMoreControlsOpen] = useState(false)
     const [isPaidChatModalOpen, setIsPaidChatModalOpen] = useState(false)
     const [isMessagePopupOpen, setIsMessagePopupOpen] = useState(false)
@@ -1994,21 +1964,6 @@ useEffect(() => {
       return () => { cancelled = true }
     }, [streamId])
 
-   useEffect(() => {
-     setSeatModalPrices((current) => {
-       const next = current.slice(0, seatModalCount)
-
-       while (next.length < seatModalCount) {
-         next.push('')
-       }
-
-       return next
-     })
-   }, [seatModalCount])
-
-   useEffect(() => {
-     setSelectedSeatIndex((current) => Math.max(0, Math.min(current, Math.max(0, seatModalCount - 1))))
-   }, [seatModalCount])
     const giftNameMapRef = useRef<Record<string, string>>({})
 const [allTimeTopGifters, setAllTimeTopGifters] = useState<Array<{
   sender_id: string; sender_username: string; sender_avatar_url: string | null; total_gift_coins: number; last_gift_at: string | null
@@ -2935,61 +2890,14 @@ const handleOpenShareModal = useCallback(() => setIsShareModalOpen(true), [])
         toast.error(e.message || 'Failed to send invites');
       }
     }, [streamId]);
-   const handleOpenSeatsModal = useCallback(() => {
-     const fallbackPrice = normalizeSeatPrice(stream?.seat_price)
-     const hasSeatPrices = Array.isArray(stream?.seat_prices)
-     const existingSeatPrices = hasSeatPrices
-       ? stream.seat_prices.slice(1, 1 + Math.max(0, currentViewerSeatCount))
-       : []
-     const normalizedPrices = Array.from({ length: Math.max(0, currentViewerSeatCount) }, (_, index) => {
-       const existingPrice = existingSeatPrices[index]
-       if (existingPrice !== undefined) return normalizeSeatPrice(existingPrice)
-       if (!hasSeatPrices) return fallbackPrice
-       return ''
-     })
-
-      setSeatModalCount(Math.max(0, Math.min(MAX_GUEST_SEATS, currentViewerSeatCount)))
-     setSeatModalPrices(normalizedPrices)
-     setSelectedSeatIndex(0)
-     setIsSeatsModalOpen(true)
-   }, [currentViewerSeatCount, stream?.seat_price, stream?.seat_prices])
-   const handleCloseSeatsModal = useCallback(() => setIsSeatsModalOpen(false), [])
-   const handleOpenMoreMenu = useCallback(() => setIsMoreControlsOpen(true), [])
-   const handleCloseMoreMenu = useCallback(() => setIsMoreControlsOpen(false), [])
-   const handleSeatPriceStep = useCallback((seatIndex: number, delta: number) => {
-     if (seatModalCount <= 0 || seatIndex < 0 || seatIndex >= seatModalCount) return
-     setSeatModalPrices((current) => {
-       const next = [...current]
-       const nextValue = Math.max(0, seatPriceToNumber(next[seatIndex]) + delta)
-       next[seatIndex] = nextValue > 0 ? nextValue : ''
-       return next
-     })
-   }, [seatModalCount])
-const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
-      if (seatModalCount <= 0 || seatIndex < 0 || seatIndex >= seatModalCount) return
-      const cleanValue = value.trim()
-      if (!cleanValue) {
-        setSeatModalPrices((current) => {
-          const next = [...current]
-          next[seatIndex] = ''
-          return next
-        })
-        return
-      }
-
-      let val = Math.max(0, Number(cleanValue))
-      if (val > 5000) {
-        toast.error('Seat Price is too High')
-        val = 5000
-      }
-      setSeatModalPrices((current) => {
-        const next = [...current]
-        next[seatIndex] = val > 0 ? val : ''
-        return next
-      })
-    }, [seatModalCount])
-
-  const handleApplySeatConfiguration = useCallback(async (count: number, prices: SeatModalPrice[]) => {
+    const handleOpenSeatsModal = useCallback(() => {
+       setSeatModalCount(Math.max(0, Math.min(MAX_GUEST_SEATS, currentViewerSeatCount)))
+      setIsSeatsModalOpen(true)
+    }, [currentViewerSeatCount])
+    const handleCloseSeatsModal = useCallback(() => setIsSeatsModalOpen(false), [])
+    const handleOpenMoreMenu = useCallback(() => setIsMoreControlsOpen(true), [])
+    const handleCloseMoreMenu = useCallback(() => setIsMoreControlsOpen(false), [])
+  const handleApplySeatConfiguration = useCallback(async (count: number) => {
     try {
       if (!streamId || !user?.id) {
         toast.error('Not connected to a live stream');
@@ -2998,10 +2906,6 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
 
       const desiredViewerSeats = Math.max(0, Math.min(MAX_GUEST_SEATS, count));
       const totalBoxes = desiredViewerSeats + 1;
-      const normalizedPrices = Array.from({ length: desiredViewerSeats }, (_, index) =>
-        seatPriceToNumber(prices[index]),
-      )
-      const nextSeatPrices = [0, ...normalizedPrices]
 
       const seatsToRemove = Object.values(seats).filter(
         (seat) => seat.status === 'active' && (seat.seat_index ?? 0) >= totalBoxes,
@@ -3043,8 +2947,6 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
         .update({
           box_count: desiredViewerSeats === 0 ? 1 : totalBoxes,
           seat_count: nextSeatCount,
-          seat_price: normalizedPrices[0] ?? 0,
-          seat_prices: nextSeatPrices,
         })
         .eq('id', streamId)
 
@@ -3056,8 +2958,6 @@ const handleSeatPriceInput = useCallback((seatIndex: number, value: string) => {
         ...current,
         box_count: desiredViewerSeats === 0 ? 1 : totalBoxes,
         seat_count: nextSeatCount,
-        seat_price: normalizedPrices[0] ?? 0,
-        seat_prices: nextSeatPrices,
       } : current)
 
       // Broadcast immediate box_count change so viewers and mobile clients update instantly
@@ -7274,7 +7174,7 @@ const showFallback =
                                     ? 'border-cyan-300/30 bg-cyan-500/10 text-cyan-200'
                                     : 'border-purple-300/30 bg-purple-500/10 text-purple-200'
                             )}>
-                              {matchedParticipant ? 'On Camera' : isCameraUnavailable ? 'Camera unavailable' : isCameraConnecting ? 'Connecting...' : seat.seatPrice > 0 ? `${seat.seatPrice} coins` : 'Free'}
+                              {matchedParticipant ? 'On Camera' : isCameraUnavailable ? 'Camera unavailable' : isCameraConnecting ? 'Connecting...' : 'Guest seat'}
                             </div>
                           </div>
                         </>
@@ -7476,7 +7376,7 @@ const showFallback =
                                     ? 'border-cyan-300/30 bg-cyan-500/10 text-cyan-200'
                                     : 'border-purple-300/30 bg-purple-500/10 text-purple-200'
                             )}>
-                              {matchedParticipant ? 'On Camera' : isCameraUnavailable ? 'Camera unavailable' : isCameraConnecting ? 'Connecting...' : seat.seatPrice > 0 ? `${seat.seatPrice} coins` : 'Free'}
+                              {matchedParticipant ? 'On Camera' : isCameraUnavailable ? 'Camera unavailable' : isCameraConnecting ? 'Connecting...' : 'Guest seat'}
                             </div>
                           </div>
                         </>
@@ -8377,7 +8277,7 @@ const showFallback =
                                           ? 'border-cyan-300/30 bg-cyan-500/10 text-cyan-200'
                                           : 'border-purple-300/30 bg-purple-500/10 text-purple-200'
                                   )}>
-                                    {matchedParticipant ? 'On Camera' : isCameraUnavailable ? 'Camera unavailable' : isCameraConnecting ? 'Connecting...' : seat.seatPrice > 0 ? `${seat.seatPrice} coins` : 'Free'}
+                                    {matchedParticipant ? 'On Camera' : isCameraUnavailable ? 'Camera unavailable' : isCameraConnecting ? 'Connecting...' : 'Guest seat'}
                                   </div>
                                 </div>
                               ) : (
@@ -8503,18 +8403,7 @@ const showFallback =
                     onToggleMic={toggleMicrophone}
                     onToggleCamera={toggleCamera}
                     onUpdateSeatCount={(count) => {
-                      const nextCount = Math.max(0, Math.min(MAX_GUEST_SEATS, count))
-                      const fallbackPrice = normalizeSeatPrice(stream?.seat_price)
-                      const currentPrices = Array.isArray(stream?.seat_prices)
-                        ? stream.seat_prices.slice(1, 1 + nextCount)
-                        : []
-                      const nextPrices = Array.from({ length: nextCount }, (_, index) => {
-                        const existingPrice = currentPrices[index]
-                        return existingPrice !== undefined
-                          ? normalizeSeatPrice(existingPrice)
-                          : fallbackPrice
-                      })
-                      void handleApplySeatConfiguration(nextCount, nextPrices)
+                      void handleApplySeatConfiguration(count)
                     }}
                     onFlipCamera={() => {
                       // Flip camera is handled by the local tracks
@@ -8677,7 +8566,7 @@ const showFallback =
               )}
               {isSeatsModalOpen && (
                 <div className="pointer-events-auto fixed inset-0 z-[90] flex items-center justify-center bg-black/70 px-4 py-4 backdrop-blur-xl">
-                  <div className="relative w-full max-w-3xl max-h-[calc(100dvh-2rem)] overflow-hidden rounded-[32px] border border-cyan-300/25 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.18),transparent_36%),radial-gradient(circle_at_bottom_right,rgba(168,85,247,0.18),transparent_42%),rgba(2,6,23,0.96)] text-white shadow-[0_0_55px_rgba(34,211,238,0.22)]">
+                  <div className="relative w-full max-w-lg overflow-hidden rounded-[32px] border border-cyan-300/25 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.18),transparent_36%),radial-gradient(circle_at_bottom_right,rgba(168,85,247,0.18),transparent_42%),rgba(2,6,23,0.96)] text-white shadow-[0_0_55px_rgba(34,211,238,0.22)]">
                     <div className="max-h-[calc(100dvh-2rem)] overflow-y-auto p-5">
                       <button
                         type="button"
@@ -8695,120 +8584,38 @@ const showFallback =
                         </div>
                         <h2 className="mt-4 text-2xl font-black tracking-tight">Broadcast seat controls</h2>
                         <p className="mt-2 text-sm leading-relaxed text-slate-300">
-                          Toggle how many viewer seats appear beside the host box, then tap any live seat to assign its price. Your changes save instantly when you hit Save Seat Layout.
+                          Choose how many viewer seats appear beside the host box. You can enable up to {MAX_GUEST_SEATS} guest seats.
                         </p>
                       </div>
 
-                      <div className="mt-5 grid gap-4 lg:grid-cols-[0.9fr,1.1fr]">
-                        <div className="rounded-3xl border border-white/10 bg-black/25 p-4">
-                          <p className="text-xs font-black uppercase tracking-[0.22em] text-cyan-200/75">Viewer Seats</p>
-                          <div className="mt-4 flex items-center justify-between gap-3">
-                            <button
-                              type="button"
-                              onClick={() => setSeatModalCount((value) => Math.max(0, value - 1))}
-                              className="grid h-12 w-12 place-items-center rounded-2xl border border-rose-300/30 bg-rose-500/15 text-rose-100 shadow-[0_0_18px_rgba(244,63,94,0.18)] transition hover:bg-rose-500/25"
-                              aria-label="Deduct one seat"
-                            >
-                              <Minus className="h-6 w-6" />
-                            </button>
-                            <div className="text-center">
-                               <div className="text-5xl font-black text-white">{seatModalCount}</div>
-                              <div className="mt-1 text-[11px] font-bold uppercase tracking-[0.18em] text-white/45">Max {MAX_GUEST_SEATS}</div>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => setSeatModalCount((value) => Math.min(MAX_GUEST_SEATS, value + 1))}
-                              disabled={seatModalCount >= MAX_GUEST_SEATS}
-                              className="grid h-12 w-12 place-items-center rounded-2xl border border-cyan-300/35 bg-cyan-500/15 text-cyan-100 shadow-[0_0_18px_rgba(34,211,238,0.18)] transition hover:bg-cyan-500/25 disabled:cursor-not-allowed disabled:opacity-40"
-                              aria-label="Add one seat"
-                            >
-                              <Plus className="h-6 w-6" />
-                            </button>
+                      <div className="mt-5 rounded-3xl border border-white/10 bg-black/25 p-4">
+                        <p className="text-xs font-black uppercase tracking-[0.22em] text-cyan-200/75">Viewer Seats</p>
+                        <div className="mt-4 flex items-center justify-between gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setSeatModalCount((value) => Math.max(0, value - 1))}
+                            className="grid h-12 w-12 place-items-center rounded-2xl border border-rose-300/30 bg-rose-500/15 text-rose-100 shadow-[0_0_18px_rgba(244,63,94,0.18)] transition hover:bg-rose-500/25"
+                            aria-label="Deduct one seat"
+                          >
+                            <Minus className="h-6 w-6" />
+                          </button>
+                          <div className="text-center">
+                            <div className="text-5xl font-black text-white">{seatModalCount}</div>
+                            <div className="mt-1 text-[11px] font-bold uppercase tracking-[0.18em] text-white/45">Max {MAX_GUEST_SEATS}</div>
                           </div>
-                          <p className="mt-4 text-sm leading-relaxed text-slate-300">
-                            Every active seat slot below can be tapped to set an individual price. Inactive slots are hidden until you increase the count.
-                          </p>
+                          <button
+                            type="button"
+                            onClick={() => setSeatModalCount((value) => Math.min(MAX_GUEST_SEATS, value + 1))}
+                            disabled={seatModalCount >= MAX_GUEST_SEATS}
+                            className="grid h-12 w-12 place-items-center rounded-2xl border border-cyan-300/35 bg-cyan-500/15 text-cyan-100 shadow-[0_0_18px_rgba(34,211,238,0.18)] transition hover:bg-cyan-500/25 disabled:cursor-not-allowed disabled:opacity-40"
+                            aria-label="Add one seat"
+                          >
+                            <Plus className="h-6 w-6" />
+                          </button>
                         </div>
-
-                        <div className="rounded-3xl border border-white/10 bg-black/25 p-4">
-                          <div className="flex items-center justify-between gap-3">
-                            <div>
-                              <p className="text-xs font-black uppercase tracking-[0.22em] text-purple-200/75">Seat editor</p>
-                              <p className="mt-2 text-sm text-slate-200">
-                                {seatModalCount > 0 ? 'Tap a seat to edit its price.' : 'Add a seat to start assigning prices.'}
-                              </p>
-                            </div>
-                            <div className="rounded-full border border-cyan-300/30 bg-cyan-500/10 px-3 py-1 text-xs font-black text-cyan-100">
-                              {seatModalCount > 0 ? `Seat ${selectedSeatIndex + 1}` : 'No seats'}
-                            </div>
-                          </div>
-
-                           <div className="mt-4 grid grid-cols-3 gap-2 max-h-48 overflow-y-auto">
-                             {Array.from({ length: 6 }, (_, index) => {
-                               const active = index < seatModalCount
-                               const selected = index === selectedSeatIndex
-                               const price = seatModalPrices[index]
-                              return (
-                                <button
-                                  key={index}
-                                  type="button"
-                                  disabled={!active}
-                                  onClick={() => active && setSelectedSeatIndex(index)}
-                                  className={cn(
-                                    'flex h-20 flex-col justify-center rounded-2xl border px-3 text-left transition',
-                                    active
-                                      ? selected
-                                        ? 'border-cyan-300/70 bg-cyan-500/20 text-cyan-50 shadow-[0_0_24px_rgba(34,211,238,0.18)]'
-                                        : 'border-cyan-300/25 bg-cyan-500/10 text-cyan-50'
-                                      : 'border-white/10 bg-white/[0.03] text-white/20 cursor-not-allowed'
-                                  )}
-                                >
-                                  <span className="text-[11px] font-black uppercase tracking-[0.18em]">Seat {index + 1}</span>
-                                  <span className="mt-2 text-lg font-black">{active ? `${price === '' ? 0 : price} coins` : 'Hidden'}</span>
-                                </button>
-                              )
-                            })}
-                          </div>
-
-                          <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                            <p className="text-[11px] font-black uppercase tracking-[0.18em] text-white/55">Selected seat price</p>
-                            <div className="mt-3 flex flex-wrap items-center gap-3">
-                              <button
-                                type="button"
-                                onClick={() => handleSeatPriceStep(selectedSeatIndex, -10)}
-                                disabled={seatModalCount <= 0}
-                                className="grid h-11 w-11 place-items-center rounded-xl border border-rose-300/30 bg-rose-500/15 text-rose-100 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/5 disabled:text-white/20"
-                                aria-label={`Subtract 10 from seat ${selectedSeatIndex + 1}`}
-                              >
-                                <Minus className="h-4 w-4" />
-                              </button>
-                              <div className="flex min-w-[140px] items-center gap-2 rounded-2xl border border-purple-300/25 bg-black/35 px-3 py-2">
-                                <input
-                                  type="number"
-                                  min={0}
-                                  value={seatModalCount > 0 ? (seatModalPrices[selectedSeatIndex] ?? '') : ''}
-                                  onChange={(event) => handleSeatPriceInput(selectedSeatIndex, event.target.value)}
-                                  disabled={seatModalCount <= 0}
-                                  className="w-full bg-transparent text-lg font-black text-white outline-none placeholder:text-white/30 disabled:cursor-not-allowed disabled:text-white/20"
-                                  aria-label={`Price for seat ${selectedSeatIndex + 1}`}
-                                />
-                                <span className="text-sm font-bold text-white/60">coins</span>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => handleSeatPriceStep(selectedSeatIndex, 10)}
-                                disabled={seatModalCount <= 0}
-                                className="grid h-11 w-11 place-items-center rounded-xl border border-cyan-300/35 bg-cyan-500/15 text-cyan-100 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/5 disabled:text-white/20"
-                                aria-label={`Add 10 to seat ${selectedSeatIndex + 1}`}
-                              >
-                                <Plus className="h-4 w-4" />
-                              </button>
-                            </div>
-                            <p className="mt-3 text-xs leading-relaxed text-slate-300">
-                              Use the plus or minus buttons or type a number directly to set the exact price for the selected seat.
-                            </p>
-                          </div>
-                        </div>
+                        <p className="mt-4 text-sm leading-relaxed text-slate-300">
+                          Choose how many viewer seats are open. Seat access does not cost coins.
+                        </p>
                       </div>
 
                       <div className="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
@@ -8821,7 +8628,7 @@ const showFallback =
                         </button>
                         <button
                           type="button"
-                          onClick={() => handleApplySeatConfiguration(seatModalCount, seatModalPrices)}
+                          onClick={() => handleApplySeatConfiguration(seatModalCount)}
                           className="h-12 rounded-2xl border border-cyan-300/35 bg-gradient-to-r from-cyan-500 to-purple-600 px-6 text-sm font-black text-white shadow-[0_0_22px_rgba(34,211,238,0.28)] transition hover:scale-[1.01]"
                         >
                           Save Seat Layout

@@ -93,6 +93,7 @@ export default function PhoneDrawer({ open, onClose }: PhoneDrawerProps) {
     add('Support', [
       { label: 'Support', path: '/support', icon: 'LifeBuoy' },
       { label: 'Safety', path: '/safety', icon: 'Shield' },
+      { label: 'Trust & Safety', path: '/trust-safety', icon: 'Lock' },
       { label: 'Legal', path: '/legal', icon: 'FileText' },
     ])
 

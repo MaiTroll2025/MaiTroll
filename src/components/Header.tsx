@@ -5,6 +5,8 @@ import { toast } from 'sonner'
 
 import { useAuthStore } from '../lib/store'
 import { doesUserProfileExist, supabase } from '../lib/supabase'
+import { usePresenceStore } from '../lib/presenceStore'
+import { canAccessRtcAdminMonitor } from '../lib/rtcAdminAccess'
 import { getVapidPublicKey } from '../lib/vapid';
 import ProfileFrame from '@/components/profile/ProfileFrame'
 import { useUserFrame } from '@/hooks/useUserFrame'
@@ -19,6 +21,7 @@ import { useIsPhone } from '../phone/useIsPhone'
 
 const Header = () => {
   const { user, profile } = useAuthStore()
+  const onlineCount = usePresenceStore((state) => state.onlineUserIds.size)
   const headerFrame = useUserFrame(user?.id)
   const navigate = useNavigate()
   const location = useLocation()
@@ -55,11 +58,7 @@ const Header = () => {
   const clearAllNotifications = async () => {
     if (!user?.id) return
     try {
-      await supabase
-        .from('notifications')
-        .update({ is_read: true, read_at: new Date().toISOString() })
-        .eq('user_id', user.id)
-        .eq('is_read', false)
+      await supabase.from('notifications').delete().eq('user_id', user.id)
       await supabase.from('jail_notifications').update({ is_read: true }).eq('user_id', user.id)
       setUnreadNotifications(0)
       setNotifications([])
@@ -95,6 +94,11 @@ const Header = () => {
     ((profile as any)?.role === 'admin' ||
       (profile as any)?.role === 'ceo' ||
       (profile as any)?.is_admin)
+
+  const canOpenRtcMonitor = canAccessRtcAdminMonitor(profile)
+  const openRtcMonitor = () => {
+    window.dispatchEvent(new Event('rtc-admin-monitor:open'))
+  }
 
   const urlBase64ToUint8Array = (base64String: string) => {
     const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
@@ -420,7 +424,7 @@ const Header = () => {
         <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-[#fd4fa8] via-[#9668ff] to-[#3de5f0]" />
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden bg-[radial-gradient(ellipse_at_18%_-80%,rgba(217,60,174,0.16),transparent_48%),radial-gradient(ellipse_at_85%_-80%,rgba(32,210,241,0.12),transparent_40%)]" />
 
-        <div className="relative flex h-[66px] w-full min-w-0 items-center gap-2 px-3 sm:gap-3 sm:px-4 lg:h-[74px] lg:gap-4 lg:px-6 2xl:px-8">
+        <div className="relative flex h-[80px] w-full min-w-0 items-center gap-2 px-3 sm:gap-3 sm:px-4 lg:h-[84px] lg:gap-4 lg:px-6 2xl:px-8">
           {/* Brand and site search stay together so the header feels like an app. */}
           <div className="relative z-10 flex min-w-0 shrink-0 items-center gap-2 sm:gap-3">
             <button
@@ -455,7 +459,7 @@ const Header = () => {
           </div>
 
           {/* World news ticker flexes rather than squeezing the tools out of view. */}
-          <div className="relative z-10 hidden h-10 min-w-0 flex-1 items-center overflow-hidden rounded-xl border border-white/[0.07] bg-[#101629]/65 px-2 md:flex lg:px-3">
+          <div className="relative z-10 hidden h-20 min-w-0 flex-1 items-center overflow-hidden rounded-xl border border-white/[0.07] bg-[#101629]/65 px-2 md:flex lg:px-3">
             <div className="mr-2 hidden shrink-0 items-center gap-1.5 border-r border-white/10 pr-3 text-[9px] font-extrabold uppercase tracking-[.15em] text-[#69dced] 2xl:flex">
               <Radio className="h-3.5 w-3.5" /> CITY PULSE
             </div>
@@ -464,6 +468,22 @@ const Header = () => {
 
           <div className="relative z-20 ml-auto flex shrink-0 items-center gap-1 sm:gap-1.5 lg:gap-2">
           {user && <PresidentialToolsModal />}
+
+          {user && canOpenRtcMonitor && (
+            <button
+              type="button"
+              onClick={openRtcMonitor}
+              className="relative inline-flex h-9 items-center gap-1.5 rounded-xl border border-cyan-300/20 bg-cyan-400/[0.07] px-2 text-xs font-bold text-cyan-100 transition hover:border-cyan-300/40 hover:bg-cyan-400/15 sm:h-10 sm:px-2.5"
+              title={`Open RTC Admin Monitor — ${onlineCount} users online`}
+              aria-label={`Open RTC Admin Monitor, ${onlineCount} users online`}
+            >
+              <Radio className="h-4 w-4" />
+              <span className="hidden lg:inline">RTC</span>
+              <span className="min-w-[1.25rem] rounded-full bg-emerald-300 px-1 text-center text-[10px] font-black leading-5 text-black">
+                {onlineCount > 999 ? '999+' : onlineCount}
+              </span>
+            </button>
+          )}
 
           {user && (
               <button
@@ -693,7 +713,7 @@ const Header = () => {
           )}
           </div>
         </div>
-        <div className="relative z-10 flex h-7 items-center overflow-hidden border-t border-white/[0.055] bg-[#0a1120]/75 px-3 md:hidden">
+        <div className="relative z-10 flex h-20 items-center overflow-hidden border-t border-white/[0.055] bg-[#0a1120]/75 px-3 md:hidden">
           <span className="mr-2 shrink-0 text-[8px] font-extrabold uppercase tracking-wider text-[#60e0f0]">CITY PULSE</span>
           <div className="min-w-0 flex-1 overflow-hidden"><GlobalTicker /></div>
         </div>

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/lib/store';
 import { supabase } from '@/lib/supabase';
-import { Coins, ExternalLink, Loader2, Star, Sparkles } from 'lucide-react';
+import { Coins, ExternalLink, Star, Sparkles } from 'lucide-react';
 import { COIN_PACKAGES } from '@/config/coinConfig';
 
 interface FloatingPosterProps {

@@ -105,7 +105,6 @@ const MarketingPage = lazyWithRetry(() => import("./pages/admin/MarketingPage"))
 import ProfileSetupModal from "./components/ProfileSetupModal";
 import RequireRole from "./components/RequireRole";
 import ErrorBoundary from "./components/ErrorBoundary";
-import GrandCityEntrance from "./components/entrance/GrandCityEntrance";
 import UnderConstructionPage from "./components/UnderConstructionPage";
 const CareersPage = lazyWithRetry(() => import("./pages/CareersPage"));
 
@@ -130,6 +129,7 @@ const BetaFeedback = lazyWithRetry(() => import("./pages/BetaFeedback"));
 const SurveyPage = lazyWithRetry(() => import("./pages/SurveyPage"));
 const JailPage = lazyWithRetry(() => import("./pages/JailPage"));
 const Safety = lazyWithRetry(() => import("./pages/Safety"));
+const TrustSafety = lazyWithRetry(() => import("./pages/TrustSafety"));
 const AdminRFC = lazyWithRetry(() => import("./components/AdminRFC"));
 const AdminEarningsDashboard = lazyWithRetry(() => import("./pages/admin/AdminEarningsDashboard"));
 const AdminDashboard = lazyWithRetry(() => import("./pages/admin/AdminDashboard"));
@@ -378,7 +378,8 @@ const isPublicRoute = (pathname: string) => {
     pathname.startsWith('/watch/') ||
     pathname.startsWith('/live/') ||
     pathname.startsWith('/stream/') ||
-    pathname.startsWith('/gaming/watch/')
+    pathname.startsWith('/gaming/watch/') ||
+    pathname === '/mai-troll-run'
   )
 }
 
@@ -703,6 +704,7 @@ function AppContent() {
   // Only re-render when these specific values change
   const userId = useAuthStore((s) => s.user?.id);
   const user = useAuthStore((s) => s.user); // Keep full user object for components that need it
+  const authIsLoading = useAuthStore((s) => s.isLoading);
   const userRole = useAuthStore((s) => s.profile?.role);
   const _isAdmin = useAuthStore((s) => s.profile?.is_admin);
   const _isLeadOfficer = useAuthStore((s) => s.profile?.is_lead_officer);
@@ -720,6 +722,10 @@ function AppContent() {
   // Some legacy logic needs the full profile object in several effects
   const profile = useAuthStore((s) => s.profile);
 
+  useEffect(() => {
+    setPublicRunPopupDismissed(false);
+  }, [userId]);
+
   // Track user route presence for Customer Service dashboard
   useUserPresenceRoute();
 
@@ -730,6 +736,7 @@ function AppContent() {
   const navigate = useNavigate();
   const mainRef = useRef<HTMLElement | null>(null);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [publicRunPopupDismissed, setPublicRunPopupDismissed] = useState(false);
   const [profileModalLoading] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
   const [hytroSpotModalOpen, setHytroSpotModalOpen] = useState(false);
@@ -1104,8 +1111,7 @@ function AppContent() {
         return;
       }
       if (event.key === 'r' || event.key === 'R') {
-        navigate('/city-registry');
-        expandGroup('City Registry');
+        window.dispatchEvent(new Event('rtc-admin-monitor:open'));
         return;
       }
     }
@@ -1242,13 +1248,13 @@ function AppContent() {
       if (!userId) return
 
       try {
-        const ipResponse = await fetch('https://api.ipify.org?format=json', {
-            signal: controller.signal
-        })
-        const ipData = await ipResponse.json()
-        const userIP = ipData.ip
+        const userIP = await getCurrentIP()
 
         if (controller.signal.aborted) return
+        if (!userIP) {
+          console.warn('IP tracking skipped because the public IP could not be determined')
+          return
+        }
 
         const blocked = await isIPBlocked(userIP)
 
@@ -1678,7 +1684,7 @@ const appShell = (
            {user && <AdminOfficerQuickMenu />}
            {user && <ChatBubble />}
            <StaffWalkieTalkieProvider>
-              <RTCAdminMonitor />
+              <RTCAdminMonitor headerDropdown />
              {import.meta.env.DEV && (profile?.is_admin || profile?.is_superadmin || ['admin','ceo','superadmin'].includes(profile?.role || '')) }
               <ErrorBoundary>
                 <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div></div>}>
@@ -1748,6 +1754,7 @@ const appShell = (
 
                  {/* Safety Page (standalone) */}
                  <Route path="/safety" element={<Safety />} />
+                 <Route path="/trust-safety" element={<TrustSafety />} />
                  <Route path="/help" element={<HelpPage />} />
 
                  {/* 🔒 Authenticated Support Route - must come before SEO */}
@@ -2887,11 +2894,15 @@ const appShell = (
          </LiveContentProvider>
        </SwipeNavigationProvider>
 
-        {/* Grand City Entrance — cinematic first-visit reveal.
-            Null fallback guarantees a render failure never blocks the home page. */}
-        <ErrorBoundary fallback={null}>
-          <GrandCityEntrance />
-        </ErrorBoundary>
+       {!user && !authIsLoading && (location.pathname === '/' || location.pathname === '/home') && !publicRunPopupDismissed && (
+         <Suspense fallback={null}>
+           <MaiTrollRun
+             key="public-landing-run"
+             publicWelcomePopup
+             onPublicPopupDismiss={() => setPublicRunPopupDismissed(true)}
+           />
+         </Suspense>
+       )}
 
        {/* Mini Podcast Player - persists across navigation */}
        <MiniPodcastPlayerWrapper />

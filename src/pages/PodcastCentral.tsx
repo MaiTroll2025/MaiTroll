@@ -106,7 +106,7 @@ export default function PodcastCentral() {
   const [trendingPodcasts, setTrendingPodcasts] = useState<Podcast[]>([])
 
   const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
+  const [, setRefreshing] = useState(false)
 
   const [showStartForm, setShowStartForm] = useState(false)
   const [podcastTitle, setPodcastTitle] = useState('')

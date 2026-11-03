@@ -151,7 +151,7 @@ export default function PrivacyPage() {
                 <p className="text-slate-300">
                   If you have any questions about this Privacy Policy, please contact us at{' '}
                   <a href="mailto:privacy@maitrollcity.com" className="text-purple-400 hover:text-purple-300">
-                    privacy@maitrollcity.com
+                    ceo@maitroll.com
                   </a>{' '}
                   or visit our <Link to="/contact" className="text-purple-400 hover:text-purple-300">Contact page</Link>.
                 </p>

@@ -1,7 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import type {
   MaiCamDevice,
-  MaiCamPairingCode,
   MaiCamSession,
   MaiCamPreferences,
   MaiCamGenerateResult,
@@ -9,10 +8,6 @@ import type {
   MaiCamQuality,
   MaiCamFps,
 } from './types';
-
-const FUNCTIONS_URL = import.meta.env.VITE_EDGE_FUNCTIONS_URL
-  ? `${import.meta.env.VITE_EDGE_FUNCTIONS_URL}/`
-  : '/functions/v1/';
 
 async function invokeFunction(name: string, body: unknown): Promise<any> {
   const { data, error } = await supabase.functions.invoke(name, { body });

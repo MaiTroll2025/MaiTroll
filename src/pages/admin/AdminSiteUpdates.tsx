@@ -36,8 +36,15 @@ const EMPTY_FORM: PostForm = {
   is_published: false,
 }
 
+const SITE_POST_COLUMNS =
+  'id, title, slug, summary, content, post_type, is_published, published_at, created_at'
+
 function slugify(title: string) {
   return title.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+}
+
+function responseIsJson(response: Response) {
+  return (response.headers.get('content-type') || '').toLowerCase().includes('application/json')
 }
 
 export default function AdminSiteUpdates() {
@@ -60,6 +67,18 @@ export default function AdminSiteUpdates() {
       const response = await fetch('/api/admin/site-updates', {
         headers: { Authorization: `Bearer ${token}` },
       })
+      if (!responseIsJson(response)) {
+        console.warn('[AdminSiteUpdates] Admin API returned a non-JSON response; loading posts through the authenticated Supabase client')
+        const { data, error: queryError } = await supabase
+          .from('site_updates')
+          .select(SITE_POST_COLUMNS)
+          .order('updated_at', { ascending: false })
+          .limit(200)
+        if (queryError) throw queryError
+        setPosts((data || []) as SitePost[])
+        return
+      }
+
       const payload = await readJsonResponse<{ posts?: SitePost[]; error?: string }>(response)
       if (!response.ok) throw new Error(payload.error || 'Failed to load site updates')
       setPosts(payload.posts || [])
@@ -115,8 +134,37 @@ export default function AdminSiteUpdates() {
           slug: slugify(form.slug),
         }),
       })
-      const payload = await readJsonResponse<{ error?: string }>(response)
-      if (!response.ok) throw new Error(payload.error || 'Unable to save site update')
+      if (!responseIsJson(response)) {
+        console.warn('[AdminSiteUpdates] Admin API returned a non-JSON response; saving through the authenticated Supabase client')
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+        if (sessionError) throw sessionError
+        const userId = sessionData.session?.user.id
+        if (!userId) throw new Error('Your session has expired. Please sign in again.')
+
+        const post = {
+          ...form,
+          slug: slugify(form.slug),
+          published_at: form.is_published ? new Date().toISOString() : null,
+        }
+        const result = editingId
+          ? await supabase
+            .from('site_updates')
+            .update({ ...post, updated_at: new Date().toISOString() })
+            .eq('id', editingId)
+            .select(SITE_POST_COLUMNS)
+            .maybeSingle()
+          : await supabase
+            .from('site_updates')
+            .insert({ ...post, created_by: userId })
+            .select(SITE_POST_COLUMNS)
+            .single()
+
+        if (result.error) throw result.error
+        if (!result.data) throw new Error('Site update was not found.')
+      } else {
+        const payload = await readJsonResponse<{ error?: string }>(response)
+        if (!response.ok) throw new Error(payload.error || 'Unable to save site update')
+      }
 
       toast.success(form.is_published ? 'Post published' : 'Draft saved')
       resetForm()
@@ -141,8 +189,20 @@ export default function AdminSiteUpdates() {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       })
-      const payload = await readJsonResponse<{ error?: string }>(response)
-      if (!response.ok) throw new Error(payload.error || 'Unable to delete post')
+      if (!responseIsJson(response)) {
+        console.warn('[AdminSiteUpdates] Admin API returned a non-JSON response; deleting through the authenticated Supabase client')
+        const { data, error: deleteError } = await supabase
+          .from('site_updates')
+          .delete()
+          .eq('id', post.id)
+          .select('id')
+          .maybeSingle()
+        if (deleteError) throw deleteError
+        if (!data) throw new Error('Site update was not found.')
+      } else {
+        const payload = await readJsonResponse<{ error?: string }>(response)
+        if (!response.ok) throw new Error(payload.error || 'Unable to delete post')
+      }
       toast.success('Post deleted')
       if (editingId === post.id) resetForm()
       await loadPosts()
@@ -186,7 +246,16 @@ export default function AdminSiteUpdates() {
               maxLength={160}
               className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white"
               value={form.title}
-              onChange={(event) => setForm({ ...form, title: event.target.value, slug: editingId ? form.slug : slugify(event.target.value) })}
+              onChange={(event) => {
+                const title = event.target.value
+                setForm((current) => ({
+                  ...current,
+                  title,
+                  slug: !editingId && (!current.slug || current.slug === slugify(current.title))
+                    ? slugify(title)
+                    : current.slug,
+                }))
+              }}
             />
           </label>
           <label className="space-y-2 text-sm font-semibold">
@@ -197,8 +266,11 @@ export default function AdminSiteUpdates() {
               pattern="[a-z0-9]+(-[a-z0-9]+)*"
               className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white"
               value={form.slug}
-              onChange={(event) => setForm({ ...form, slug: event.target.value })}
+              onChange={(event) => setForm((current) => ({ ...current, slug: event.target.value }))}
             />
+            <span className="block text-xs font-normal text-slate-400">
+              Automatically generated from the title. You can edit it before publishing.
+            </span>
           </label>
           <label className="space-y-2 text-sm font-semibold">
             Search summary

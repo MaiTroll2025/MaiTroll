@@ -33,7 +33,7 @@ export type BattleArenaControlsProps = {
 
 export default function BattleArenaControls(props: BattleArenaControlsProps) {
   const {
-    greenFighterCount, purpleFighterCount, hasSeats, seatCounts, setSeatCounts,
+    greenFighterCount, purpleFighterCount, hasSeats,
     powerSlots, openBag, setOpenBag,
     powerAnnounce, fullSlotsMsg, onTryActivate, onActivatePower, onReset, onForfeit, canForfeit = true, showDemoActions = true, onRematchVote,
   } = props;

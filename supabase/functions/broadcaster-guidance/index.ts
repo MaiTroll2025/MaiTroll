@@ -21,6 +21,16 @@ type GuidanceDelivery = {
   avatar_url: string;
 };
 
+type GuidanceDeliveryRow = Omit<GuidanceDelivery, "username" | "avatar_url">;
+
+type AutomatedAudienceAccount = {
+  user_id: string;
+  user_profiles:
+    | { username: string | null; avatar_url: string | null }
+    | { username: string | null; avatar_url: string | null }[]
+    | null;
+};
+
 const SCHEDULING = {
   messageCount: 3,
   firstDelaySeconds: [2, 4] as const,
@@ -147,7 +157,7 @@ function shuffled<T>(items: T[]): T[] {
   return result;
 }
 
-function profileFromAccount(account: Record<string, unknown>) {
+function profileFromAccount(account: AutomatedAudienceAccount) {
   const relation = account.user_profiles;
   return Array.isArray(relation) ? relation[0] : relation;
 }
@@ -164,18 +174,18 @@ async function loadDeliveries(
   if (deliveriesError) throw new Error(`Unable to load guidance schedule: ${deliveriesError.message}`);
   if (!deliveries?.length) return [];
 
-  const accountIds = [...new Set(deliveries.map((delivery) => delivery.account_id))];
+  const deliveryRows = deliveries as GuidanceDeliveryRow[];
+  const accountIds = [...new Set(deliveryRows.map((delivery) => delivery.account_id))];
   const { data: accounts, error: accountsError } = await adminClient
     .from("automated_audience_accounts")
     .select("user_id, user_profiles(username, avatar_url)")
     .in("user_id", accountIds);
   if (accountsError) throw new Error(`Unable to load guidance identities: ${accountsError.message}`);
 
+  const accountRows = (accounts || []) as AutomatedAudienceAccount[];
   const identityById = new Map<string, { username: string; avatar_url: string }>();
-  for (const account of accounts || []) {
-    const profile = profileFromAccount(account as Record<string, unknown>) as
-      | { username?: string | null; avatar_url?: string | null }
-      | null;
+  for (const account of accountRows) {
+    const profile = profileFromAccount(account);
     if (profile?.username && profile.avatar_url) {
       identityById.set(account.user_id, {
         username: profile.username,
@@ -184,7 +194,7 @@ async function loadDeliveries(
     }
   }
 
-  return deliveries.map((delivery) => {
+  return deliveryRows.map((delivery) => {
     const identity = identityById.get(delivery.account_id);
     if (!identity) {
       throw new Error(`Guidance account identity is missing for delivery ${delivery.id}`);
@@ -215,14 +225,16 @@ async function createSchedule(
     .eq("enabled", true);
   if (accountsError) throw new Error(`Unable to load existing guidance accounts: ${accountsError.message}`);
 
-  const eligibleAccounts = (accounts || []).filter((account) => {
-    const profile = profileFromAccount(account as Record<string, unknown>) as
-      | { username?: string | null; avatar_url?: string | null }
-      | null;
+  const accountRows = (accounts || []) as AutomatedAudienceAccount[];
+  const eligibleAccounts = accountRows.filter((account) => {
+    const profile = profileFromAccount(account);
     return Boolean(profile?.username && profile.avatar_url);
   });
   if (eligibleAccounts.length === 0) {
-    throw new Error("No enabled, registered automated accounts are available for guidance");
+    console.warn("[broadcaster-guidance] No eligible automated accounts; skipping sequence creation", {
+      streamId,
+    });
+    return { created: false, messages: [] };
   }
 
   const selectedAccounts = shuffled(eligibleAccounts).slice(0, SCHEDULING.messageCount);

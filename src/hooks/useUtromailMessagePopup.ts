@@ -66,7 +66,7 @@ export function useUtromailMessagePopup() {
   const handleOpenThread = useCallback((threadId: string) => {
     clearTimers()
     setState((prev) => ({ ...prev, visible: false }))
-    navigate(`/utromail/${threadId}`)
+    navigate(`/utromail/thread/${threadId}`)
   }, [clearTimers, navigate])
 
   const handleViewProfile = useCallback((userId: string) => {

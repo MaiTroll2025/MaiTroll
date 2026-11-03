@@ -672,7 +672,7 @@ const BattleArena = ({
   isBroadcaster = false,
   isRandomBattle = false,
   departedSeatKeys = EMPTY_DEPARTED_SEAT_KEYS,
-  timeLeft,
+  timeLeft: _timeLeft,
   battleStatus,
   jailTimeEnabled = true,
   jailTimeSoundEnabled = true,

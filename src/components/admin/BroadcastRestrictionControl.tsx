@@ -371,8 +371,8 @@ export default function BroadcastRestrictionControl() {
                 </h3>
                 <p className="text-xs text-slate-400 mt-0.5">
                   {seatCapEnabled
-                    ? `Limited to ${seatCapMax} total boxes per stream (temp 2-week limit).`
-                    : 'Limit total boxes per broadcast (including broadcaster).'}
+                    ? `Limited to ${seatCapMax} guest seats per stream, plus the broadcaster.`
+                    : 'Limit guest seats per broadcast. The broadcaster is not counted.'}
                 </p>
               </div>
             </div>
@@ -405,9 +405,9 @@ export default function BroadcastRestrictionControl() {
           {seatCapEnabled && (
             <div className="flex flex-wrap items-center gap-3 pt-3 border-t border-white/10">
               <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                Max Boxes:
+                Max Guest Seats:
               </label>
-              {[2, 3, 4, 5, 6].map((n) => (
+              {Array.from({ length: 4 }, (_, index) => index + 1).map((n) => (
                 <button
                   key={n}
                   onClick={() => handleSetMax('seat-cap-max', setSeatCapMax, n)}

@@ -178,7 +178,7 @@ export function useBattleViewController({
   const battleRoomRef = useRef<Room | null>(null); // FIX 1: Prevent double connection
   const isConnectingRef = useRef(false); // FIX 1: Track connection state
   const connectedBattleIdRef = useRef<string | null>(null); // PHASE 3: Track which battleId the room is connected for
-  const [livekitRoom, setLivekitRoom] = useState<Room | null>(null);
+  const [, setLivekitRoom] = useState<Room | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected' | 'failed'>('connecting');
   const audioPublishedRef = useRef(false);
   const videoPublishedRef = useRef(false);
@@ -1702,7 +1702,7 @@ export function useBattleViewController({
       console.error('Rematch error:', e);
       toast.error('Failed to start rematch');
     }
-  }, [battle, challengerStream?.id, challengerStream?.user_id, opponentStream?.id, opponentStream?.user_id, participantInfo?.team, user, isBroadcaster, effectiveUserId]);
+  }, [battle, challengerStream?.id, opponentStream?.id, opponentStream?.user_id, participantInfo?.team, user, isBroadcaster, effectiveUserId]);
 
   const endBattle = useCallback(async (skipConfirmation = false, endReason: BattleEndReason = "manual") => {
     if (!battle || !user) return;

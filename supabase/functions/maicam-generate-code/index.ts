@@ -1,5 +1,5 @@
 import { handleCorsPreflight, withCors } from "../_shared/cors.ts";
-import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const CODE_TTL_SECONDS = 5 * 60; // 5 minutes
 const CODE_LENGTH = 6;

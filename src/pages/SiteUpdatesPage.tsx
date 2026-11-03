@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { CalendarDays, Newspaper } from 'lucide-react'
 import SEOLayout, { Breadcrumb } from './seo/SEOLayout'
 import { readJsonResponse } from '../lib/readJsonResponse'
+import { supabase } from '../lib/supabase'
 
 type SitePostType = 'update' | 'blog'
 
@@ -47,9 +48,28 @@ export default function SiteUpdatesPage({ postType }: SiteUpdatesPageProps) {
     setError('')
     fetch(`/api/site-updates?${query.toString()}`, { signal: controller.signal })
       .then(async (response) => {
+        const contentType = response.headers.get('content-type') || ''
+        if (!contentType.toLowerCase().includes('application/json')) {
+          console.warn('[SiteUpdatesPage] Public API returned a non-JSON response; querying published content directly')
+          let publicQuery = supabase
+            .from('site_updates')
+            .select('id, title, slug, summary, content, post_type, published_at, created_at')
+            .eq('is_published', true)
+            .eq('post_type', postType)
+            .order('published_at', { ascending: false })
+
+          if (slug) publicQuery = publicQuery.eq('slug', slug)
+          else publicQuery = publicQuery.limit(100)
+
+          const { data, error: queryError } = await publicQuery
+          if (queryError) throw queryError
+          if (!controller.signal.aborted) setPosts((data || []) as SitePost[])
+          return
+        }
+
         const payload = await readJsonResponse<{ posts?: SitePost[]; error?: string }>(response)
         if (!response.ok) throw new Error(payload.error || 'Unable to load posts')
-        setPosts(payload.posts || [])
+        if (!controller.signal.aborted) setPosts(payload.posts || [])
       })
       .catch((fetchError: unknown) => {
         if (fetchError instanceof DOMException && fetchError.name === 'AbortError') return

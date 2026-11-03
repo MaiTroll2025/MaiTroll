@@ -41,28 +41,37 @@ import type {
   PowerState,
   Runner,
   RunOutcome,
+  RunCheckpoint,
   RunSummary,
   Surface,
 } from '@/components/games/MaiTrollRun/game/types';
+import type { GameWeapon } from '@/components/games/MaiTrollRun/game/weapons';
 
-export function createGameState(difficulty: Difficulty, gender: Gender, seed: number): GameState {
-  const level = generateLevel(0, difficulty, seed);
+export function createGameState(
+  difficulty: Difficulty,
+  gender: Gender,
+  seed: number,
+  checkpoint?: RunCheckpoint,
+): GameState {
+  const levelIndex = checkpoint?.levelIndex ?? 0;
+  const level = generateLevel(levelIndex, difficulty, seed);
   return {
     difficulty,
     gender,
     seed,
     level,
-    levelIndex: 0,
+    levelIndex,
     runner: createRunner(level),
     power: { shield: 0, magnet: 0, slow: 0 },
     status: 'banner',
     statusTimer: LEVEL_BANNER_SECONDS,
     time: 0,
-    distanceBase: 0,
-    letters: MAITROLL_LETTERS.map(() => false),
-    levelsCleared: 0,
-    coins: 0,
-    bonusScore: 0,
+    letters: checkpoint ? [...checkpoint.letters] : MAITROLL_LETTERS.map(() => false),
+    levelsCleared: levelIndex,
+    coins: checkpoint?.coins ?? 0,
+    bonusScore: checkpoint?.bonusScore ?? 0,
+    distanceBase: checkpoint?.distanceBase ?? 0,
+    shots: [],
     particles: [],
   };
 }
@@ -73,6 +82,8 @@ export function isRunOver(status: GameState['status']): status is RunOutcome {
 
 export function stepGame(s: GameState, dt: number, input: InputState): void {
   s.time += dt;
+  for (const shot of s.shots) shot.life -= dt;
+  s.shots = s.shots.filter((shot) => shot.life > 0);
   stepParticles(s.particles, dt);
 
   if (s.status === 'banner') {
@@ -121,7 +132,41 @@ export function summarizeRun(s: GameState): RunSummary {
     levelsCleared: s.levelsCleared,
     lettersCollected: s.letters.filter(Boolean).length,
     coins: s.coins,
+    checkpoint: {
+      levelIndex: s.levelsCleared,
+      letters: [...s.letters],
+      coins: s.coins,
+      bonusScore: s.bonusScore,
+      distanceBase: s.distanceBase,
+    },
   };
+}
+
+export function fireWeapon(s: GameState, weapon: GameWeapon): void {
+  if (s.status !== 'playing') return;
+  const playerY = s.runner.feetY - RUNNER_HEIGHT / 2;
+  const targets = s.level.hazards
+    .filter((hazard) => {
+      if (hazard.spent || hazard.x < s.runner.worldX || hazard.x - s.runner.worldX > weapon.range) return false;
+      const hazardY = hazard.y + hazard.h / 2;
+      return Math.abs(hazardY - playerY) <= 100;
+    })
+    .sort((a, b) => a.x - b.x)
+    .slice(0, weapon.targets);
+
+  for (const hazard of targets) {
+    hazard.spent = true;
+    burst(s, hazard.x, hazard.y + hazard.h / 2, weapon.color, 8);
+  }
+
+  s.shots.push({
+    x1: s.runner.worldX,
+    x2: targets.length
+      ? targets[targets.length - 1].x
+      : Math.min(s.runner.worldX + weapon.range, s.level.length),
+    y: playerY,
+    life: 0.12,
+  });
 }
 
 export function snapshotGame(s: GameState): HudSnapshot {

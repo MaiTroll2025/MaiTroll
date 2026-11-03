@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, CalendarDays, Church, Clock3, HeartHandshake, Info, Loader2, ShieldCheck, Sparkles, XCircle, Play, ArrowRight, Users, Cross, HandHeart } from 'lucide-react';
+import { BookOpen, CalendarDays, Church, Clock3, HeartHandshake, Info, Loader2, ShieldCheck, Sparkles, XCircle, Play, ArrowRight, Cross, HandHeart } from 'lucide-react';
 import { useAuthStore } from '@/lib/store';
 import { supabase } from '@/lib/supabase';
 import useSEO from '@/hooks/useSEO';

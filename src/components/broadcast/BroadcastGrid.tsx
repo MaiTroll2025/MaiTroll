@@ -78,7 +78,6 @@ interface BroadcastGridProps {
   onKick?: (userId: string) => void;
   broadcasterProfile?: any;
   hideEmptySeats?: boolean;
-  seatPriceOverride?: number;
   localTracks: [LocalAudioTrack | undefined, LocalVideoTrack | undefined];
   // Camera overlay track for gaming screen share mode
   cameraOverlayTrack?: LocalVideoTrack | null;
@@ -487,7 +486,6 @@ const BroadcastGridComponent = function BroadcastGrid({
   onKick,
   broadcasterProfile,
   hideEmptySeats = false,
-  seatPriceOverride,
   localTracks,
   cameraOverlayTrack,
   remoteUsers,
@@ -1723,43 +1721,14 @@ boxClass,
                         e.stopPropagation();
                         e.preventDefault();
                         if (import.meta.env.DEV) console.debug('[BroadcastGrid] Join seat clicked:', seatIndex);
-                        const seatPrices = stream.seat_prices;
-                        const price = seatPrices && seatPrices.length > seatIndex
-                          ? seatPrices[seatIndex]
-                          : (typeof seatPriceOverride === 'number' ? seatPriceOverride : stream.seat_price);
-                        onJoinSeat(seatIndex, price);
+                        onJoinSeat(seatIndex, 0);
                       }}
-                      className="flex flex-col items-center text-zinc-400 hover:text-white active:scale-95 transition-all w-full h-full cursor-pointer"
-                    >
-                      <div className="p-3 rounded-full border-2 border-dashed border-zinc-500 hover:border-white mb-2 bg-zinc-900/50">
-                        <Plus size={24} />
-                      </div>
-                      <span className="text-xs font-medium">Join Box {seatIndex + 1}</span>
-                      {(() => {
-                        // Get price for this specific seat - supports per-box pricing
-                        const seatPrices = stream.seat_prices;
-                        const price = seatPrices && seatPrices.length > seatIndex 
-                          ? seatPrices[seatIndex] 
-                          : (typeof seatPriceOverride === 'number' ? seatPriceOverride : stream.seat_price);
-                        
-                        if (price > 0) {
-                          return (
-                            <div className="flex items-center gap-1 bg-black/60 px-2 py-1 rounded-full mt-2 border border-yellow-500/30 transition-none">
-                              <Coins size={12} className="text-yellow-500" />
-                              <span className="text-xs font-bold text-yellow-400">
-                                {price}
-                              </span>
-                            </div>
-                          );
-                        } else {
-                          // Show "FREE" badge when price is 0
-                           return (
-                             <div className="flex items-center gap-1 bg-green-500/20 px-2 py-1 rounded-full mt-2 border border-green-500/30 transition-none">
-                               <span className="text-[10px] font-bold text-green-400">FREE</span>
-                             </div>
-                           );
-                         }
-                        })()}
+                        className="flex flex-col items-center text-zinc-400 hover:text-white active:scale-95 transition-all w-full h-full cursor-pointer"
+                      >
+                        <div className="p-3 rounded-full border-2 border-dashed border-zinc-500 hover:border-white mb-2 bg-zinc-900/50">
+                          <Plus size={24} />
+                        </div>
+                        <span className="text-xs font-medium">Join Box {seatIndex + 1}</span>
                       </button>
                     )}
                   </div>
@@ -2170,7 +2139,6 @@ function areBroadcastGridPropsEqual(prev: BroadcastGridProps, next: BroadcastGri
     prev.maxItems === next.maxItems &&
     prev.mode === next.mode &&
     prev.hideEmptySeats === next.hideEmptySeats &&
-    prev.seatPriceOverride === next.seatPriceOverride &&
     prev.localTracks?.[0] === next.localTracks?.[0] &&
     prev.localTracks?.[1] === next.localTracks?.[1] &&
     prev.cameraOverlayTrack === next.cameraOverlayTrack &&

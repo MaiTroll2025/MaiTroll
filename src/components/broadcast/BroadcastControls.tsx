@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, memo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Stream } from '../../types/broadcast';
 import { supabase } from '../../lib/supabase';
-import { Settings2, Coins, Mic, MicOff, Video, VideoOff, MessageSquare, MessageSquareOff, Heart, Eye, Power, Palette, UserX, ImageIcon, LogOut, Share2, Package, Swords, Star, X, Sliders, Shield, PlusCircle, Bell, Crown } from 'lucide-react';
+import { Settings2, Mic, MicOff, Video, VideoOff, MessageSquare, MessageSquareOff, Heart, Eye, Power, Palette, UserX, ImageIcon, LogOut, Share2, Package, Swords, Star, X, Sliders, Shield, PlusCircle, Bell, Crown } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { toast } from 'sonner';
 import { getCategoryConfig, MAX_GUEST_SEATS } from '../../config/broadcastCategories';
@@ -166,11 +166,6 @@ function BroadcastControls({
 
   const { user, isAdmin, profile } = useAuthStore();
   const isCEO = profile?.username === 'ceo' || (profile as any)?.role === 'ceo';
-  const [seatPrice, setSeatPrice] = useState(stream.seat_price || 0);
-  const [seatPrices, setSeatPrices] = useState<number[]>(stream.seat_prices || [0, seatPrice, seatPrice, seatPrice, seatPrice, seatPrice]);
-
-  const [debouncedPrice, setDebouncedPrice] = useState(seatPrice);
-  const [debouncedSeatPrices, setDebouncedSeatPrices] = useState(seatPrices);
 
   const [showBannedList, setShowBannedList] = useState(false);
   const [showThemeSelector, setShowThemeSelector] = useState(false);
@@ -229,21 +224,6 @@ function BroadcastControls({
       setLikes(stream.total_likes);
     }
   }, [stream.total_likes]);
-
-  useEffect(() => {
-    if (stream.seat_prices && Array.isArray(stream.seat_prices)) {
-      const currentPrices = stream.seat_prices;
-      setSeatPrices(currentPrices);
-      setDebouncedSeatPrices(currentPrices);
-    }
-  }, [stream.seat_prices]);
-
-  useEffect(() => {
-    if (stream.seat_price !== undefined) {
-      setSeatPrice(stream.seat_price);
-      setDebouncedPrice(stream.seat_price);
-    }
-  }, [stream.seat_price]);
 
   const attributes = useParticipantAttributes(user ? [user.id] : [], stream.id);
   const myAttributes = user ? attributes[user.id] : null;
@@ -361,71 +341,11 @@ function BroadcastControls({
     }
   };
 
-  const updateStreamConfig = React.useCallback(async (price: number, showToast: boolean = true, perBoxPrices?: number[]) => {
-    if (!canEditStream) return;
-    try {
-      const updates: { seat_price: number; seat_prices?: number[] } = { seat_price: price };
-      if (perBoxPrices) {
-        updates.seat_prices = perBoxPrices;
-      }
-      await supabase.from('streams').update(updates).eq('id', stream.id);
-      if (showToast) {
-        toast.success("Stream settings updated");
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  }, [canEditStream, stream.id]);
-
-  useEffect(() => {
-    if (debouncedPrice == stream.seat_price) return;
-    const timer = setTimeout(() => {
-      updateStreamConfig(debouncedPrice, false);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, [debouncedPrice, stream.seat_price, updateStreamConfig]);
-
-  useEffect(() => {
-    const currentPrices = stream.seat_prices || [0, stream.seat_price || 0, stream.seat_price || 0, stream.seat_price || 0, stream.seat_price || 0, stream.seat_price || 0];
-    const hasChanged = debouncedSeatPrices.some((price, idx) => price !== currentPrices[idx]);
-    if (!hasChanged) return;
-    const timer = setTimeout(() => {
-      updateStreamConfig(seatPrice, false, debouncedSeatPrices);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, [debouncedSeatPrices, stream.seat_price, stream.seat_prices, seatPrice, updateStreamConfig]);
-
-  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!isHost) return;
-    if (e.target.value === '') {
-      setSeatPrice(0);
-      setDebouncedPrice(0);
-      return;
-    }
-    let val = parseInt(e.target.value, 10) || 0;
-    if (val > 5000) val = 5000;
-    setSeatPrice(val);
-    setDebouncedPrice(val);
-  };
-
-  const handleBoxPriceChange = (boxIndex: number, value: string) => {
-    if (!isHost) return;
-    const newPrices = [...seatPrices];
-    let val = parseInt(value, 10) || 0;
-    if (val > 5000) val = 5000;
-    if (val < 0) val = 0;
-    newPrices[boxIndex] = val;
-    setSeatPrices(newPrices);
-    setDebouncedSeatPrices(newPrices);
-  };
-
-  const [enablePerBoxPricing, setEnablePerBoxPricing] = useState(false);
-
   const _updateBoxCount = async (newCount: number) => {
     if (!canEditStream) return;
-    const effectiveMaxBoxes = seatCap.enabled ? Math.min(MAX_GUEST_SEATS + 1, seatCap.max) : MAX_GUEST_SEATS + 1;
+    const effectiveMaxBoxes = seatCap.enabled ? Math.min(MAX_GUEST_SEATS + 1, seatCap.max + 1) : MAX_GUEST_SEATS + 1;
     if (newCount > effectiveMaxBoxes) {
-      toast.error(seatCap.enabled ? `Maximum ${effectiveMaxBoxes} boxes allowed during capped period` : `Maximum ${MAX_GUEST_SEATS + 1} boxes allowed`);
+      toast.error(seatCap.enabled ? `Maximum ${effectiveMaxBoxes - 1} guest seats allowed during capped period` : `Maximum ${MAX_GUEST_SEATS} guest seats allowed`);
       return;
     }
     const minLimit = Math.max(1, requiredBoxes);
@@ -871,73 +791,6 @@ function BroadcastControls({
                 />
               )}
             </div>
-
-            {/* Seat Price */}
-            {canManageStream && (
-              <div className="bg-white/5 rounded-xl p-3 mb-3">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <Coins size={14} className="text-amber-400" />
-                    <span className="text-xs font-bold text-white">
-                      {enablePerBoxPricing ? 'Per-Box Pricing' : 'Seat Price'}
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => setEnablePerBoxPricing(!enablePerBoxPricing)}
-                    className="text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-white/10 text-slate-400 hover:text-white transition-colors"
-                  >
-                    {enablePerBoxPricing ? 'Simple' : 'Advanced'}
-                  </button>
-                </div>
-
-                {!enablePerBoxPricing ? (
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="number"
-                      min="0"
-                      max="5000"
-                      value={seatPrice === 0 ? '' : seatPrice}
-                      onChange={handlePriceChange}
-                      disabled={!isHost}
-                      className={cn(
-                        "flex-1 bg-black/40 border border-amber-500/20 rounded-lg px-3 py-2 text-sm font-bold text-white placeholder:text-zinc-700 focus:outline-none focus:border-amber-500/50 transition-all",
-                        !isHost && "opacity-50 cursor-not-allowed"
-                      )}
-                      placeholder="0"
-                    />
-                    <span className="text-[10px] text-zinc-500 font-medium">coins</span>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-3 gap-2">
-                    {Array.from({ length: 6 }, (_, i) => (
-                      <div key={i} className="flex flex-col items-center gap-1">
-                        <label className={cn(
-                          "text-[9px] font-bold uppercase tracking-wider",
-                          i === 0 ? "text-purple-400" : "text-zinc-500"
-                        )}>
-                          {i === 0 ? 'Host' : `Seat ${i}`}
-                        </label>
-                        <input
-                          type="number"
-                          min="0"
-                          max="5000"
-                          value={seatPrices[i] || 0}
-                          onChange={(e) => handleBoxPriceChange(i, e.target.value)}
-                          disabled={!isHost || i === 0}
-                          className={cn(
-                            "w-full bg-black/40 border rounded-lg px-2 py-1.5 text-xs font-bold text-white text-center focus:outline-none transition-all",
-                            i === 0
-                              ? "border-purple-500/20 text-purple-300 opacity-60 cursor-not-allowed"
-                              : "border-amber-500/20"
-                          )}
-                          placeholder="0"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
 
             {isHost && categoryConfig.supportsBattles && onBattleThemeChange && (
               <BattleThemeSelector

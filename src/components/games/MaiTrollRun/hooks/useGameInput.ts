@@ -6,17 +6,18 @@ export interface GameInput {
   read: () => InputState;
   setUp: (held: boolean) => void;
   setDown: (held: boolean) => void;
+  setShoot: (held: boolean) => void;
   queueJump: () => void;
 }
 
 export function useGameInput(): GameInput {
-  const held = useRef({ up: false, down: false });
+  const held = useRef({ up: false, down: false, shoot: false });
   const jumpQueued = useRef(false);
 
   const read = useCallback((): InputState => {
     const jumpPressed = jumpQueued.current;
     jumpQueued.current = false;
-    return { up: held.current.up, down: held.current.down, jumpPressed };
+    return { up: held.current.up, down: held.current.down, jumpPressed, shootHeld: held.current.shoot };
   }, []);
 
   const setUp = useCallback((value: boolean) => {
@@ -25,6 +26,10 @@ export function useGameInput(): GameInput {
 
   const setDown = useCallback((value: boolean) => {
     held.current.down = value;
+  }, []);
+
+  const setShoot = useCallback((value: boolean) => {
+    held.current.shoot = value;
   }, []);
 
   const queueJump = useCallback(() => {
@@ -44,13 +49,15 @@ export function useGameInput(): GameInput {
       }
       if (event.code === 'KeyW' || event.code === 'ArrowUp') held.current.up = true;
       if (isDownKey(event.code)) held.current.down = true;
+      if (event.code === 'KeyF') held.current.shoot = true;
     };
     const onKeyUp = (event: KeyboardEvent) => {
       if (event.code === 'KeyW' || event.code === 'ArrowUp') held.current.up = false;
       if (isDownKey(event.code)) held.current.down = false;
+      if (event.code === 'KeyF') held.current.shoot = false;
     };
     const onBlur = () => {
-      held.current = { up: false, down: false };
+      held.current = { up: false, down: false, shoot: false };
     };
 
     window.addEventListener('keydown', onKeyDown);
@@ -63,5 +70,5 @@ export function useGameInput(): GameInput {
     };
   }, [queueJump]);
 
-  return { read, setUp, setDown, queueJump };
+  return { read, setUp, setDown, setShoot, queueJump };
 }

@@ -66,14 +66,17 @@ export default function MobileAudienceTicker({
   }
 
   return (
-    <div className={cn('flex w-full items-center gap-2', className)}>
+    <div className={cn('flex w-full items-center', phone ? 'gap-1.5' : 'gap-2', className)}>
       {/* Viewer count chip */}
       <button
         type="button"
         onClick={onViewerCountClick}
-        className="flex shrink-0 items-center gap-1 rounded-full border border-white/10 bg-black/40 px-2 py-1 text-[10px] font-bold text-white/80 backdrop-blur-md hover:bg-white/10 transition-colors"
+        className={cn(
+          'flex shrink-0 items-center rounded-full border border-white/10 bg-black/40 font-bold text-white/80 backdrop-blur-md transition-colors hover:bg-white/10',
+          phone ? 'gap-0.5 px-1.5 py-0.5 text-[9px]' : 'gap-1 px-2 py-1 text-[10px]',
+        )}
       >
-        <Users className="h-3 w-3 text-cyan-300" />
+        <Users className={cn('text-cyan-300', phone ? 'h-2.5 w-2.5' : 'h-3 w-3')} />
         {viewerCount}
       </button>
 
@@ -90,8 +93,11 @@ export default function MobileAudienceTicker({
 
       {/* Likes chip */}
       {likes > 0 && (
-        <div className="flex shrink-0 items-center gap-1 rounded-full border border-white/10 bg-black/40 px-2 py-1 text-[10px] font-bold text-white/80 backdrop-blur-md">
-          <Heart className="h-3 w-3 text-pink-400" />
+        <div className={cn(
+          'flex shrink-0 items-center rounded-full border border-white/10 bg-black/40 font-bold text-white/80 backdrop-blur-md',
+          phone ? 'gap-0.5 px-1.5 py-0.5 text-[9px]' : 'gap-1 px-2 py-1 text-[10px]',
+        )}>
+          <Heart className={cn('text-pink-400', phone ? 'h-2.5 w-2.5' : 'h-3 w-3')} />
           {likes.toLocaleString()}
         </div>
       )}
@@ -116,14 +122,15 @@ export default function MobileAudienceTicker({
             >
               <div
                 className={cn(
-                  'relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border bg-white/10 shadow-[0_0_8px_rgba(34,211,238,0.18)] backdrop-blur-sm',
+                  'relative flex items-center justify-center overflow-hidden rounded-full border bg-white/10 shadow-[0_0_8px_rgba(34,211,238,0.18)] backdrop-blur-sm',
+                  phone ? 'h-6 w-6' : 'h-8 w-8',
                   isCurrent ? 'border-cyan-400/60 ring-1 ring-cyan-400/60' : 'border-cyan-400/30',
                 )}
               >
                 {m.avatar_url ? (
                   <img src={m.avatar_url} alt={m.username} className="h-full w-full object-cover" />
                 ) : (
-                  <span className="text-[11px] font-black text-cyan-100">{firstLetter}</span>
+                  <span className={cn('font-black text-cyan-100', phone ? 'text-[9px]' : 'text-[11px]')}>{firstLetter}</span>
                 )}
                 {m.role === 'broadcaster' && (
                   <span className="absolute -bottom-0.5 -right-0.5 rounded-full border border-yellow-300/30 bg-yellow-500 px-1 text-[6px] font-black uppercase leading-3 text-white">
@@ -132,7 +139,7 @@ export default function MobileAudienceTicker({
                 )}
               </div>
               {coinLabel && (
-                <span className="mt-0.5 text-[7px] font-black leading-none text-cyan-300">
+                <span className={cn('font-black leading-none text-cyan-300', phone ? 'text-[6px]' : 'mt-0.5 text-[7px]')}>
                   {coinLabel}💎
                 </span>
               )}
@@ -140,7 +147,10 @@ export default function MobileAudienceTicker({
           )
         })}
         {overflow > 0 && (
-          <div className="flex shrink-0 items-center rounded-full border border-white/15 bg-white/10 px-2 py-1 text-[9px] font-black uppercase text-white/80">
+          <div className={cn(
+            'flex shrink-0 items-center rounded-full border border-white/15 bg-white/10 font-black uppercase text-white/80',
+            phone ? 'px-1.5 py-0.5 text-[8px]' : 'px-2 py-1 text-[9px]',
+          )}>
             +{overflow}
           </div>
         )}

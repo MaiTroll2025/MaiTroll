@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ArrowLeft, Camera, Mic, MicOff, RefreshCw, Video, VideoOff, Power, X } from 'lucide-react';
+import { Camera, Mic, MicOff, RefreshCw, Video, VideoOff, Power, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { MaiCamConnectionManager } from '@/lib/maicam/MaiCamConnectionManager';
@@ -18,6 +18,7 @@ export default function PhoneMaiCamCamera({ manager, onDisconnect }: PhoneMaiCam
   const [fps, setFps] = useState<15 | 24 | 30 | 60>(30);
 
   useEffect(() => {
+    const video = videoRef.current;
     if (manager.localStream && videoRef.current) {
       videoRef.current.srcObject = manager.localStream;
       videoRef.current.muted = true;
@@ -25,7 +26,7 @@ export default function PhoneMaiCamCamera({ manager, onDisconnect }: PhoneMaiCam
       try { videoRef.current.play().catch(() => {}); } catch {}
     }
     return () => {
-      if (videoRef.current) videoRef.current.srcObject = null;
+      if (video) video.srcObject = null;
     };
   }, [manager.localStream]);
 

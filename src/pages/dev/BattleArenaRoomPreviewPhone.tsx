@@ -15,9 +15,9 @@ import {
 } from '../../lib/battleArenaPowerUps';
 import BattleArenaControls from './BattleArenaControls';
 import {
-  ArrowLeft, AudioLines, Crown, Flame, Gift,
+  Crown, Flame,
   MessageCircle, Mic, MicOff, Send, ShieldCheck,
-  Sparkles, Swords, Trophy, Users, Video, VideoOff, X, Zap,
+  Swords, Trophy, Users, Video, VideoOff, X, Zap,
 } from 'lucide-react';
 
 export type BattleSeatLike = string | {
@@ -292,18 +292,18 @@ export default function BattleArenaRoomPreviewPhone({
   const [activeEffects, setActiveEffects] = useState<{ green: { id: PowerUpId; expiresAt: number }[]; purple: { id: PowerUpId; expiresAt: number }[] }>({ green: [], purple: [] });
   const [mockBalance, setMockBalance] = useState<{ green: number; purple: number }>({ green: 1000, purple: 1000 });
   const [powerBar, setPowerBar] = useState<{ green: number; purple: number }>({ green: 0, purple: 0 });
-  const [likes, setLikes] = useState<{ green: number; purple: number }>({ green: 0, purple: 0 });
+  const [, setLikes] = useState<{ green: number; purple: number }>({ green: 0, purple: 0 });
   const [powerAnnounce, setPowerAnnounce] = useState<string>('');
   const [showPowerPanel, setShowPowerPanel] = useState<Side | null>(null);
   const [openBag, setOpenBag] = useState<Side | null>(null);
-  const [selectedGift, setSelectedGift] = useState(MOCK_GIFTS[0]);
+  const [, setSelectedGift] = useState(MOCK_GIFTS[0]);
   const [arenaGifts, setArenaGifts] = useState<any[]>([]);
   const [selectedPower, setSelectedPower] = useState<PowerUpId | null>(null);
   const [fullSlotsMsg, setFullSlotsMsg] = useState<Side | null>(null);
   const [showWinner, setShowWinner] = useState(false);
   const [round, setRound] = useState(1);
   const [seatCounts, setSeatCounts] = useState<{ green: number; purple: number }>({ green: 4, purple: 4 });
-  const [viewAs, setViewAs] = useState<'green' | 'purple' | 'neutral'>('neutral');
+  const [viewAs, _setViewAs] = useState<'green' | 'purple' | 'neutral'>('neutral');
   const [greenWins, setGreenWins] = useState(0);
   const [purpleWins, setPurpleWins] = useState(0);
   const [battleWinner, setBattleWinner] = useState<'green' | 'purple' | 'draw' | null>(null);
@@ -312,6 +312,7 @@ export default function BattleArenaRoomPreviewPhone({
   const [selectedSeats, setSelectedSeats] = useState<Set<string>>(new Set());
   const [seatScoreMap, setSeatScoreMap] = useState<Record<string, number>>({});
   const [suddenDeath, setSuddenDeath] = useState(false);
+  const startCombatRef = useRef<() => void>(() => {});
   useEffect(() => {
     if (rematchGreen && rematchPurple) {
       setSuddenDeath(true);
@@ -324,7 +325,7 @@ export default function BattleArenaRoomPreviewPhone({
       setActiveEffects({ green: [], purple: [] });
       setChaosSide(null);
       clearCombat();
-      window.setTimeout(() => startCombat(), 0);
+      window.setTimeout(() => startCombatRef.current(), 0);
     }
   }, [rematchGreen, rematchPurple]);
   useEffect(() => {
@@ -402,7 +403,7 @@ green: asSeatArray(greenSeats ?? grouped.green).filter((seat) => getSeatName(sea
       setTimeLeft((v) => {
         if (v <= step) {
           if (suddenDeath) {
-            setScoreC(0); setScoreO(0); setPowerBar({ green: 0, purple: 0 }); setActiveEffects({ green: [], purple: [] }); setChaosSide(null); setSeatScoreMap({}); clearCombat(); window.setTimeout(() => startCombat(), 0); setSuddenDeath(false);
+            setScoreC(0); setScoreO(0); setPowerBar({ green: 0, purple: 0 }); setActiveEffects({ green: [], purple: [] }); setChaosSide(null); setSeatScoreMap({}); clearCombat(); window.setTimeout(() => startCombatRef.current(), 0); setSuddenDeath(false);
             return 168;
           }
 const c = scoreCRef.current + greenSeatTotalRef.current;
@@ -429,7 +430,7 @@ const c = scoreCRef.current + greenSeatTotalRef.current;
           setSeatScoreMap({});
           clearCombat();
           // restart combat next tick
-          window.setTimeout(() => startCombat(), 0);
+          window.setTimeout(() => startCombatRef.current(), 0);
           return 168;
         }
         return v - step;
@@ -440,7 +441,7 @@ const c = scoreCRef.current + greenSeatTotalRef.current;
       setPowerBar((prev) => ({ green: Math.min(500, prev.green + Math.max(5, Math.round(25 / roundRef.current))), purple: Math.min(500, prev.purple + Math.max(5, Math.round(25 / roundRef.current))) }));
     }, 1800);
     return () => window.clearInterval(t);
-  }, []);
+  }, [suddenDeath]);
 
   const total = Math.max(1, totalScoreC + totalScoreO);
   const cPct = (totalScoreC / total) * 100;
@@ -651,10 +652,11 @@ const c = scoreCRef.current + greenSeatTotalRef.current;
     attackTimers.current.green = window.setTimeout(() => doAttack('green'), 1000);
     attackTimers.current.purple = window.setTimeout(() => doAttack('purple'), 1500);
   };
+  startCombatRef.current = startCombat;
 
   useEffect(() => { initBattleAudio(); }, []);
   useEffect(() => {
-    startCombat();
+    startCombatRef.current();
     return () => clearCombat();
   }, []);
 

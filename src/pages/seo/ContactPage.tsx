@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import SEOLayout, { Breadcrumb, CTASection } from './SEOLayout'
+import { useAuthStore } from '@/lib/store'
+import { sendContactMessage } from '@/services/utromailService'
 import { Mail, MessageSquare, Clock, Send, CheckCircle, HelpCircle, Users } from 'lucide-react';
 
 const contactMethods = [
@@ -9,7 +11,7 @@ const contactMethods = [
     title: 'Email Us',
     description: 'Send us an email and we\'ll respond within 24 hours.',
     action: 'ceo@maitroll.com',
-    link: 'mailto:Mai Troll2025@gmail.com'
+    link: 'mailto:ceo@maitroll.com'
   },
   {
     icon: MessageSquare,
@@ -43,19 +45,33 @@ const faqPreview = [
 ]
 
 export default function ContactPage() {
+  const { user, profile, isLoading } = useAuthStore()
   const [submitted, setSubmitted] = useState(false)
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
   const [subject, setSubject] = useState('')
   const [message, setMessage] = useState('')
+  const [sending, setSending] = useState(false)
+  const [error, setError] = useState('')
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setSubmitted(true)
-    setName('')
-    setEmail('')
-    setSubject('')
-    setMessage('')
+    if (!user?.id) {
+      setError('Sign in to your MaiTroll account to send a message.')
+      return
+    }
+
+    setSending(true)
+    setError('')
+    try {
+      await sendContactMessage({ senderId: user.id, subject, body: message })
+      setSubmitted(true)
+      setSubject('')
+      setMessage('')
+    } catch (submitError) {
+      console.error('[ContactPage] Failed to send contact message:', submitError)
+      setError(submitError instanceof Error ? submitError.message : 'Unable to send your message. Please try again.')
+    } finally {
+      setSending(false)
+    }
   }
 
   return (
@@ -113,7 +129,7 @@ export default function ContactPage() {
         </div>
       </section>
 
-      <section className="py-16 bg-slate-900/50">
+      <section id="contact-form" className="py-16 bg-slate-900/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12">
             <div>
@@ -122,13 +138,25 @@ export default function ContactPage() {
                 Fill out the form and we&apos;ll get back to you as soon as possible.
               </p>
 
-              {submitted ? (
+              {isLoading ? (
+                <p className="text-slate-400" role="status">Checking your account…</p>
+              ) : !user ? (
+                <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-6 text-slate-300">
+                  <p className="mb-4">Sign in to your MaiTroll account to contact the admin team. Replies will arrive in your Utromail inbox.</p>
+                  <Link to="/auth" className="inline-flex rounded-lg bg-purple-600 px-5 py-2 font-semibold text-white transition-colors hover:bg-purple-500">
+                    Sign In
+                  </Link>
+                </div>
+              ) : submitted ? (
                 <div className="p-8 bg-green-900/20 border border-green-500/30 rounded-2xl text-center">
                   <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-white mb-2">Message Sent!</h3>
-                  <p className="text-slate-400">Thank you for reaching out. We&apos;ll respond within 24 hours.</p>
+                  <p className="text-slate-400">Your message was sent to the admin team in Utromail. Replies will arrive in your Utromail inbox.</p>
                   <button
-                    onClick={() => setSubmitted(false)}
+                    onClick={() => {
+                      setSubmitted(false)
+                      setError('')
+                    }}
                     className="mt-4 px-6 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg transition-colors"
                   >
                     Send Another Message
@@ -136,32 +164,10 @@ export default function ContactPage() {
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <label htmlFor="contact-name" className="block text-sm text-slate-400 mb-2">Name</label>
-                      <input
-                        id="contact-name"
-                        type="text"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        required
-                        className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-purple-500"
-                        placeholder="Your name"
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="contact-email" className="block text-sm text-slate-400 mb-2">Email</label>
-                      <input
-                        id="contact-email"
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                        className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-purple-500"
-                        placeholder="your@email.com"
-                      />
-                    </div>
-                  </div>
+                  <p className="text-sm text-slate-400">
+                    Sending as {profile?.display_name || profile?.username || user.email || 'your MaiTroll account'}. Replies will be delivered through Utromail.
+                  </p>
+                  {error && <p className="rounded-lg border border-red-500/30 bg-red-950/30 p-3 text-sm text-red-200" role="alert">{error}</p>}
                   <div>
                     <label htmlFor="contact-subject" className="block text-sm text-slate-400 mb-2">Subject</label>
                     <input
@@ -170,6 +176,7 @@ export default function ContactPage() {
                       value={subject}
                       onChange={(e) => setSubject(e.target.value)}
                       required
+                      maxLength={200}
                       className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-purple-500"
                       placeholder="What is this regarding?"
                     />
@@ -181,6 +188,7 @@ export default function ContactPage() {
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
                       required
+                      maxLength={5000}
                       rows={5}
                       className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-purple-500 resize-none"
                       placeholder="Tell us how we can help..."
@@ -188,10 +196,11 @@ export default function ContactPage() {
                   </div>
                   <button
                     type="submit"
+                    disabled={sending}
                     className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all flex items-center justify-center gap-2"
                   >
                     <Send className="w-5 h-5" />
-                    Send Message
+                    {sending ? 'Sending…' : 'Send Message'}
                   </button>
                 </form>
               )}

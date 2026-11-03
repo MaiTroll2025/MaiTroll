@@ -961,7 +961,6 @@ export function useRandomBattleQueueController({
       setIsBusy(false);
     }
   }, [
-    battleUnlockConfirmed,
     findMatch,
 
     isBroadcaster,

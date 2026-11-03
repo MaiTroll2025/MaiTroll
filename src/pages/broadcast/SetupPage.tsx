@@ -190,7 +190,7 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
   const { isLocked: isBroadcastLocked, canBroadcast, isAdmin: isUserAdmin } = useBroadcastLockdown();
 
   // Broadcast restrictions from control panel
-  const { startCapEnabled, startCapMax, allRestrictionsDisabled, seatCap } = useBroadcastViewerCap();
+  const { startCapEnabled, startCapMax, allRestrictionsDisabled } = useBroadcastViewerCap();
 
   useEffect(() => {
     try {
@@ -660,7 +660,7 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
   };
 
   // Helper to clear the video container - detaches any existing LiveKit elements
-  const clearVideoContainer = () => {
+  const clearVideoContainer = useCallback(() => {
     if (!videoContainerRef.current) return;
 
     // Remove any dynamically attached video elements, but keep the React-managed preview video
@@ -674,7 +674,7 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
     if (previewVideoRef.current) {
       previewVideoRef.current.srcObject = null;
     }
-  };
+  }, []);
 
   useEffect(() => {
     const videoEl = previewVideoRef.current;
@@ -700,7 +700,7 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
   }, [previewStream, facingMode]);
 
   // Attach a native browser video element for preview directly from a MediaStream
-  const attachNativePreview = (stream: MediaStream, _facing: 'user' | 'environment') => {
+  const attachNativePreview = useCallback((stream: MediaStream, _facing: 'user' | 'environment') => {
     setPreviewStream(stream);
 
     if (!videoContainerRef.current) return;
@@ -747,7 +747,7 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
     videoEl.play().catch(() => {
       // Autoplay may still be blocked in some contexts; muted should help.
     });
-  };
+  }, [clearVideoContainer, facingMode]);
 
   // Detach video track from container using LiveKit's detach() method
   const detachVideoTrack = (videoTrack: LocalVideoTrack) => {
@@ -959,7 +959,7 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
     attachNativePreview(combined, 'user');
     toast.success('MaiCam phone camera ready for broadcast');
     return combined;
-  }, [remoteStream]);
+  }, [attachNativePreview, remoteStream, setCameraTrack]);
 
 
   // Cleanup session storage when component unmounts (user leaves setup page)
@@ -1687,17 +1687,9 @@ const handleStartStream = async () => {
             ...(battleMode === 'state' && randomBattleQueueEnabled && category === 'general' ? { state_battle_mode: 'state' } : {}),
           };
 
-      // Add password protection if enabled
-      if (isProtected && broadcastPassword.length >= 4) {
-        insertData.is_protected = true;
-        const { data: hashData, error: hashError } = await supabase.rpc('crypt_password', {
-          p_password: broadcastPassword
-        });
-        insertData.password_hash = hashError ? null : hashData;
-      } else {
-        insertData.is_protected = false;
-        insertData.password_hash = null;
-      }
+      const protectThisStream = isProtected && broadcastPassword.length >= 4;
+      insertData.is_protected = protectThisStream;
+      insertData.password_hash = null;
 
       const tDbInsert = Date.now()
       const { data, error } = await supabase
@@ -1711,6 +1703,16 @@ const handleStartStream = async () => {
       failureStage = 'stream row created';
       console.log(`[SetupPage] Stream row created in ${Date.now() - tDbInsert}ms`, { streamId: data.id, roomName });
       broadcastStartLog('stream row created', { streamId: data.id, roomName });
+
+      if (protectThisStream) {
+        const { error: passwordError } = await supabase.rpc('set_broadcast_password', {
+          p_stream_id: data.id,
+          p_password: broadcastPassword,
+        });
+        if (passwordError) {
+          throw new Error(`Unable to secure broadcast password: ${passwordError.message}`);
+        }
+      }
 
       // FAST CAPACITY CHECK: run before expensive LiveKit work
       failureStage = 'capacity check';
@@ -2430,14 +2432,12 @@ const handleStartStream = async () => {
             {/* Seat Count Selector */}
             {(() => {
               if (areBroadcastSeatsDisabled()) return null;
-              const effectiveMaxSeats = seatCap.enabled ? Math.min(MAX_GUEST_SEATS, seatCap.max) : MAX_GUEST_SEATS;
+              const effectiveMaxSeats = MAX_GUEST_SEATS;
               return (
                 <div className="rounded-xl border border-white/10 bg-[#172134] p-4 flex flex-col justify-between">
                   <div className="flex items-center gap-1.5 mb-1">
                     <span className="text-[10px] font-bold text-amber-300 uppercase tracking-wider">Seats</span>
-                    {seatCap.enabled && (
-                      <span className="text-[8px] font-bold text-amber-400/60 bg-amber-500/10 px-1.5 py-0.5 rounded-full">CAP {effectiveMaxSeats}</span>
-                    )}
+                    <span className="text-[8px] font-bold text-amber-400/60 bg-amber-500/10 px-1.5 py-0.5 rounded-full">MAX {MAX_GUEST_SEATS}</span>
                   </div>
                   <p className="text-[9px] text-slate-500 mb-2">Guest seats (host = box 1)</p>
                   <div className="flex items-center gap-2">

@@ -70,7 +70,6 @@ export default function MobileSetupPage() {
   const [streamMode, setStreamMode] = useState<StreamMode>("camera");
   const [saveBroadcast, setSaveBroadcast] = useState(false);
   const [paidChatEnabled, setPaidChatEnabled] = useState(false);
-  const [seatPrice, setSeatPrice] = useState("0");
   const [isStarting, setIsStarting] = useState(false);
 
   const canStart = title.trim().length >= 3 && !isStarting;
@@ -89,7 +88,6 @@ export default function MobileSetupPage() {
         streamMode,
         saveBroadcast,
         paidChatEnabled,
-        seatPrice,
       });
 
       // Keep user inside fresh app flow for now.
@@ -252,15 +250,6 @@ export default function MobileSetupPage() {
           </button>
         </div>
 
-        <label className="tc-mobile-setup__field">
-          <span>Seat price</span>
-          <input
-            value={seatPrice}
-            onChange={(event) => setSeatPrice(event.target.value)}
-            inputMode="numeric"
-            placeholder="0"
-          />
-        </label>
       </section>
 
       <section className="tc-mobile-setup__checks">

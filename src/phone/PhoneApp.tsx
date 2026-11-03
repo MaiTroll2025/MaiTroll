@@ -4,7 +4,6 @@ import PhoneHomepage from './pages/PhoneHomepage'
 import PhoneAuth from './pages/PhoneAuth'
 import PhoneGoLive from './pages/PhoneGoLive'
 import PhoneMaiCamEntry from './pages/MaiCamEntry'
-import PhoneMaiCamCamera from './pages/MaiCamCamera'
 import PhoneMAIPiks from './pages/PhoneMaiPiks'
 import PhoneBroadcastPage from './pages/PhoneBroadcastPage'
 import PhoneAuctions from './pages/PhoneAuctions'
@@ -21,6 +20,7 @@ import FounderHub from '../pages/FounderHub'
 import MKeyInvitePopup from '../components/broadcast/mkey/MKeyInvitePopup'
 import PhoneCoins from './pages/PhoneCoins'
 import PhoneMaiPay from './pages/PhoneMaiPay'
+import MaiTrollRun from '../components/games/MaiTrollRun/MaiTrollRun'
 import PhoneTreelz from './pages/PhoneTreelz'
 import PhoneChat from './pages/PhoneChat'
 import PhoneFollowing from './pages/PhoneFollowing'
@@ -55,6 +55,7 @@ import PhoneAgencyApply from './pages/PhoneAgencyApply'
 import PhoneCeoDashboard from './pages/PhoneCeoDashboard'
 import PhoneSupport from './pages/PhoneSupport'
 import PhoneSafety from './pages/PhoneSafety'
+import PhoneTrustSafety from './pages/PhoneTrustSafety'
 import PhoneLegal from './pages/PhoneLegal'
 import PhoneForum from './pages/PhoneForum'
 import PhoneForumPost from './pages/PhoneForumPost'
@@ -188,7 +189,12 @@ function PhoneJailRedirect({ children }: { children: React.ReactNode }) {
 
 export default function PhoneApp() {
   const authUser = useAuthStore((state) => state.user)
+  const authIsLoading = useAuthStore((state) => state.isLoading)
   const location = useLocation()
+  const [publicRunPopupDismissed, setPublicRunPopupDismissed] = useState(false)
+  useEffect(() => {
+    setPublicRunPopupDismissed(false)
+  }, [authUser?.id])
   const isPhoneBroadcastPage =
     location.pathname === '/broadcast' ||
     (location.pathname.startsWith('/broadcast/') &&
@@ -239,6 +245,7 @@ export default function PhoneApp() {
             />
             <Route path="/mai-life" element={<MaiLifePage />} />
             <Route path="/games" element={<GamesPage />} />
+            <Route path="/mai-troll-run" element={<MaiTrollRun key={authUser?.id ?? 'anon'} />} />
 
             <Route path="/troll-animal-shelter" element={<TrollAnimalShelterPage />} />
             <Route path="/owner" element={<OwnerPage />} />
@@ -270,6 +277,7 @@ export default function PhoneApp() {
             <Route path="/rtcadminmonitor" element={<PhoneRtcAdminMonitor />} />
             <Route path="/support" element={<PhoneSupport />} />
             <Route path="/safety" element={<PhoneSafety />} />
+            <Route path="/trust-safety" element={<PhoneTrustSafety />} />
             <Route path="/community" element={<PhoneForum />} />
             <Route path="/community/post/:postId" element={<PhoneForumPost />} />
             <Route path="/insights" element={<PhoneInsights />} />
@@ -324,6 +332,13 @@ export default function PhoneApp() {
             <Route path="/admin/*" element={<PhoneAdminPage />} />
             <Route path="*" element={<PhoneWebPage />} />
           </Routes>
+          {!authUser && !authIsLoading && (location.pathname === '/' || location.pathname === '/home') && !publicRunPopupDismissed && (
+            <MaiTrollRun
+              key="public-landing-run"
+              publicWelcomePopup
+              onPublicPopupDismiss={() => setPublicRunPopupDismissed(true)}
+            />
+          )}
 
           {/* 🔑 Live MKey invitations reach a viewer wherever they are — usually
               inside another broadcast — with a single JOIN LIVE deep link. */}

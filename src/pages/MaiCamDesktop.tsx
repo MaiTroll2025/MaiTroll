@@ -2,15 +2,12 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import {
-  ArrowLeft,
-  Camera,
   Mic,
   Phone,
   RefreshCw,
   Smartphone,
   Trash2,
   Video,
-  VideoOff,
   X,
   ShieldCheck,
   Gamepad2,
@@ -28,7 +25,7 @@ export default function MaiCamDesktopPage() {
 
   const managerRef = useRef<MaiCamConnectionManager | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [stage, setStage] = useState<'pairing' | 'connected'>('pairing');
+  const [, setStage] = useState<'pairing' | 'connected'>('pairing');
   const [enterCode, setEnterCode] = useState('');
   const [generatedCode, setGeneratedCode] = useState<string | null>(null);
   const [expiresAt, setExpiresAt] = useState<string | null>(null);
@@ -79,7 +76,7 @@ export default function MaiCamDesktopPage() {
       setRemoteStream(null);
       setLocalStream(null);
     };
-  }, [user?.id, setRole, setConnectionState, setRemoteStream, setLocalStream, navigate]);
+  }, [user?.id, profile?.display_name, profile?.username, setRole, setConnectionState, setRemoteStream, setLocalStream, navigate]);
 
   useEffect(() => {
     if (remoteStream && videoRef.current) {

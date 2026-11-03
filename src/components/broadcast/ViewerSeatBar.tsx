@@ -23,14 +23,6 @@ export type ViewerSeatBarProps = {
   onJoinSeat: (index: number, price: number) => Promise<boolean> | boolean
 }
 
-function getSeatPrice(stream: any, seatIndex: number) {
-  if (Array.isArray(stream?.seat_prices) && stream.seat_prices.length > seatIndex) {
-    return Number(stream.seat_prices[seatIndex] || 0)
-  }
-  if (typeof stream?.seat_price === 'number') return stream.seat_price
-  return Number(stream?.seat_price || 0)
-}
-
 export default function ViewerSeatBar({ streamId, boxCount, stream, areSeatsLocked, onJoinSeat }: ViewerSeatBarProps) {
   const navigate = useNavigate()
   const { user } = useAuthStore()
@@ -73,13 +65,12 @@ export default function ViewerSeatBar({ streamId, boxCount, stream, areSeatsLock
         return
       }
 
-      const price = getSeatPrice(stream, seatIndex)
-      const ok = await Promise.resolve(onJoinSeat(seatIndex, price))
+      const ok = await Promise.resolve(onJoinSeat(seatIndex, 0))
       if (!ok) return
 
       navigate(`/broadcast/${streamId}?seat=${seatIndex + 1}&mode=seat`)
     },
-    [areSeatsLocked, navigate, onJoinSeat, stream, streamId, user?.id]
+    [areSeatsLocked, navigate, onJoinSeat, streamId, user?.id]
   )
 
   if (!streamId) return null
@@ -88,7 +79,6 @@ export default function ViewerSeatBar({ streamId, boxCount, stream, areSeatsLock
     <div className="w-full px-3">
       <div className="flex items-center gap-2 overflow-x-auto pb-2">
         {seats.map((seatIndex) => {
-          const price = getSeatPrice(stream, seatIndex)
           const locked = areSeatsLocked
 
           return (
@@ -103,7 +93,7 @@ export default function ViewerSeatBar({ streamId, boxCount, stream, areSeatsLock
                   ? 'border-white/10 bg-white/5 text-white/40 cursor-not-allowed'
                   : 'border-yellow-400/35 bg-black/55 text-yellow-100 hover:bg-black/70'
               )}
-              title={price > 0 ? `Join seat ${seatIndex + 1} for ${price} coins` : `Join seat ${seatIndex + 1}`}
+              title={`Join seat ${seatIndex + 1}`}
             >
               {seatIndex + 1}
             </button>
@@ -113,4 +103,3 @@ export default function ViewerSeatBar({ streamId, boxCount, stream, areSeatsLock
     </div>
   )
 }
-

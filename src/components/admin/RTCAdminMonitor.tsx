@@ -4219,7 +4219,7 @@ return (
             {renderMobileMiniBubble()}
           </>
         )}
-        {fullPage ? null : isOpen && renderFullPageModal()}
+        {!fullPage && !headerDropdown && isOpen && renderFullPageModal()}
         {isOpen && renderActionModal()}
         {isOpen && renderStreamModal()}
       </>

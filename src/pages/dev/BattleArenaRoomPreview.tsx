@@ -329,7 +329,7 @@ battleId,
   cameraEnabled,
   micEnabled,
   remoteUsers,
-  userIdToLiveKitIdentity = {},
+  userIdToLiveKitIdentity: _userIdToLiveKitIdentity = {},
   challengerHostId = '',
   opponentHostId = '',
   challengerHostName = '',
@@ -337,14 +337,14 @@ battleId,
   challengerStreamId = '',
   opponentStreamId = '',
   isBroadcaster = false,
-  isRandomBattle = false,
-  battleStatus = 'idle',
+  isRandomBattle: _isRandomBattle = false,
+  battleStatus: _battleStatus = 'idle',
   timeLeft: externalTimeLeft,
   onGift,
   onToggleCamera,
   onToggleMic,
   onOpenBroadcasterControls,
-  onChangeBoxCount,
+  onChangeBoxCount: _onChangeBoxCount,
   onForfeit,
   onRematch,
   onLeaveBattle,
@@ -368,11 +368,11 @@ battleId,
   const [chatOpen, setChatOpen] = useState(false);
   const [chatText, setChatText] = useState('');
   const [chat, setChat] = useState<any[]>(battleChatMessages);
-  const [ultimateFlash, setUltimateFlash] = useState<Side | null>(null);
+  const [ultimateFlash, _setUltimateFlash] = useState<Side | null>(null);
   const [powerSlots, setPowerSlots] = useState<{ green: PowerUpId[]; purple: PowerUpId[] }>({ green: [], purple: [] });
   const [activeEffects, setActiveEffects] = useState<{ green: { id: PowerUpId; expiresAt: number }[]; purple: { id: PowerUpId; expiresAt: number }[] }>({ green: [], purple: [] });
   const [powerBar, setPowerBar] = useState<{ green: number; purple: number }>({ green: 0, purple: 0 });
-  const [likes, setLikes] = useState<{ green: number; purple: number }>({ green: 0, purple: 0 });
+  const [, setLikes] = useState<{ green: number; purple: number }>({ green: 0, purple: 0 });
   const [powerAnnounce, setPowerAnnounce] = useState<string>('');
   const [showPowerPanel, setShowPowerPanel] = useState<Side | null>(null);
   const [openBag, setOpenBag] = useState<Side | null>(null);
@@ -391,7 +391,7 @@ battleId,
   const [seatScoreMap, setSeatScoreMap] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [powerUpInventory, setPowerUpInventory] = useState<Record<Side, PowerUpId[]>>({ green: [], purple: [] });
+  const [, setPowerUpInventory] = useState<Record<Side, PowerUpId[]>>({ green: [], purple: [] });
   useEffect(() => {
     if (rematchGreen && rematchPurple) {
       setRematchGreen(false);
@@ -607,11 +607,11 @@ battleId,
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [battleId, challengerHostId, opponentHostId, challengerHostName, opponentHostName]);
+  }, [battle.scoreC, battle.scoreO, battleId, challengerHostId, opponentHostId, challengerHostName, opponentHostName]);
 
   // Sync external timer prop
   useEffect(() => {
-    if (externalTimeLeft !== undefined && externalTimeLeft !== timeLeft) {
+    if (externalTimeLeft !== undefined) {
       setTimeLeft(externalTimeLeft);
     }
   }, [externalTimeLeft]);
@@ -778,8 +778,6 @@ battleId,
     }, 500);
     return () => window.clearInterval(t);
   }, []);
-
-  const ghostActive = (side: Side) => activeEffectsRef.current[side].some((e) => e.id === 'ghost' && (e.expiresAt === 0 || e.expiresAt > Date.now()));
 
   useEffect(() => { initBattleAudio(); }, []);
 

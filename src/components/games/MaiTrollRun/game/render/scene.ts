@@ -1,6 +1,6 @@
 import { POWER_COLORS, RUNNER_X, WORLD_HEIGHT, WORLD_WIDTH } from '@/components/games/MaiTrollRun/game/config';
 import { drawBackdrop } from '@/components/games/MaiTrollRun/game/render/backdrop';
-import { drawHazards, drawParticles, drawPickups } from '@/components/games/MaiTrollRun/game/render/entities';
+import { drawHazards, drawParticles, drawPickups, drawShots } from '@/components/games/MaiTrollRun/game/render/entities';
 import { drawGate, drawGround, drawLadders, drawPlatforms } from '@/components/games/MaiTrollRun/game/render/world';
 import { drawTroll } from '@/components/games/MaiTrollRun/game/render/troll';
 import type { GameState } from '@/components/games/MaiTrollRun/game/types';
@@ -17,6 +17,7 @@ export function drawScene(ctx: CanvasRenderingContext2D, s: GameState): void {
   drawGate(ctx, level.length, cam, time, level.theme);
   drawHazards(ctx, level.hazards, cam, time);
   drawPickups(ctx, level.pickups, cam, time);
+  drawShots(ctx, s.shots, cam);
 
   ctx.save();
   ctx.globalAlpha = 0.35;

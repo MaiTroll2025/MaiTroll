@@ -10,6 +10,21 @@ ALTER TABLE public.web_push_subscriptions
   ADD COLUMN IF NOT EXISTS user_agent text,
   ADD COLUMN IF NOT EXISTS is_active boolean NOT NULL DEFAULT true;
 
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM pg_index i
+    JOIN pg_class c ON c.oid = i.indexrelid
+    JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE n.nspname = 'public'
+      AND c.relname = 'web_push_subscriptions_endpoint_key'
+      AND i.indpred IS NOT NULL
+  ) THEN
+    DROP INDEX public.web_push_subscriptions_endpoint_key;
+  END IF;
+END
+$$;
+
 CREATE UNIQUE INDEX IF NOT EXISTS web_push_subscriptions_endpoint_key
-  ON public.web_push_subscriptions (endpoint)
-  WHERE endpoint IS NOT NULL;
+  ON public.web_push_subscriptions (endpoint);

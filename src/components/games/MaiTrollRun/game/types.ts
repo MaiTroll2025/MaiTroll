@@ -2,6 +2,7 @@ export type Gender = 'male' | 'female';
 export type Difficulty = 'easy' | 'normal' | 'brutal' | 'nightmare';
 export type HazardKind = 'spikes' | 'boulder' | 'bat';
 export type PowerKind = 'shield' | 'magnet' | 'slow';
+export type GunKey = 'maipiks_popper' | 'troll_court_judge' | 'troll_city_blaster' | 'maitroll_cannon';
 export type PickupKind = 'coin' | 'letter' | 'power';
 export type RunnerMode = 'run' | 'air' | 'climb';
 export type RunOutcome = 'dead' | 'won' | 'escaped';
@@ -132,13 +133,30 @@ export interface GameState {
   levelsCleared: number;
   coins: number;
   bonusScore: number;
+  shots: ShotEffect[];
   particles: Particle[];
+}
+
+export interface ShotEffect {
+  x1: number;
+  x2: number;
+  y: number;
+  life: number;
+}
+
+export interface RunCheckpoint {
+  levelIndex: number;
+  letters: boolean[];
+  coins: number;
+  bonusScore: number;
+  distanceBase: number;
 }
 
 export interface InputState {
   up: boolean;
   down: boolean;
   jumpPressed: boolean;
+  shootHeld: boolean;
 }
 
 export interface HudSnapshot {
@@ -159,4 +177,5 @@ export interface RunSummary {
   levelsCleared: number;
   lettersCollected: number;
   coins: number;
+  checkpoint: RunCheckpoint;
 }
