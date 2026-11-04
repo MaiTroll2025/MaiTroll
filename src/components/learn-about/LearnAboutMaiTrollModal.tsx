@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
+import { supabase } from '../../lib/supabase'
 import {
   ArrowRight,
   BriefcaseBusiness,
@@ -19,11 +20,20 @@ import {
   Wallet,
   X,
   Zap,
+  Newspaper,
 } from 'lucide-react'
 
 interface LearnAboutMaiTrollModalProps {
   isOpen: boolean
   onClose: () => void
+  blogCount: number
+}
+
+interface BlogPost {
+  title: string
+  slug: string
+  summary: string
+  published_at: string | null
 }
 
 const ecosystemFeatures = [
@@ -167,8 +177,11 @@ const principles = [
 export default function LearnAboutMaiTrollModal({
   isOpen,
   onClose,
+  blogCount,
 }: LearnAboutMaiTrollModalProps) {
   const navigate = useNavigate()
+  const [blogPosts, setBlogPosts] = React.useState<BlogPost[]>([])
+  const [blogTotal, setBlogTotal] = React.useState(blogCount)
 
   const handleClose = useCallback(() => {
     onClose()
@@ -193,6 +206,43 @@ export default function LearnAboutMaiTrollModal({
       document.body.style.overflow = previousOverflow
     }
   }, [isOpen, handleClose])
+
+  useEffect(() => {
+    if (!isOpen) return
+    let cancelled = false
+
+    fetch('/api/site-updates?type=blog')
+      .then(async (response) => {
+        const contentType = response.headers.get('content-type') || ''
+        if (!contentType.toLowerCase().includes('application/json')) {
+          const { data, error, count } = await supabase
+            .from('site_updates')
+            .select('title, slug, summary, published_at', { count: 'exact' })
+            .eq('is_published', true)
+            .eq('post_type', 'blog')
+            .order('published_at', { ascending: false })
+            .limit(3)
+          if (error) throw error
+          return { posts: data || [], count: count ?? data?.length ?? 0 }
+        }
+        if (!response.ok) throw new Error('Failed to load blogs')
+        return response.json() as Promise<{ posts?: BlogPost[]; count?: number }>
+      })
+      .then((data) => {
+        if (!cancelled) {
+          setBlogPosts((data.posts || []).slice(0, 3))
+          setBlogTotal(typeof data.count === 'number' ? data.count : data.posts?.length || 0)
+        }
+      })
+      .catch((error) => {
+        console.error('[LearnAboutMaiTrollModal] Failed to load blogs:', error)
+        if (!cancelled) setBlogPosts([])
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [isOpen])
 
   const handleNavigate = (path: string) => {
     handleClose()
@@ -320,6 +370,53 @@ export default function LearnAboutMaiTrollModal({
                   )
                 })}
               </div>
+            </div>
+          </section>
+
+          {/* Published blogs */}
+          <section className="border-b border-white/10 bg-purple-500/[0.03] px-6 py-12 sm:px-10 sm:py-16">
+            <div className="mx-auto max-w-4xl">
+              <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+                <div>
+                  <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.2em] text-purple-400">
+                    <Newspaper className="h-4 w-4" />
+                    Site updates &amp; blogs
+                  </p>
+                  <h2 className="mt-3 text-3xl font-bold sm:text-4xl">
+                    {blogTotal} {blogTotal === 1 ? 'blog' : 'blogs'} published
+                  </h2>
+                  <p className="mt-4 max-w-2xl leading-7 text-white/55">
+                    Read the latest news, product updates, and stories posted by MaiTroll.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleNavigate('/blog')}
+                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-purple-400/25 bg-purple-500/10 px-4 py-2.5 text-sm font-semibold text-purple-200 transition hover:bg-purple-500/20"
+                >
+                  View all blogs
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
+
+              {blogPosts.length > 0 && (
+                <div className="mt-8 grid gap-4 md:grid-cols-3">
+                  {blogPosts.map((post) => (
+                    <button
+                      key={post.slug}
+                      type="button"
+                      onClick={() => handleNavigate(`/blog/${encodeURIComponent(post.slug)}`)}
+                      className="rounded-2xl border border-white/10 bg-black/20 p-5 text-left transition hover:border-purple-400/30 hover:bg-white/[0.05]"
+                    >
+                      <h3 className="line-clamp-2 text-lg font-semibold">{post.title}</h3>
+                      <p className="mt-2 line-clamp-3 text-sm leading-6 text-white/50">{post.summary}</p>
+                      <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-purple-300">
+                        Read blog <ChevronRight className="h-4 w-4" />
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </section>
 

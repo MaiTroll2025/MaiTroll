@@ -727,9 +727,9 @@ return {
       const [totalResult, maiTrollResult, googlePlayResult, topUrlsResult, recentResult] = await Promise.all([
         supabase.from('outbound_clicks').select('id', { count: 'exact', head: true }).gte('clicked_at', startDateIso),
         supabase.from('outbound_clicks').select('id', { count: 'exact', head: true }).ilike('url', '%MaiTroll.com%').gte('clicked_at', startDateIso),
-        supabase.from('outbound_clicks').select('id', { count: 'exact', head: true }).ilike('url', '%play.google.com/store/apps/details?id=com.Mai Troll.twa%').gte('clicked_at', startDateIso),
+        supabase.from('outbound_clicks').select('id', { count: 'exact', head: true }).ilike('url', '%play.google.com/store/apps/details?id=com.maitroll.app%').gte('clicked_at', startDateIso),
         supabase.from('outbound_clicks').select('url, clicked_at').gte('clicked_at', startDateIso),
-        supabase.from('outbound_clicks').select('ip_address, url, clicked_at').order('clicked_at', { ascending: false }).limit(25),
+        supabase.from('outbound_clicks').select('url, clicked_at').gte('clicked_at', startDateIso).order('clicked_at', { ascending: false }).limit(25),
       ]);
       const queryError = [totalResult.error, maiTrollResult.error, googlePlayResult.error, topUrlsResult.error, recentResult.error]
         .find((error) => error !== null);
@@ -740,23 +740,10 @@ return {
         counts[String(click.url || 'unknown')] = (counts[String(click.url || 'unknown')] || 0) + 1;
       });
 
-      // Assign stable "Random User #N" labels per IP, deterministic by IP so the
-      // same visitor keeps the same label between refreshes. IPs are never shown.
-      const ipToLabel = new Map<string, string>();
-      const seenIps = new Set<string>();
-      (recentResult.data || []).forEach((row) => {
-        const ip = String(row?.ip_address || 'unknown');
-        if (!seenIps.has(ip)) seenIps.add(ip);
-      });
-      let n = 1;
-      seenIps.forEach((ip) => {
-        ipToLabel.set(ip, `Random User #${n++}`);
-      });
-
       const recentClicks = (recentResult.data || []).map((row) => ({
         url: String(row?.url || 'unknown'),
         clickedAt: String(row?.clicked_at || ''),
-        label: ipToLabel.get(String(row?.ip_address || 'unknown')) || 'Random User #1',
+        label: 'Anonymous visitor',
       }));
 
       setClickStats({
@@ -2555,15 +2542,15 @@ return (
          </div>
          <div className="mt-2 rounded-lg border border-cyan-500/20 bg-cyan-500/5 p-3">
            <div className="mb-2 flex items-center justify-between">
-             <span className="text-xs font-semibold text-cyan-300">Website Clicks (Live)</span>
+             <span className="text-xs font-semibold text-cyan-300">External Link Clicks (Live)</span>
              <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${clickFlash ? 'bg-cyan-400 text-black' : 'bg-cyan-500/20 text-cyan-300'}`}>{clickFlash ? 'NEW!' : 'LIVE'}</span>
            </div>
            {clickError ? (
              <div className="py-3 text-center text-xs text-red-300">Click analytics could not be loaded.</div>
            ) : clickLoading && clickStats.recentClicks.length === 0 ? (
-             <div className="py-3 text-center text-xs text-gray-500">Loading recent clicks...</div>
+             <div className="py-3 text-center text-xs text-gray-500">Loading recent external clicks...</div>
            ) : clickStats.recentClicks.length === 0 ? (
-             <div className="py-3 text-center text-xs text-gray-500">No clicks yet</div>
+             <div className="py-3 text-center text-xs text-gray-500">No external clicks yet</div>
            ) : (
              <div className="max-h-44 space-y-1 overflow-y-auto">
                {clickStats.recentClicks.map((click, idx) => (
@@ -2574,7 +2561,7 @@ return (
                ))}
              </div>
            )}
-           <div className="mt-2 text-[10px] text-gray-500">Visitors are masked as Random User #N for admin visibility. Raw IPs are never shown.</div>
+           <div className="mt-2 text-[10px] text-gray-500">Counts external links only. Page views and sessions are in Analytics; internal navigation and button clicks are not tracked.</div>
          </div>
        </div>
      </div>
@@ -2853,7 +2840,8 @@ return (
       <section className="space-y-3 rounded-lg border border-cyan-500/20 bg-cyan-500/5 p-3">
         <div>
           <h3 className="text-sm font-semibold text-cyan-200">MaiTroll.com Site Traffic</h3>
-          <p className="mt-0.5 text-[10px] text-gray-400">Anonymous visits and browser-reported transfer estimates for the selected period.</p>
+          <p className="mt-0.5 text-[10px] text-gray-400">Page views, sessions, sources, and searches are separate from outbound-link clicks. Internal navigation and button clicks are not tracked.</p>
+          <p className="mt-0.5 text-[10px] text-gray-400">Transfer is a browser-reported estimate for the selected period.</p>
         </div>
         {siteUsageError ? (
           <p className="text-xs text-red-300">Site analytics could not be loaded. Check that the site-analytics database migration has been applied.</p>
@@ -2902,10 +2890,12 @@ return (
         <StatCard label="Viewer Min" value={analyticsSummary.totalViewerMinutes.toLocaleString()} tone="border-purple-500/20 bg-purple-500/10 text-purple-400" icon={<BarChart3 className="h-3 w-3" />} />
         <StatCard label="Avg Watch" value={`${analyticsSummary.avgWatchTimePerUser.toFixed(1)}m`} tone="border-purple-500/20 bg-purple-500/10 text-purple-400" icon={<Clock className="h-3 w-3" />} />
         <StatCard label="Gift Coins" value={analyticsSummary.totalGiftCoins.toLocaleString()} tone="border-yellow-500/20 bg-yellow-500/10 text-yellow-400" icon={<Coins className="h-3 w-3" />} />
-        <StatCard label="Clicks" value={clickStats.total.toLocaleString()} tone="border-cyan-500/20 bg-cyan-500/10 text-cyan-400" icon={<TrendingUp className="h-3 w-3" />} />
+        <StatCard label="Outbound Link Clicks" value={clickStats.total.toLocaleString()} tone="border-cyan-500/20 bg-cyan-500/10 text-cyan-400" icon={<TrendingUp className="h-3 w-3" />} />
+        <StatCard label="MaiTroll.com Clicks" value={clickStats.MaiTroll.toLocaleString()} tone="border-cyan-500/20 bg-cyan-500/10 text-cyan-300" icon={<TrendingUp className="h-3 w-3" />} />
+        <StatCard label="Google Play Clicks" value={clickStats.googlePlay.toLocaleString()} tone="border-green-500/20 bg-green-500/10 text-green-300" icon={<TrendingUp className="h-3 w-3" />} />
       </div>
       <div className="border-t border-white/10 pt-2">
-        <span className="text-xs text-gray-500">Top URLs</span>
+        <span className="text-xs text-gray-500">Top Outbound URLs</span>
         <div className="mt-2 space-y-1">
           {clickError ? <div className="text-xs text-red-300">Click analytics could not be loaded.</div> : clickStats.topUrls.length === 0 ? <div className="text-xs text-gray-500">No click data</div> : clickStats.topUrls.map((item) => (
             <div key={item.url} className="flex items-center justify-between rounded bg-white/5 px-2 py-1.5 text-xs">
@@ -2915,7 +2905,7 @@ return (
           ))}
         </div>
       </div>
-      <div className="text-[10px] text-gray-500">Live recent clicks now appear on the RTC Monitor tab (next to online users).</div>
+      <div className="text-[10px] text-gray-500">Recent external-link clicks appear live on the RTC Monitor tab.</div>
     </div>
   );
 

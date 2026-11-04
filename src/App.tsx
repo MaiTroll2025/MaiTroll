@@ -57,7 +57,6 @@ import { useGlobalApp } from "./contexts/GlobalAppContext";
 import { updateRoute } from "./utils/sessionStorage";
 import { initTimeUpdater } from "./hooks/useGlobalTime";
 import { APP_DATA_REFETCH_EVENT_NAME } from "./lib/appEvents";
-import { autoUnlockPayouts } from "./lib/supabase";
 import { PageVisibilityProvider } from "./contexts/PageVisibilityContext";
 import { LiveContentProvider } from "./contexts/LiveContentContext";
 import { TabSwitchHandler } from "./components/TabSwitchHandler";
@@ -995,11 +994,6 @@ function AppContent() {
   useEffect(() => {
     updateRoute(location.pathname);
   }, [location.pathname]);
-
-  // Check payouts unlock on mount
-  useEffect(() => {
-    void autoUnlockPayouts();
-  }, []);
 
   // 🔹 Auto-routing after approval (only on landing page, not on every route change)
   useEffect(() => {
@@ -2981,6 +2975,15 @@ function App() {
   useRouteTitle();
 
   const location = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    document.querySelectorAll<HTMLElement>('[data-route-scroll], main, [role="main"]').forEach((element) => {
+      element.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    });
+  }, [location.key, location.pathname, location.search]);
 
   useEffect(() => {
     trackSitePageView(location.pathname, location.key);

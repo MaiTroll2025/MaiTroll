@@ -315,7 +315,7 @@ export default function BroadcastRestrictionControl() {
               <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                 Max Broadcasters:
               </label>
-              {[2].map((n) => (
+              {[2, 4, 6, 8, 10, 20, 40, 60, 80, 100].map((n) => (
                 <button
                   key={n}
                   onClick={() => handleSetMax('start-cap-max', setStartCapMax, n)}

@@ -1,9 +1,41 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Info } from 'lucide-react';
 import LearnAboutMaiTrollModal from './LearnAboutMaiTrollModal';
+import { supabase } from '../../lib/supabase';
 
 export default function LearnAboutMaiTrollBanner() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [blogCount, setBlogCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/site-updates?type=blog')
+      .then(async (response) => {
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.toLowerCase().includes('application/json')) {
+          const { count, error } = await supabase
+            .from('site_updates')
+            .select('id', { count: 'exact', head: true })
+            .eq('is_published', true)
+            .eq('post_type', 'blog');
+          if (error) throw error;
+          return { count: count ?? 0 };
+        }
+        if (!response.ok) throw new Error('Failed to load blog count');
+        return response.json() as Promise<{ count?: number }>;
+      })
+      .then((data) => {
+        if (!cancelled) setBlogCount(typeof data.count === 'number' ? data.count : 0);
+      })
+      .catch((error) => {
+        console.error('[LearnAboutMaiTrollBanner] Failed to load blog count:', error);
+        if (!cancelled) setBlogCount(0);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <>
@@ -18,16 +50,21 @@ export default function LearnAboutMaiTrollBanner() {
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-sm font-bold text-white sm:text-base">Learn About MaiTroll</p>
-            <p className="text-xs text-slate-400 sm:text-sm">where MAi meets control. </p>
+            <p className="text-xs text-slate-400 sm:text-sm">
+              where MAi meets control. {blogCount !== null ? `${blogCount} ${blogCount === 1 ? 'blog' : 'blogs'} published` : 'Loading blogs...'}
+            </p>
           </div>
-          <div className="shrink-0 rounded-full bg-purple-600/20 px-3 py-1.5 text-xs font-semibold text-purple-300 group-hover:bg-purple-600/30 transition-colors">
-            
-          
+          <div className="shrink-0 rounded-full bg-purple-600/20 px-3 py-1.5 text-xs font-semibold text-purple-300 transition-colors group-hover:bg-purple-600/30">
+            {blogCount === null ? '...' : blogCount}
           </div>
         </div>
       </button>
 
-      <LearnAboutMaiTrollModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      <LearnAboutMaiTrollModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        blogCount={blogCount ?? 0}
+      />
     </>
   );
 }

@@ -6,7 +6,6 @@
     { "src": "/api/(.*)", "dest": "/api/$1" },
     { "src": "/legal/(.*)", "dest": "/api/legal/$1" },
     { "src": "/downloads/MaiTroll-Setup.exe", "dest": "https://github.com/maitroll/maitroll/releases/latest/download/MaiTroll-Setup.exe" },
-    { "src": "^/sitemap.xml$", "dest": "/api/sitemap-dynamic" },
     { "src": "^/sitemap-dynamic.xml$", "dest": "/api/sitemap-dynamic" },
 
     { "handle": "filesystem" },

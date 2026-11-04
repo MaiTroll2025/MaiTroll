@@ -59,6 +59,70 @@ const STATIC_PAGES: Record<string, { title: string; description: string; paragra
       'MaiTroll brings broadcasting and social interaction into one platform, so creators can build relationships with viewers and audiences can participate in more than passive viewing.',
     ],
   },
+  '/hytrogaming': {
+    title: 'Hytro Gaming | MaiTroll',
+    description: 'Explore Hytro Gaming on MaiTroll for gaming broadcasts, creators, viewers, and gaming community experiences.',
+    paragraphs: [
+      'Hytro Gaming is MaiTroll’s gaming-focused community for broadcasts, gaming creators, and viewers.',
+      'Explore public gaming content and connect with the MaiTroll gaming community.',
+    ],
+  },
+  '/troll-wheel': {
+    title: 'Troll Wheel | MaiTroll',
+    description: 'Play Troll Wheel on MaiTroll, an interactive community game with random challenges and rewards.',
+    paragraphs: [
+      'Troll Wheel is an interactive MaiTroll community game built for fun, participation, and random outcomes.',
+      'Sign in to participate where required and follow the game rules shown in the experience.',
+    ],
+  },
+  '/mai-troll-run': {
+    title: 'MaiTroll Run | MaiTroll',
+    description: 'Play MaiTroll Run, an interactive running game inside the MaiTroll virtual city.',
+    paragraphs: [
+      'MaiTroll Run is an interactive game inside the MaiTroll virtual city.',
+      'Play, improve your run, and take part in the wider MaiTroll community experience.',
+    ],
+  },
+  '/podcast': {
+    title: 'MaiTroll Podcast Central | MaiTroll',
+    description: 'Discover public MaiTroll podcasts, live audio rooms, conversations, and creator shows.',
+    paragraphs: [
+      'Podcast Central helps visitors discover public MaiTroll podcasts and live audio conversations.',
+      'Browse available shows and join public podcast rooms when they are live.',
+    ],
+  },
+  '/broadcast': {
+    title: 'MaiTroll Broadcasts | Live Broadcasting',
+    description: 'Discover live broadcasts and creator streams on MaiTroll.',
+    paragraphs: [
+      'MaiTroll brings creators and viewers together through live broadcasting, chat, and community interaction.',
+      'Explore public broadcasts and discover creators on MaiTroll.',
+    ],
+  },
+  '/wall': {
+    title: 'MaiTroll Wall | Community Posts',
+    description: 'Explore public community posts and conversations on the MaiTroll Wall.',
+    paragraphs: [
+      'The MaiTroll Wall is a public community space for posts, conversations, and shared updates.',
+      'Explore public posts and join the wider MaiTroll community.',
+    ],
+  },
+  '/troll-court': {
+    title: 'Troll Court | MaiTroll',
+    description: 'Explore Troll Court on MaiTroll, a public community moderation and civic experience.',
+    paragraphs: [
+      'Troll Court is a public community experience within the MaiTroll virtual city.',
+      'Explore available court sessions and public proceedings while following MaiTroll community standards.',
+    ],
+  },
+  '/mai-piks': {
+    title: 'Mai Piks | MaiTroll',
+    description: 'Discover Mai Piks on MaiTroll, a community space for sharing and discovering visual content.',
+    paragraphs: [
+      'Mai Piks is a MaiTroll community experience for sharing and discovering visual content.',
+      'Explore public content and participate in the MaiTroll community.',
+    ],
+  },
   '/donate': {
     title: 'Support MaiTroll City | Help Our Live Streaming Community Grow',
     description: 'Help MaiTroll City grow! Support live-streaming infrastructure, platform development, future hiring, and community expansion through secure PayPal contributions.',

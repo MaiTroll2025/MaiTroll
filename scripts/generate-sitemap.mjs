@@ -75,38 +75,25 @@ function escapeXml(str) {
  * Build a single URL entry
  */
 function urlEntry(loc, lastmod, changefreq, priority) {
-  return `  <url>
-    <loc>${escapeXml(loc)}</loc>
-    <lastmod>${lastmod}</lastmod>
-    <changefreq>${changefreq}</changefreq>
-    <priority>${priority}</priority>
-  </url>`
+  const lines = [
+    '  <url>',
+    `    <loc>${escapeXml(loc)}</loc>`,
+  ]
+
+  if (lastmod) {
+    lines.push(`    <lastmod>${lastmod}</lastmod>`)
+  }
+
+  lines.push(
+    `    <changefreq>${changefreq}</changefreq>`,
+    `    <priority>${priority}</priority>`,
+    '  </url>',
+  )
+
+  return lines.join('\n')
 }
 
 const urls = []
-
-// ============================================================
-// 0. Static public marketing pages
-// ============================================================
-for (const route of [
-  '/',
-  '/about',
-  '/donate',
-  '/terms',
-  '/features/broadcasting-app',
-  '/features/social-media',
-  '/updates',
-  '/blog',
-  '/utromail',
-  '/mai-pay',
-  '/troll-court',
-  '/mai-life',
-  '/mai-sing-off',
-  '/hytrogaming',
-]) {
-  const location = route === '/donate' ? 'https://www.maitroll.com/donate' : `${BASE_URL}${route}`
-  urls.push(urlEntry(location, today, 'weekly', '0.8'))
-}
 
 // ============================================================
 // 1. User Profiles
@@ -119,9 +106,10 @@ try {
   while (true) {
     const { data, error } = await supabase
       .from('user_profiles')
-      .select('username, updated_at, created_at')
+      .select('username, updated_at, created_at, is_banned, account_state, is_private')
       .not('username', 'is', null)
       .neq('username', '')
+      .order('username', { ascending: true })
       .range(from, from + batchSize - 1)
     if (error) throw error
     if (!data || data.length === 0) break
@@ -131,7 +119,12 @@ try {
   }
 
   for (const profile of allProfiles) {
-    if (profile.username) {
+    if (
+      profile.username &&
+      !profile.is_private &&
+      !profile.is_banned &&
+      !['banned', 'suspended', 'jailed', 'exiled'].includes(profile.account_state || '')
+    ) {
       urls.push(urlEntry(
         `${BASE_URL}/profile/${encodeURIComponent(profile.username)}`,
         (profile.updated_at || profile.created_at || today).split('T')[0],
@@ -154,21 +147,33 @@ try {
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
   const { data: streams, error } = await supabase
     .from('streams')
-    .select('id, updated_at, created_at')
+    .select('id, status, is_live, updated_at, created_at, is_public, is_private, password_hash, user_profiles!streams_broadcaster_id_fkey(username, is_banned, account_state, is_private)')
+    .eq('is_public', true)
+    .eq('is_private', false)
     .gte('created_at', thirtyDaysAgo)
     // Password protected streams are not public, so they must never be
     // advertised in a sitemap that search engines can read.
     .is('password_hash', null)
+    .not('status', 'in', '("deleted","suspended","ended")')
+    .eq('is_live', true)
     .order('created_at', { ascending: false })
+    .order('id', { ascending: true })
     .limit(5000)
   if (error) throw error
 
   for (const stream of (streams || [])) {
+    const profile = Array.isArray(stream.user_profiles) ? stream.user_profiles[0] : stream.user_profiles
+    if (
+      !profile?.username ||
+      profile.is_banned ||
+      profile.is_private ||
+      ['banned', 'suspended', 'jailed', 'exiled'].includes(profile.account_state || '')
+    ) continue
     urls.push(urlEntry(
-      `${BASE_URL}/live/${stream.id}`,
+      `${BASE_URL}/live/${encodeURIComponent(profile.username)}`,
       (stream.updated_at || stream.created_at || today).split('T')[0],
-      'hourly',
-      '0.9'
+      stream.status === 'live' ? 'always' : 'daily',
+      stream.status === 'live' ? '0.9' : '0.6'
     ))
   }
   console.log(`  ✅ ${streams?.length || 0} live streams`)
@@ -213,6 +218,7 @@ try {
     .select('id, updated_at, created_at, published_at')
     .eq('is_published', true)
     .order('published_at', { ascending: false })
+    .order('slug', { ascending: true })
     .limit(5000)
   if (error) throw error
 

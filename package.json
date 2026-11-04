@@ -12,7 +12,7 @@
     "server": "node ./server/index.js",
     "render:start": "node ./server/index.js --render",
     "server:watch": "tsx watch ./server/index.ts",
-    "build": "node ./scripts/generate-version.js && npm run build:sitemap && vite build",
+    "build": "node ./scripts/generate-version.js && vite build",
     "build:sitemap": "node ./scripts/generate-sitemap.mjs",
     "build:web": "npm run build",
     "build:verify-seo": "node ./scripts/verify-build-seo.mjs",

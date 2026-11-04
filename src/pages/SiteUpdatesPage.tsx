@@ -34,6 +34,20 @@ export default function SiteUpdatesPage({ postType }: SiteUpdatesPageProps) {
   const description = article?.summary || (postType === 'blog'
     ? 'Read MaiTroll articles about live broadcasting, creator tools, social media, and virtual communities.'
     : 'Read public MaiTroll product updates, feature announcements, and platform news from the CEO of Mai Corp.')
+  const articleUrl = slug ? `${window.location.origin}${collectionPath}/${encodeURIComponent(slug)}` : undefined
+  const structuredData = article && postType === 'blog'
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'BlogPosting',
+        headline: article.title,
+        description: article.summary,
+        datePublished: article.published_at,
+        dateModified: article.published_at || article.created_at,
+        mainEntityOfPage: articleUrl,
+        author: { '@type': 'Organization', name: 'MaiTroll' },
+        publisher: { '@type': 'Organization', name: 'MaiTroll' },
+      }
+    : undefined
 
   const keywords = useMemo(() => postType === 'blog'
     ? ['MaiTroll blog', 'broadcasting app', 'creator tools', 'social media']
@@ -50,7 +64,6 @@ export default function SiteUpdatesPage({ postType }: SiteUpdatesPageProps) {
       .then(async (response) => {
         const contentType = response.headers.get('content-type') || ''
         if (!contentType.toLowerCase().includes('application/json')) {
-          console.warn('[SiteUpdatesPage] Public API returned a non-JSON response; querying published content directly')
           let publicQuery = supabase
             .from('site_updates')
             .select('id, title, slug, summary, content, post_type, published_at, created_at')
@@ -90,9 +103,11 @@ export default function SiteUpdatesPage({ postType }: SiteUpdatesPageProps) {
       description={description}
       keywords={keywords}
       robots="index, follow"
-      author={article && postType === 'update' ? 'CEO of Mai Corp' : undefined}
+      author={article ? (postType === 'update' ? 'CEO of Mai Corp' : 'MaiTroll') : undefined}
       publishedTime={article?.published_at || undefined}
       section={postType === 'blog' ? 'Blog' : 'Product updates'}
+      canonical={articleUrl}
+      structuredData={structuredData}
     >
       <main className="mx-auto min-h-[65vh] max-w-5xl px-4 py-12">
         <Breadcrumb items={slug ? [{ label: collectionLabel, path: collectionPath }, { label: article?.title || 'Article' }] : [{ label: collectionLabel }]} />

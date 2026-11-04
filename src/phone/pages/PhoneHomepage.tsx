@@ -1,7 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Link } from 'react-router-dom'
-import { ArrowRight, Building2, ChevronLeft, ChevronRight, Coins, Gavel, Mail, Play, Radio, Trophy, Users, Shield, Gamepad2, Mic, BriefcaseBusiness, Landmark, Church, RefreshCw } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom'
+import {
+  ArrowRight, Building2, ChevronLeft, ChevronRight, Coins, Gavel, Mail,
+  Play, Radio, Trophy, Users, Shield, Gamepad2, Mic,
+  BriefcaseBusiness, Landmark, Church, RefreshCw, Sparkles,
+} from 'lucide-react'
 
 import PhoneHeader from '../PhoneHeader'
 import DynamicWeatherBackground from '@/components/home/DynamicWeatherBackground'
@@ -11,316 +14,174 @@ import { useLiveContent } from '@/hooks/useLiveContent'
 import type { LiveItem } from '@/contexts/LiveContentContext'
 import { useRandomFreeSeat } from '@/hooks/useRandomFreeSeat'
 import MaiTrollRulesPopup from '@/components/MaiTrollRulesPopup'
-
-const _neonGradient =
-  'bg-gradient-to-br from-[#39FF14] via-[#a855f7] to-[#A855F7]'
-
-const neonBorder =
-  'border border-[#39FF14]/30 shadow-[0_0_25px_rgba(0,191,255,0.10),0_0_35px_rgba(191,0,255,0.08)]'
-
-const PHONE_CITY_BUILDINGS = [
-  { title: 'City Post Office', path: '/tromail/office', icon: Mail },
-  { title: 'Treelz Cinema', path: '/treelz', icon: Play },
-  { title: 'Broadcast Tower', path: '/broadcast/setup', icon: Radio },
-  { title: 'Municipal Court', path: '/court', icon: Gavel },
-  { title: 'Town Hall', path: '/town-meeting', icon: Landmark },
-  { title: 'City Jail', path: '/jail', icon: Shield },
-  { title: 'City Church', path: '/church', icon: Church },
-  { title: 'Game Center', path: '/games', icon: Gamepad2 },
-  { title: 'City Treasury', path: '/president/treasury', icon: Coins },
-  { title: 'Employment Office', path: '/jobs/opportunities', icon: BriefcaseBusiness },
-] as const
-
-function PhoneCityBuildings({ onOpen }: { onOpen: (path: string) => void }) {
-  const stripRef = useRef<HTMLDivElement>(null)
-  const [index, setIndex] = useState(0)
-
-  const scroll = (direction: number) => {
-    const strip = stripRef.current
-    if (!strip) return
-    const visible = 4
-    strip.scrollBy({ left: direction * (strip.clientWidth / visible), behavior: 'smooth' })
-  }
-
-  return (
-    <section className="overflow-hidden rounded-[23px] border border-[#BF00FF]/55 bg-[#0B0711]/95 shadow-[0_0_22px_rgba(191,0,255,.16),0_22px_70px_rgba(0,0,0,.28)]">
-      <div className="flex items-center justify-between gap-2 px-2.5 pt-2 pb-1">
-        <div className="min-w-0">
-          <h2 className="flex items-center gap-1.5 text-[13px] font-black uppercase tracking-wide text-white"><Building2 className="h-[18px] w-[18px] text-[#39FF14]"/> MAITROLL <span className="text-[#39FF14]">CITY</span></h2>
-          <p className="mt-0.5 text-[9px] text-slate-400">Explore your city • Swipe to visit more buildings</p>
-        </div>
-        <div className="flex shrink-0 items-center gap-1">
-          <button aria-label="Previous city buildings" onClick={() => scroll(-1)} disabled={index === 0} className={`grid h-8 w-8 place-items-center rounded-full border border-[#00BFFF]/50 bg-[#00BFFF]/10 text-[#00BFFF] ${index === 0 ? 'opacity-30 pointer-events-none' : ''}`}><ChevronLeft size={16}/></button>
-          <button aria-label="Next city buildings" onClick={() => scroll(1)} disabled={index >= Math.ceil(PHONE_CITY_BUILDINGS.length / 4) - 1} className={`grid h-8 w-8 place-items-center rounded-full border border-[#39FF14]/60 bg-[#39FF14]/10 text-[#39FF14] ${index >= Math.ceil(PHONE_CITY_BUILDINGS.length / 4) - 1 ? 'opacity-30 pointer-events-none' : ''}`}><ChevronRight size={16}/></button>
-        </div>
-      </div>
-      <div className="relative overflow-hidden bg-[linear-gradient(180deg,#100719_0%,#190B22_47%,#0C1713_68%,#090711_100%)]">
-        <div ref={stripRef} onScroll={(event) => { const el = event.currentTarget; setIndex(Math.min(Math.ceil(PHONE_CITY_BUILDINGS.length / 4) - 1, Math.round(el.scrollLeft / Math.max(el.clientWidth, 1)))) }} className="relative flex snap-x snap-mandatory overflow-x-auto overscroll-x-contain scroll-smooth px-2 pt-2 pb-0 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
-          {PHONE_CITY_BUILDINGS.map((building) => {
-            return (
-              <button key={building.title} onClick={() => onOpen(building.path)} title={building.title} className="group flex min-w-0 shrink-0 basis-1/4 snap-start flex-col items-center justify-end px-[2px] text-center active:scale-[.98]">
-                <div className="relative flex h-[75px] w-full max-w-[95px] items-end justify-center">
-                  {building.title === 'Broadcast Tower' ? (
-                    <div className="relative mb-0 flex h-[70px] w-[45px] flex-col items-center justify-end">
-                      <span className="absolute -top-1 h-2 w-2 rounded-full bg-red-400 shadow-[0_0_12px_#ff5353]"/>
-                      <div className="absolute top-3 h-[53px] w-[2px] bg-slate-300/80"/>
-                      <div className="relative mb-[9px] h-[35px] w-[38px] bg-[#27153A] [clip-path:polygon(50%_0,100%_100%,0_100%)]"/>
-                      <div className="absolute bottom-0 flex h-[20px] w-[52px] items-center justify-around rounded-t-md border border-lime-300/30 bg-[#110F20] text-[#39FF14]"><Radio size={13}/><Users size={13}/></div>
-                    </div>
-                  ) : (
-                    <div className={`relative flex w-[91%] flex-col items-center justify-end overflow-visible border border-[#00BFFF]/60 bg-gradient-to-b from-[#25133A] via-[#171123] to-[#0B1515] shadow-[3px_5px_0_#090610,0_0_16px_rgba(0,191,255,.23)] ${['Municipal Court','Town Hall','City Treasury'].includes(building.title) ? 'h-[64px]' : building.title === 'City Church' ? 'h-[61px] rounded-t-3xl' : 'h-[55px]'}`}>
-                      {['Municipal Court','Town Hall','City Treasury'].includes(building.title) && <div className="absolute -top-[9px] left-[-6%] h-3 w-[112%] bg-[#b9b6b2] [clip-path:polygon(50%_0,100%_100%,0_100%)]"/>}
-                      {building.title === 'City Church' && <div className="absolute -top-5 text-xl text-amber-200">✝</div>}
-                      <div className="absolute top-1 w-[92%] truncate bg-[#11091A]/90 px-[1px] py-1 text-[6px] font-black uppercase tracking-[-.02em] text-white">{building.title}</div>
-                      <div className="mb-[10px] grid w-[85%] flex-1 grid-cols-3 gap-[3px] pt-5 pb-1">{Array.from({length:9}, (_,i)=><span key={i} className="rounded-[1px] border border-black/20 bg-[#00BFFF]/35 shadow-[inset_1px_1px_0_rgba(255,255,255,.13)]"/>)}</div>
-                      <span className="absolute bottom-0 h-[12px] w-[15px] border border-[#39FF14]/50 bg-[#071009]"/>
-                    </div>
-                  )}
-                </div>
-                <span className="flex h-[25px] w-full items-center justify-center rounded-sm border-t border-white/10 bg-[#090710] px-[2px] text-center text-[7px] font-extrabold leading-[10px] text-white group-active:text-[#39FF14]">{building.title}</span>
-              </button>
-            )
-          })}
-        </div>
-      </div>
-      <div className="flex items-center justify-center gap-1.5 py-1">{[0,1,2].map(n=>(
-        <span key={n} className={`h-1 rounded-full transition-all ${index===n ? 'w-6 bg-[#39FF14]' : 'w-2 bg-white/20'}`}/>
-      ))}</div>
-    </section>
-  )
-}
+import UniversalButton from '@/components/ui/UniversalButton'
 
 interface PhoneHomepageProps {
   onNavigate?: (path: string) => void
 }
 
-/* -------------------------------------------------------------------------- */
-/* Live Stream Tile                                                           */
-/* -------------------------------------------------------------------------- */
+type PodcastItem = {
+  id: string
+  title?: string | null
+  host_username?: string | null
+  host_user_id?: string | null
+  listener_count?: number | null
+}
 
-const PhoneLiveTile = React.memo(function PhoneLiveTile({
-  item,
-  onClick,
-}: {
-  item: LiveItem
-  onClick: () => void
+const PHONE_CITY_BUILDINGS = [
+  { title: 'City Post Office', path: '/tromail/office', icon: Mail, kind: 'post' },
+  { title: 'Treelz Cinema', path: '/treelz', icon: Play, kind: 'cinema' },
+  { title: 'Broadcast Tower', path: '/broadcast/setup', icon: Radio, kind: 'tower' },
+  { title: 'Municipal Court', path: '/court', icon: Gavel, kind: 'court' },
+  { title: 'Town Hall', path: '/town-meeting', icon: Landmark, kind: 'court' },
+  { title: 'City Jail', path: '/jail', icon: Shield, kind: 'post' },
+  { title: 'City Church', path: '/church', icon: Church, kind: 'court' },
+  { title: 'Game Center', path: '/games', icon: Gamepad2, kind: 'cinema' },
+  { title: 'City Treasury', path: '/president/treasury', icon: Coins, kind: 'court' },
+  { title: 'Employment Office', path: '/jobs/opportunities', icon: BriefcaseBusiness, kind: 'post' },
+] as const
+
+const panel = 'relative overflow-hidden rounded-[22px] border border-[#a64aff]/35 bg-[#111022]/95 shadow-[0_12px_38px_rgba(0,0,0,.35),inset_0_1px_0_rgba(255,255,255,.045)]'
+const action = 'inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#9515f3] to-[#f12dc9] px-5 py-2 text-[13px] font-black text-white shadow-[0_8px_22px_rgba(173,25,239,.25)] transition hover:brightness-110 active:scale-[.98]'
+
+/** CSS-drawn city facade: no additional asset URLs or image dependencies required. */
+function CityArtwork({ kind, label, Icon }: {
+  kind: string
+  label: string
+  Icon: React.ElementType
 }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="group relative h-[105px] w-[108px] shrink-0 overflow-hidden rounded-xl border border-[#BF00FF]/65 bg-[#0C0612] text-left shadow-[0_8px_30px_rgba(0,0,0,0.40)] transition-all duration-200 active:scale-[0.97] hover:border-[#00BFFF]/80 hover:shadow-[0_0_25px_rgba(0,191,255,0.35)]"
-    >
-      <div className="absolute inset-0 bg-gradient-to-br from-[#00BFFF]/30 via-[#0A0610] to-[#BF00FF]/30" />
-      <div className="absolute -right-2 -top-2 z-10 text-xl drop-shadow-[0_0_8px_rgba(255,122,0,.7)]">🎃</div>
-      <div className="absolute -left-1 bottom-14 z-10 text-sm opacity-80">🕷️</div>
-      <div className="absolute inset-0 z-[1] pointer-events-none opacity-25 [background-image:radial-gradient(circle_at_20%_20%,#a3f529_1px,transparent_1px),radial-gradient(circle_at_80%_70%,#A855F7_1px,transparent_1px)] [background-size:18px_18px]" />
-
-      {item.streamerAvatar ? (
-        <img
-          src={item.streamerAvatar}
-          alt={item.streamerName || 'Live streamer'}
-          loading="lazy"
-          className="absolute inset-0 h-full w-full object-cover opacity-75 transition-transform duration-500 group-hover:scale-105"
-        />
+    <div className="relative flex h-[120px] w-full items-end justify-center overflow-hidden bg-[radial-gradient(ellipse_at_50%_55%,#55317b_0%,#1d1846_48%,#091326_100%)] sm:h-[155px]">
+      <div className="pointer-events-none absolute inset-0 opacity-70 [background-image:radial-gradient(#e0b6ff_1px,transparent_1px)] [background-size:37px_31px]" />
+      <div className="absolute bottom-0 h-9 w-full bg-[linear-gradient(0deg,#080b19,transparent)]" />
+      {kind === 'tower' ? (
+        <div className="relative flex h-[110px] w-[83px] items-end justify-center">
+          <span className="absolute top-0 z-10 h-2.5 w-2.5 rounded-full bg-[#ff75b7] shadow-[0_0_18px_6px_#e943d0]" />
+          <div className="absolute top-3 h-[88px] w-[4px] bg-gradient-to-b from-[#e4c7ff] to-[#53408a]" />
+          <div className="absolute bottom-[17px] h-[55px] w-[65px] border-x-[3px] border-[#ab72fc] bg-[linear-gradient(110deg,#211c56,#5a3a93,#131b40)] [clip-path:polygon(50%_0%,100%_100%,0%_100%)]" />
+          <div className="absolute bottom-[23px] h-[2px] w-[82px] bg-[#e48aff] shadow-[0_0_12px_#d42cff]" />
+          <div className="relative z-10 mb-0 flex h-[26px] w-[77px] items-center justify-center rounded-t-xl border border-[#bf7bff] bg-[#17143d] text-[#f279ff] shadow-[0_0_20px_#a92ff088]"><Radio size={24}/></div>
+        </div>
+      ) : kind === 'cinema' ? (
+        <div className="relative mb-0 flex h-[91px] w-[85%] flex-col items-center rounded-t-[24px] border-2 border-[#bb50d9] bg-[linear-gradient(105deg,#1e1332,#4d1746,#231136)] shadow-[0_0_28px_#f02ca966]">
+          <div className="absolute -top-4 rounded-xl border-2 border-[#ff80d9] bg-[#541552] px-2 py-1 text-center text-[10px] font-black uppercase tracking-wider text-[#ffc2ed] shadow-[0_0_12px_#ed36cd]">{label.replace(' Cinema','')}</div>
+          <div className="mt-7 flex w-[85%] justify-around border-y border-[#c74dbd] py-1 text-[#ff8ee1]"><Icon size={18}/><Sparkles size={16}/><Icon size={18}/></div>
+          <div className="mt-2 flex h-full w-[70%] justify-center gap-2"><span className="w-5 bg-[#3b204e]"/><span className="w-5 bg-[#3b204e]"/></div>
+        </div>
+      ) : kind === 'court' ? (
+        <div className="relative mb-0 flex h-[83px] w-[85%] flex-col items-center border-x-2 border-[#ddb46f] bg-[linear-gradient(120deg,#815174,#e6a875,#54375e)] shadow-[0_0_27px_#ea9c7277]">
+          <div className="absolute -top-[22px] h-[24px] w-[112%] bg-[#deb38c] [clip-path:polygon(50%_0%,100%_100%,0%_100%)]" />
+          <div className="absolute -top-[10px] text-[#ffe49d]"><Icon size={17}/></div>
+          <div className="mt-4 flex h-[65px] w-[83%] justify-around border-y-[5px] border-[#eac8a0] bg-[#33233c] px-1">
+            {[0,1,2,3].map(i => <span key={i} className="h-full w-[12%] border-x-2 border-[#d3a67d] bg-[#a3797b]" />)}
+          </div>
+        </div>
       ) : (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[#39FF14]/50 bg-[#39FF14]/10">
-            <Play className="h-7 w-7 text-[#39FF14]/50" />
+        <div className="relative flex h-[91px] w-[77%] flex-col items-center rounded-t-md border-2 border-[#608bf6] bg-[linear-gradient(110deg,#1b2b66,#553779,#161f50)] shadow-[0_0_25px_#6386f077]">
+          <span className="absolute -top-4 h-4 w-[85%] rounded-t-lg bg-[#6b7fe3]" />
+          <div className="mt-2 w-[85%] bg-[#182049] py-1 text-center text-[8px] font-black uppercase text-[#ffe0ac]">{label}</div>
+          <div className="mt-2 grid w-[81%] flex-1 grid-cols-3 gap-[5px] pb-2">
+            {Array.from({ length: 9 }, (_, i) => <span key={i} className="border border-[#4e84d7]/50 bg-[#4b71ba]/65 shadow-[0_0_7px_#4a8bdf66]" />)}
           </div>
         </div>
       )}
-
-      <div className="absolute inset-0 bg-gradient-to-b from-[#09050F]/10 via-transparent to-[#09050F]" />
-
-      {/* Neon LIVE badge */}
-      <div className="absolute left-2 top-2 flex items-center gap-1 rounded-lg border border-[#39FF14]/60 bg-[#05050c]/75 px-2 py-1 text-[8px] font-black tracking-wider text-white backdrop-blur-md">
-        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#39FF14] shadow-[0_0_8px_#a3f529]" />
-        LIVE
-      </div>
-
-      <div className="absolute right-2 top-2 rounded-lg border border-white/10 bg-black/55 px-1.5 py-1 text-[8px] font-black text-white backdrop-blur-md">
-        👁 {item.viewerCount || 0}
-      </div>
-
-      <div className="absolute inset-x-0 bottom-0 p-2.5">
-        <p className="truncate text-[10px] font-black text-white">
-          {item.title || 'Live Broadcast'}
-        </p>
-
-        <p className="mt-0.5 truncate text-[9px] font-bold text-[#39FF14]/70">
-          {item.streamerName || 'Unknown'}
-        </p>
-      </div>
-    </button>
+      <div className="absolute inset-x-0 bottom-0 h-[3px] bg-[#e295e5]/50 blur-[1px]" />
+    </div>
   )
-})
+}
 
-/* -------------------------------------------------------------------------- */
-/* Section                                                                     */
-/* -------------------------------------------------------------------------- */
+function PhoneCityBuildings({ onOpen }: { onOpen: (path: string) => void }) {
+  const stripRef = useRef<HTMLDivElement>(null)
+  const [page, setPage] = useState(0)
+  const maxPage = Math.ceil(PHONE_CITY_BUILDINGS.length / 4) - 1
 
-function PhoneSection({
-  title,
-  icon: Icon,
-  count,
-  children,
-  onViewAll,
-}: {
-  title: string
-  icon: React.ElementType
-  count?: number
-  children: React.ReactNode
-  onViewAll?: () => void
-}) {
+  const scrollToPage = (nextPage: number) => {
+    const el = stripRef.current
+    if (!el) return
+    const clamped = Math.max(0, Math.min(maxPage, nextPage))
+    el.scrollTo({ left: el.clientWidth * clamped, behavior: 'smooth' })
+    setPage(clamped)
+  }
+
   return (
-    <section className="space-y-1.5">
-      <div className="flex items-center justify-between px-1">
-        <div className="flex min-w-0 items-center gap-2.5">
-          <div className="relative flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#39FF14]/50 bg-[#39FF14]/10">
-            <div className="absolute inset-0 bg-gradient-to-br from-[#39FF14]/25 to-[#A855F7]/25" />
-            <span className="absolute -right-1 -top-1 text-[10px]">🕷️</span>
-            <Icon size={15} className="relative text-[#39FF14]" />
-          </div>
-
-          <div className="min-w-0">
-            <h2 className="truncate text-[12px] font-black tracking-tight text-white">
-              {title}
-            </h2>
-
-            {count !== undefined && (
-              <p className="text-[9px] font-bold text-[#39FF14]/55">
-                {count} {count === 1 ? 'active stream' : 'active streams'}
-              </p>
-            )}
-          </div>
+    <section className={`${panel} px-3 py-4 sm:px-5`}>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="flex items-center gap-2 text-[19px] font-black uppercase tracking-tight sm:text-[24px]"><Building2 className="text-[#c34eff]"/> MaiTroll City</h2>
+          <p className="text-[11px] text-[#a6a7c4] sm:text-[13px]">Explore the city • Visit buildings • Discover what&apos;s live</p>
         </div>
-
-        {onViewAll && (
-          <button
-            type="button"
-            onClick={onViewAll}
-            className="group flex shrink-0 items-center gap-0.5 rounded-lg px-2 py-1 text-[9px] font-black uppercase tracking-wider text-[#39FF14] transition hover:bg-[#39FF14]/10"
-          >
-            Explore
-            <ChevronRight
-              size={12}
-              className="transition-transform group-hover:translate-x-0.5"
-            />
-          </button>
-        )}
+        <div className="flex gap-2">
+          <UniversalButton iconOnly aria-label="Previous city buildings" icon={<ChevronLeft size={20}/>} onClick={() => scrollToPage(page - 1)} disabled={page === 0} className="h-9 w-9 rounded-full p-0" />
+          <UniversalButton iconOnly aria-label="Next city buildings" icon={<ChevronRight size={20}/>} onClick={() => scrollToPage(page + 1)} disabled={page >= maxPage} className="h-9 w-9 rounded-full border-[#d447ff]/60 bg-gradient-to-br from-[#9318ec] to-[#da24c3] p-0 text-white" />
+        </div>
       </div>
-
-      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
-        {children}
+      <div ref={stripRef} onScroll={(event) => {
+        const el = event.currentTarget
+        setPage(Math.min(maxPage, Math.max(0, Math.round(el.scrollLeft / Math.max(1, el.clientWidth)))))
+      }} className="flex snap-x snap-mandatory overflow-x-auto scroll-smooth scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
+        {PHONE_CITY_BUILDINGS.map(({ title, path, icon: Icon, kind }) => (
+          <UniversalButton type="button" key={title} onClick={() => onOpen(path)} aria-label={`Visit ${title}`} variant="ghost" className="group h-auto w-1/4 shrink-0 snap-start p-0 text-left sm:px-1.5">
+            <div className="overflow-hidden rounded-xl border border-[#8663cd]/40 bg-[#141428] shadow-[0_6px_20px_#0009] transition group-hover:border-[#d55aff]">
+              <CityArtwork kind={kind} label={title} Icon={Icon}/>
+              <div className="flex h-10 items-center justify-center bg-[#0f1223] px-1 text-center text-[9px] font-extrabold leading-tight text-white sm:h-12 sm:text-xs">{title}</div>
+            </div>
+          </UniversalButton>
+        ))}
       </div>
     </section>
   )
 }
 
-/* -------------------------------------------------------------------------- */
-/* Live Now                                                                    */
-/* -------------------------------------------------------------------------- */
-
-function _PhoneLiveNow({
-  items,
-  loading,
-  onItemClick,
-  onViewAll,
-}: {
-  items: LiveItem[]
-  loading: boolean
-  onItemClick: (item: LiveItem) => void
-  onViewAll?: () => void
-}) {
-  if (loading) {
-    return (
-      <PhoneSection title="Live Now" icon={Radio}>
-        {Array.from({ length: 3 }).map((_, index) => (
-          <div
-            key={index}
-            className="h-[105px] w-[108px] shrink-0 animate-pulse rounded-xl border border-[#00BFFF]/45 bg-gradient-to-br from-[#00BFFF]/10 to-[#BF00FF]/10"
-          />
-        ))}
-      </PhoneSection>
-    )
-  }
-
+const PhoneLiveTile = React.memo(function PhoneLiveTile({ item, onClick }: { item: LiveItem, onClick: () => void }) {
   return (
-    <PhoneSection
-      title="Live Now"
-      icon={Radio}
-      count={items.length}
-      onViewAll={onViewAll}
-    >
-      {items.length === 0 ? (
-        <button
-          type="button"
-          onClick={onViewAll}
-          className={`flex h-[86px] w-full min-w-[260px] flex-col items-center justify-center rounded-2xl ${neonBorder} bg-gradient-to-br from-[#39FF14]/5 via-[#0D0814] to-[#A855F7]/5 px-5 text-center transition active:scale-[0.98]`}
-        >
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[#39FF14]/50 bg-[#39FF14]/10">
-            <Radio className="h-6 w-6 text-[#39FF14]/60" />
-          </div>
+    <UniversalButton type="button" onClick={onClick} variant="ghost" className="group relative h-[152px] w-[136px] shrink-0 overflow-hidden rounded-2xl border border-[#ab63fc]/40 bg-[#17122b] p-0 text-left sm:h-[180px] sm:w-[165px]">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_20%,#6939bd,#17122b_65%)]" />
+      {item.streamerAvatar ? <img src={item.streamerAvatar} alt={item.streamerName || 'Broadcaster'} loading="lazy" className="absolute inset-0 h-full w-full object-cover" /> : <Radio className="absolute left-1/2 top-1/2 h-12 w-12 -translate-x-1/2 -translate-y-1/2 text-[#c343ff]/70" />}
+      <div className="absolute inset-0 bg-gradient-to-t from-[#090716] via-transparent to-[#090716]/25" />
+      <span className="absolute left-2 top-2 flex items-center gap-1 rounded-md bg-[#eb2389] px-2 py-1 text-[9px] font-black text-white"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white"/> LIVE</span>
+      <span className="absolute right-2 top-2 rounded-md bg-black/65 px-1.5 py-1 text-[9px] font-bold text-white">{item.viewerCount || 0} watching</span>
+      <div className="absolute inset-x-0 bottom-0 p-3"><div className="truncate text-[12px] font-black text-white">{item.title || 'Live Broadcast'}</div><div className="truncate text-[10px] font-semibold text-[#deb9ff]">{item.streamerName || 'MaiTroll Citizen'}</div></div>
+    </UniversalButton>
+  )
+})
 
-          <p className="mt-1 text-xs font-black text-zinc-300">
-            The network is quiet
-          </p>
-
-          <p className="mt-1 text-[9px] font-bold text-zinc-600">
-            Explore MaiTroll or be the first to go live.
-          </p>
-        </button>
-      ) : (
-        items.slice(0, 12).map((item) => (
-          <PhoneLiveTile
-            key={item.id}
-            item={item}
-            onClick={() => onItemClick(item)}
-          />
-        ))
-      )}
-    </PhoneSection>
+function FeatureCard({ type, title, description, cta, onClick }: { type: 'gaming' | 'podcast', title: string, description: string, cta: string, onClick: () => void }) {
+  const gaming = type === 'gaming'
+  const Icon = gaming ? Gamepad2 : Mic
+  return (
+    <UniversalButton onClick={onClick} variant="ghost" icon={<ArrowRight size={13} />} iconPosition="end" className={`relative min-h-[164px] w-full overflow-hidden rounded-[20px] border p-4 text-left transition active:scale-[.99] ${gaming ? 'border-[#4164e9]/60 bg-[radial-gradient(ellipse_at_85%_65%,#303795_0%,#171536_55%,#0b1429_100%)]' : 'border-[#a33bd8]/60 bg-[radial-gradient(ellipse_at_86%_55%,#66235e_0%,#271334_51%,#130e29_100%)]'}`}>
+      <Icon className={`absolute -right-4 bottom-5 h-28 w-28 rotate-[-12deg] opacity-30 sm:h-36 sm:w-36 ${gaming ? 'text-[#338eff]' : 'text-[#fc63db]'}`}/>
+      <div className="relative z-10 flex items-center gap-2 text-[15px] font-black sm:text-lg"><Icon size={22} className={gaming ? 'text-[#6da9ff]' : 'text-[#ff70da]'}/>{title}</div>
+      <p className="relative z-10 mt-2 max-w-[220px] text-[11px] leading-relaxed text-[#c6c5de] sm:text-[13px]">{description}</p>
+      <span className="relative z-10 mt-4 inline-flex items-center gap-1 rounded-xl bg-gradient-to-r from-[#8a19e8] to-[#d527c9] px-3 py-2 text-[11px] font-bold text-white sm:text-[12px]">{cta}<ArrowRight size={13}/></span>
+    </UniversalButton>
   )
 }
 
-/* -------------------------------------------------------------------------- */
-/* Homepage                                                                    */
-/* -------------------------------------------------------------------------- */
-
-export default function PhoneHomepage({
-  onNavigate,
-}: PhoneHomepageProps) {
+export default function PhoneHomepage({ onNavigate }: PhoneHomepageProps) {
   const navigate = useNavigate()
-
   const user = useAuthStore((state) => state.user)
-  const profile = useAuthStore((state) => state.profile) as any
+  const profile = useAuthStore((state) => state.profile) as { display_name?: string, username?: string, avatar_url?: string } | null
   const isLoading = useAuthStore((state) => state.isLoading)
-
-  const {
-    liveItems,
-    onlineUsers,
-    loadingLive,
-    refresh,
-  } = useLiveContent()
-
-
+  const { liveItems, onlineUsers, loadingLive, refresh } = useLiveContent()
   const [refreshing, setRefreshing] = useState(false)
-
-  const [podcasts, setPodcasts] = useState<any[]>([])
+  const [podcasts, setPodcasts] = useState<PodcastItem[]>([])
   const [podcastsLoading, setPodcastsLoading] = useState(false)
 
+  const go = useCallback((path: string) => {
+    if (onNavigate) onNavigate(path)
+    else navigate(path)
+  }, [navigate, onNavigate])
+
+  const { joinRandomFreeSeat, joiningRandomSeat } = useRandomFreeSeat(user?.id, go)
+
   const loadPodcasts = useCallback(async () => {
-    if (!user?.id) return
+    if (!user?.id) { setPodcasts([]); return }
     setPodcastsLoading(true)
     try {
-      const { data, error } = await supabase
-        .from('podcasts')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(24)
+      const { data, error } = await supabase.from('podcasts').select('*').order('created_at', { ascending: false }).limit(24)
       if (error) throw error
-      setPodcasts(data || [])
+      setPodcasts((data || []) as PodcastItem[])
     } catch (err) {
       console.error('Failed to load podcasts:', err)
       setPodcasts([])
@@ -329,109 +190,37 @@ export default function PhoneHomepage({
     }
   }, [user?.id])
 
-  useEffect(() => {
-    loadPodcasts()
-  }, [loadPodcasts])
+  useEffect(() => { void loadPodcasts() }, [loadPodcasts])
+  const battleItems = useMemo(() => liveItems.filter(item => item.isBattle), [liveItems])
+  const hytroItems = useMemo(() => liveItems.filter(item => item.category === 'gaming'), [liveItems])
 
-  const battleItems = useMemo(
-    () => liveItems.filter((item) => item.isBattle),
-    [liveItems],
-  )
-
-  const _courtItems = useMemo(
-    () => liveItems.filter((item) => item.category === 'court'),
-    [liveItems],
-  )
-
-  const hytroItems = useMemo(
-    () => liveItems.filter((item) => item.category === 'gaming'),
-    [liveItems],
-  )
-
-  const totalLive = liveItems.length
-
-  const go = useCallback(
-    (path: string) => {
-      if (onNavigate) {
-        onNavigate(path)
-      } else {
-        navigate(path)
-      }
-    },
-    [navigate, onNavigate],
-  )
-
-  const { joinRandomFreeSeat, joiningRandomSeat } = useRandomFreeSeat(user?.id, go)
-
-  const handleStreamClick = useCallback(
-    (item: LiveItem) => {
-      if (item.category === 'gaming') {
-        go(`/gaming/watch/${item.id}`)
-      } else {
-        go(`/watch/${item.id}`)
-      }
-    },
-    [go],
-  )
+  const handleStreamClick = useCallback((item: LiveItem) => {
+    go(item.category === 'gaming' ? `/gaming/watch/${item.id}` : `/watch/${item.id}`)
+  }, [go])
 
   const refreshLiveContent = useCallback(async () => {
     setRefreshing(true)
-
-    try {
-      await refresh()
-      await new Promise((resolve) => setTimeout(resolve, 300))
-    } finally {
-      setRefreshing(false)
-    }
+    try { await refresh(); await new Promise(resolve => setTimeout(resolve, 300)) }
+    finally { setRefreshing(false) }
   }, [refresh])
 
+  useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }) }, [])
   useEffect(() => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'instant',
-    })
-  }, [])
-
-  useEffect(() => {
-    const handleOpenLive = () => {
-      go('/live')
-    }
-
-    window.addEventListener('phone-open-live', handleOpenLive)
-
-    return () => {
-      window.removeEventListener('phone-open-live', handleOpenLive)
-    }
+    const openLive = () => go('/live')
+    window.addEventListener('phone-open-live', openLive)
+    return () => window.removeEventListener('phone-open-live', openLive)
   }, [go])
-
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        refresh()
-      }
-    }
-
-    document.addEventListener(
-      'visibilitychange',
-      handleVisibilityChange,
-    )
-
-    return () => {
-      document.removeEventListener(
-        'visibilitychange',
-        handleVisibilityChange,
-      )
-    }
+    const handleVisibilityChange = () => { if (document.visibilityState === 'visible') void refresh() }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
   }, [refresh])
 
-  if (isLoading) {
-    return <div className="flex min-h-screen items-center justify-center bg-[#09070E] text-sm font-semibold text-[#BF00FF]"><span className="animate-pulse">Entering MaiTroll City...</span></div>
-  }
+  if (isLoading) return <div className="flex min-h-screen items-center justify-center bg-[#080916] font-semibold text-[#d16aff]"><span className="animate-pulse">Entering MaiTroll City...</span></div>
 
   const displayName = profile?.display_name || profile?.username || 'MaiTroll Citizen'
   const citizenAvatar = profile?.avatar_url || ''
-  const open = (path: string) => go(path)
-  const socialLinks = [
+  const links = [
     { label: 'Live', icon: Radio, path: '/live' },
     { label: 'People', icon: Users, path: '/explore' },
     { label: 'Treelz', icon: Play, path: '/treelz' },
@@ -439,86 +228,96 @@ export default function PhoneHomepage({
     { label: 'Podcasts', icon: Mic, path: '/podcast' },
     { label: 'Coins', icon: Coins, path: '/coins' },
   ]
+  const heroCopy = [
+    { kicker: 'BROADCAST  •  BATTLE  •  PODCAST  •  EARN', heading: 'Welcome to MaiTroll', text: 'Go live, join a seat, watch, and earn Troll Coins with the city’s live network.', icon: Mic },
+    { kicker: 'YOUR CITY. YOUR WORLD.', heading: 'Explore MaiTroll City', text: 'Discover the post office, cinema, live broadcasts, court, and much more.', icon: Building2 },
+    { kicker: 'GO LIVE  •  CONNECT  •  CREATE', heading: 'Your moment starts here', text: 'Meet creators, enjoy live shows, battle, and build your place in the city.', icon: Radio },
+  ]
+  const hero = heroCopy[0]
+  const HeroIcon = hero.icon
+
   return (
-    <div className="relative min-h-[100dvh] overflow-x-hidden bg-[#09070E] text-white">
-      <DynamicWeatherBackground
-        isDark={true}
-        showWalker={!!user}
-        showBuildings={false}
-        onBuildingClick={open}
-        onJoinRandomSeat={joinRandomFreeSeat}
-        isJoiningRandomSeat={joiningRandomSeat}
-      />
-      <PhoneHeader showTickerLinks={false} />
-      <main className="relative z-10 mx-auto flex w-full max-w-[800px] flex-col gap-2 px-2.5 pb-20 pt-2">
-        <section className="flex items-center justify-between gap-2 rounded-xl border border-[#BF00FF]/55 bg-[#100818]/95 shadow-[0_0_18px_rgba(191,0,255,.11)] px-2.5 py-1.5">
-          <button onClick={() => user ? go(`/profile/id/${user.id}`) : go('/auth')} className="flex min-w-0 items-center gap-2 text-left">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[#BF00FF]/80 bg-[#BF00FF]/15 text-sm font-black">{citizenAvatar ? <img src={citizenAvatar} alt="" className="h-full w-full object-cover"/> : displayName[0]?.toUpperCase()}</div>
-            <div className="min-w-0"><p className="text-[8px] text-slate-400">{user ? 'Welcome back, citizen' : 'Welcome to the city'}</p><p className="truncate text-[12px] font-black">{displayName}</p></div>
-          </button>
-          <button onClick={() => go('/coins')} className="flex shrink-0 items-center gap-1.5 rounded-lg border border-[#39FF14]/65 bg-[#39FF14]/10 px-2 py-1.5"><Coins className="h-4 w-4 text-[#39FF14]"/><span className="text-[9px] font-bold">Troll Coins</span><ArrowRight size={12} className="text-[#39FF14]"/></button>
+    <div className="relative min-h-[100dvh] overflow-x-hidden bg-[#090b18] text-white">
+      {/* Preserve existing background/city-related event integration, but dim it behind the new cards. */}
+      <div className="absolute inset-0 opacity-[.13]">
+        <DynamicWeatherBackground isDark={true} showWalker={!!user} showBuildings={false} onBuildingClick={go} onJoinRandomSeat={joinRandomFreeSeat} isJoiningRandomSeat={joiningRandomSeat}/>
+      </div>
+      {/* Existing PhoneHeader owns your app header/menu and may coexist with the app-level bottom navigation. */}
+      <PhoneHeader showTickerLinks={false}/>
+
+      <main className="relative z-10 mx-auto flex w-full max-w-[900px] flex-col gap-4 px-3 pb-24 pt-3 sm:gap-5 sm:px-5">
+        {/* Cinematic branded hero */}
+        <section className="relative min-h-[232px] overflow-hidden rounded-[24px] border border-[#9858db]/60 bg-[radial-gradient(ellipse_at_75%_70%,#63159d_0%,#24123f_37%,#091125_85%)] shadow-[inset_0_1px_0_#c68aff44,0_15px_38px_#0007] sm:min-h-[280px]">
+          <div className="pointer-events-none absolute -right-10 top-4 h-40 w-40 rounded-full bg-[#e322dc]/40 blur-[65px]"/>
+          <div className="pointer-events-none absolute bottom-0 right-[-12%] h-28 w-[80%] rotate-[-18deg] bg-gradient-to-r from-transparent via-[#fa3be6]/40 to-transparent blur-[20px]"/>
+          <div className="pointer-events-none absolute right-[2%] top-[9%] rotate-[12deg] text-[#f59aff] drop-shadow-[0_0_30px_#c326ef] opacity-50"><HeroIcon size={160} strokeWidth={1.1}/></div>
+          <div className="relative z-10 flex h-full min-h-[232px] flex-col justify-center px-5 py-6 sm:min-h-[280px] sm:px-8">
+            <p className="max-w-[75%] text-[9px] font-black uppercase tracking-[.19em] text-[#bca7ff] sm:text-xs">{hero.kicker}</p>
+            <h1 className="mt-2 max-w-[77%] text-[27px] font-black leading-[1.06] tracking-tight sm:text-[40px]">{hero.heading}</h1>
+            <p className="mt-3 max-w-[72%] text-[11px] leading-relaxed text-[#c3c5df] sm:max-w-[65%] sm:text-sm">{hero.text}</p>
+            <div className="mt-5 flex flex-wrap items-center gap-2">
+              <UniversalButton onClick={() => go('/broadcast/setup')} icon={<Radio size={17}/>} className={`${action} px-3 text-[11px] sm:px-5 sm:text-sm`}>Go Live Now</UniversalButton>
+              <UniversalButton onClick={() => document.getElementById('maitroll-city-phone')?.scrollIntoView({ behavior: 'smooth', block: 'center' })} variant="secondary" icon={<Building2 size={16}/>} className="min-h-10 border-[#cf84f9]/65 bg-[#0c1024]/70 px-3 text-[11px] sm:px-5 sm:text-sm">Explore City</UniversalButton>
+            </div>
+          </div>
         </section>
 
-        <section className="grid grid-cols-4 gap-1.5">
-          {socialLinks.map(({label,icon:Icon,path},i)=><button key={label} onClick={()=>go(path)} className={`flex h-[43px] flex-col items-center justify-center gap-0.5 rounded-lg px-0.5 active:scale-95 ${i % 3 === 0 ? 'border border-[#00BFFF]/65 bg-[#07121B] shadow-[0_0_12px_rgba(0,191,255,.20)]' : i % 3 === 1 ? 'border border-[#39FF14]/65 bg-[#0A170A] shadow-[0_0_12px_rgba(57,255,20,.18)]' : 'border border-[#BF00FF]/65 bg-[#16091C] shadow-[0_0_12px_rgba(191,0,255,.20)]'}`}><Icon size={16} className={i%3===0 ? 'text-[#00BFFF]' : i%3===1 ? 'text-[#39FF14]' : 'text-[#BF00FF]'}/><span className="text-[9px] font-semibold text-slate-200">{label}{label === 'Battles' && battleItems.length > 0 ? ` (${battleItems.length})` : ''}</span></button>)}
+        {/* Six main shortcuts — same navigation as existing home */}
+        <section aria-label="MaiTroll quick navigation" className="grid grid-cols-3 gap-2 sm:grid-cols-6 sm:gap-3">
+          {links.map(({ label, icon: Icon, path }, i) => (
+            <UniversalButton key={label} onClick={() => go(path)} variant="ghost" className={`flex min-h-[86px] w-full flex-col gap-2 rounded-[18px] border p-2 text-center ${i === 0 ? 'border-[#b436fb] bg-gradient-to-br from-[#8f16dc] to-[#c425cf] shadow-[0_6px_24px_#9210c855]' : 'border-white/[.065] bg-gradient-to-b from-[#1b1b37] to-[#131428] hover:border-[#b761fb]/40'}`}>
+              <Icon size={23} strokeWidth={2.2} className={i === 0 ? 'text-white' : i === 5 ? 'text-[#ffc75c]' : 'text-[#d8a0ff]'}/>
+              <span className="text-[12px] font-extrabold sm:text-[13px]">{label}{label === 'Battles' && battleItems.length > 0 ? ` (${battleItems.length})` : ''}</span>
+            </UniversalButton>
+          ))}
         </section>
 
-        <div className="grid grid-cols-2 gap-1.5">
-          <button onClick={()=>go('/broadcast/setup')} className="flex h-9 items-center justify-center gap-1.5 rounded-lg border border-[#39FF14]/70 bg-[#0B1709]/90 shadow-[0_0_14px_rgba(57,255,20,.18)] text-[10px] font-black text-[#39FF14]"><Radio size={14}/> GO LIVE</button>
-          <button disabled={joiningRandomSeat} onClick={joinRandomFreeSeat} className="flex h-9 items-center justify-center gap-1.5 rounded-lg border border-[#BF00FF]/60 bg-[#BF00FF]/10 text-[10px] font-black text-[#BF00FF] disabled:opacity-50"><Users size={14}/>{joiningRandomSeat ? 'FINDING...' : 'RANDOM SEAT'}</button>
+        {/* Personalized citizen card + dedicated random seat action */}
+        <section className="flex flex-wrap items-center justify-between gap-3 rounded-[20px] border border-[#6a56a5]/30 bg-[linear-gradient(110deg,#191a35,#201c3c,#100f24)] p-3 sm:p-4">
+          <UniversalButton onClick={() => user ? go(`/profile/id/${user.id}`) : go('/auth')} variant="ghost" className="h-auto min-w-0 flex-1 justify-start p-0 text-left">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[#b84aff] bg-[#25114a] text-xl font-black text-[#e4acff] shadow-[0_0_15px_#a728e850]">
+              {citizenAvatar ? <img src={citizenAvatar} alt="Your profile avatar" className="h-full w-full object-cover"/> : displayName[0]?.toUpperCase()}
+            </div>
+            <div className="min-w-0"><p className="text-[10px] text-[#c4c0dc]">{user ? 'Welcome back, citizen' : 'Welcome to MaiTroll'}</p><p className="truncate text-[15px] font-black sm:text-lg">{displayName}</p></div>
+          </UniversalButton>
+          <UniversalButton onClick={() => go('/coins')} variant="secondary" icon={<Coins size={19} className="text-[#ffd15f]"/>} iconPosition="start" className="min-h-10 shrink-0 rounded-full border-[#dc71f6] bg-[#19132c] px-3 text-[12px]">Troll Coins <ChevronRight size={17}/></UniversalButton>
+        </section>
+
+        <UniversalButton loading={joiningRandomSeat} onClick={joinRandomFreeSeat} variant="secondary" icon={<Users size={18}/>} className="min-h-11 rounded-2xl">{joiningRandomSeat ? 'Finding a free seat…' : 'Join a Random Seat'}</UniversalButton>
+
+        {/* Active broadcasters: real hook data, visible empty state */}
+        <section className={`${panel} min-h-[238px] p-4 sm:p-5`}>
+          <div className="relative z-10 flex items-center justify-between gap-3">
+            <div><h2 className="flex items-center gap-2 text-[18px] font-black sm:text-[22px]"><Radio size={22} className="text-[#ff40b9]"/> Live in MaiTroll City</h2><p className="text-[10px] text-[#acaac5]">{liveItems.length} broadcasts • {onlineUsers.toLocaleString()} online</p></div>
+            <div className="flex items-center gap-2"><UniversalButton iconOnly aria-label="Refresh live streams" loading={refreshing} onClick={() => void refreshLiveContent()} variant="ghost" className="h-9 w-9 p-2"><RefreshCw size={16}/></UniversalButton><UniversalButton onClick={() => go('/live')} variant="ghost" icon={<ArrowRight size={15}/>} iconPosition="end" className="min-h-8 whitespace-nowrap px-1 text-[11px] text-[#ec83eb]">View All</UniversalButton></div>
+          </div>
+          {loadingLive ? (
+            <div className="mt-4 flex gap-3 overflow-hidden">{Array.from({length: 3}, (_, i) => <div key={i} className="h-[152px] w-[136px] shrink-0 animate-pulse rounded-xl bg-white/10"/>)}</div>
+          ) : liveItems.length > 0 ? (
+            <div className="mt-4 flex gap-3 overflow-x-auto pb-1 scrollbar-hide">{liveItems.slice(0, 12).map(item => <PhoneLiveTile key={item.id} item={item} onClick={() => handleStreamClick(item)}/>)}</div>
+          ) : (
+            <div className="relative mt-3 flex min-h-[154px] flex-col items-center justify-center overflow-hidden rounded-xl bg-[radial-gradient(ellipse_at_bottom,#441a6c_0%,transparent_70%)] px-3 text-center">
+              <Radio size={42} className="mb-2 text-[#d946e9] drop-shadow-[0_0_20px_#c128f4]"/>
+              <h3 className="text-[15px] font-black">No broadcasts live yet</h3>
+              <p className="mt-1 text-[11px] text-[#b3a8cd]">Be the first to go live and bring MaiTroll City to life!</p>
+              <UniversalButton onClick={() => go('/broadcast/setup')} icon={<Radio size={16}/>} className={`${action} mt-3 min-h-9 py-1.5`}>Go Live Now</UniversalButton>
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 opacity-30 [background:repeating-linear-gradient(90deg,#a448f5_0_14px,transparent_14px_22px,#6931aa_22px_38px,transparent_38px_44px)] [clip-path:polygon(0_60%,15%_20%,22%_45%,30%_0%,40%_55%,52%_15%,61%_40%,69%_0%,79%_50%,91%_20%,100%_60%,100%_100%,0_100%)]"/>
+            </div>
+          )}
+        </section>
+
+        {/* Gaming and podcast discovery */}
+        <div className="grid grid-cols-2 gap-3">
+          <FeatureCard type="gaming" title="Hytro Gaming Streams" description="Watch live gaming, compete and connect with the Hytro community." cta="Explore Gaming" onClick={() => go('/hytro')}/>
+          <FeatureCard type="podcast" title="Podcasts" description="Discover live and recorded podcasts from creators in the city." cta="Browse Podcasts" onClick={() => go('/podcast')}/>
         </div>
+        {hytroItems.length > 0 && <section className={`${panel} p-3 sm:p-4`}><h3 className="mb-3 flex items-center gap-2 text-sm font-black"><Gamepad2 size={18} className="text-[#8f90ff]"/> Gaming live now</h3><div className="flex gap-3 overflow-x-auto scrollbar-hide">{hytroItems.slice(0, 12).map(item => <PhoneLiveTile key={item.id} item={item} onClick={() => handleStreamClick(item)}/>)}</div></section>}
+        {(podcastsLoading || podcasts.length > 0) && <section className={`${panel} p-3 sm:p-4`}><h3 className="mb-3 flex items-center gap-2 text-sm font-black"><Mic size={18} className="text-[#f16cda]"/> Discover podcasts</h3><div className="flex gap-3 overflow-x-auto scrollbar-hide">{podcastsLoading ? Array.from({length:3}, (_, i) => <div key={i} className="h-[104px] w-[160px] shrink-0 animate-pulse rounded-xl bg-white/10"/>) : podcasts.slice(0,8).map(podcast =>         <UniversalButton key={podcast.id} onClick={() => go(`/podcast/${podcast.id}`)} variant="ghost" icon={<Mic size={20} className="mb-2 text-[#ec6ee8]"/>} className="min-h-[105px] w-[170px] shrink-0 flex-col justify-center rounded-xl border border-[#ae4fde]/40 bg-gradient-to-br from-[#371b52] to-[#13152e] p-3 text-left"><span className="truncate text-xs font-black">{podcast.title || 'Untitled Podcast'}</span><span className="mt-1 truncate text-[10px] text-[#b7aacb]">{podcast.host_username || podcast.host_user_id || 'Unknown Host'}</span><span className="mt-1 text-[10px] text-[#d9afff]">{Number(podcast.listener_count || 0)} listeners</span></UniversalButton>)}</div></section>}
 
-        <section className="relative overflow-hidden rounded-xl border border-[#BF00FF]/55 bg-[#0F0817]/95 shadow-[0_0_18px_rgba(191,0,255,.12)] p-2">
-          <div className="absolute inset-0 opacity-40 [background-image:linear-gradient(180deg,transparent,#080c17),radial-gradient(ellipse_at_85%_20%,rgba(160,67,239,.4),transparent_45%)]"/>
-          <div className="relative flex items-center justify-between gap-2 pb-1.5"><div><h2 className="text-[13px] font-black">Live in MaiTroll City</h2><p className="text-[9px] text-slate-400">{totalLive} broadcasts • {onlineUsers.toLocaleString()} online</p></div><div className="flex gap-1.5"><button onClick={refreshLiveContent} disabled={refreshing} aria-label="Refresh streams" className="rounded-md border border-[#00BFFF]/50 bg-[#00BFFF]/10 p-1 text-[#00BFFF]"><RefreshCw size={13} className={refreshing ? 'animate-spin' : ''}/></button><button onClick={()=>go('/live')} className="text-[9px] font-bold text-[#39FF14]">View All ›</button></div></div>
-          <div className="relative flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-hide">
-            <button onClick={()=>go('/broadcast/setup')} className="flex h-[105px] w-[84px] shrink-0 flex-col items-center justify-center gap-1 rounded-xl border border-[#39FF14]/75 bg-[#0E1B0A]/90 shadow-[0_0_16px_rgba(57,255,20,.19)] text-[#39FF14]"><Radio size={20}/><span className="text-[10px] font-black">GO LIVE</span></button>
-            {loadingLive ? Array.from({length:3},(_,i)=><div key={i} className="h-[105px] w-[108px] shrink-0 animate-pulse rounded-xl bg-white/10"/>) : liveItems.length ? liveItems.slice(0,12).map(item=><PhoneLiveTile key={item.id} item={item} onClick={()=>handleStreamClick(item)}/>) : <div className="flex h-[105px] flex-1 items-center justify-center text-center text-[10px] text-slate-400">No broadcasts live yet. Be the first!</div>}
-          </div>
-        </section>
-
-        {/* Separate, compact live Hytro Gaming stream carousel. */}
-        <section className="rounded-xl border border-[#BF00FF]/55 bg-[#0F0817]/95 shadow-[0_0_18px_rgba(191,0,255,.12)] p-2">
-          <div className="mb-1.5 flex items-center justify-between gap-2">
-            <h2 className="flex items-center gap-1.5 text-[12px] font-black text-white"><Gamepad2 size={15} className="text-[#39FF14]"/> Hytro Gaming Streams</h2>
-            <button onClick={() => go('/hytro')} className="text-[9px] font-bold text-[#39FF14]">View All ›</button>
-          </div>
-          <div className="flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-hide">
-            {loadingLive ? Array.from({ length: 3 }, (_, i) => <div key={i} className="h-[105px] w-[108px] shrink-0 animate-pulse rounded-xl bg-white/10"/>)
-              : hytroItems.length ? hytroItems.slice(0, 12).map(item => <PhoneLiveTile key={item.id} item={item} onClick={() => handleStreamClick(item)}/>)
-              : <button onClick={() => go('/hytro')} className="flex h-[72px] w-full items-center gap-2 rounded-lg border border-[#00BFFF]/55 bg-[#07131B] shadow-[0_0_12px_rgba(0,191,255,.12)] px-3 text-left"><Gamepad2 size={20} className="text-[#39FF14]"/><span className="text-[10px] text-slate-300">No Hytro gaming streams live. Explore Hytro Gaming ›</span></button>}
-          </div>
-        </section>
-
-        {/* Podcast discovery — grid of all podcasts */}
-        <section className="rounded-xl border border-[#BF00FF]/55 bg-[#0F0817]/95 shadow-[0_0_18px_rgba(191,0,255,.12)] p-2">
-          <div className="mb-1.5 flex items-center justify-between gap-2">
-            <h2 className="flex items-center gap-1.5 text-[12px] font-black text-white"><Mic size={15} className="text-[#BF00FF]"/> Podcasts</h2>
-            <button onClick={() => go('/podcast')} className="text-[9px] font-bold text-[#BF00FF]">View All ›</button>
-          </div>
-          <div className="grid grid-cols-2 gap-1.5">
-            {podcastsLoading ? Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-48 animate-pulse rounded-xl bg-white/5" />
-            )) : podcasts.length === 0 ? (
-              <button onClick={() => go('/podcast')} className="flex h-[72px] flex-col items-center gap-3 rounded-lg border border-[#BF00FF]/60 bg-gradient-to-r from-[#BF00FF]/15 to-[#0C0613] px-3 text-left"><Mic size={23} className="text-[#BF00FF]"/><span className="flex-1"><span className="block text-[11px] font-bold text-white">Discover MaiTroll Podcasts</span><span className="block text-[9px] text-slate-400">Listen to shows from the city</span></span><ChevronRight size={15} className="text-[#BF00FF]"/></button>
-            ) : (
-              podcasts.slice(0, 8).map((podcast) => (
-                <button key={podcast.id} onClick={() => go(`/podcast/${podcast.id}`)} className="flex h-40 flex-col items-start justify-center gap-1 rounded-lg border border-[#00BFFF]/55 bg-[#07111A]/90 shadow-[0_0_13px_rgba(0,191,255,.12)] p-2 active:scale-95">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-xl border border-[#BF00FF]/60 bg-[#BF00FF]/10 text-[#BF00FF]"><Mic size={16}/></div>
-                  <p className="text-[10px] font-black text-white truncate">{podcast.title || 'Untitled Podcast'}</p>
-                  <p className="text-[8px] text-slate-400 truncate">{podcast.host_username || podcast.host_user_id || 'Unknown Host'}</p>
-                  <span className="text-[8px] font-black text-emerald-400">{Number(podcast.listener_count || 0)} listeners</span>
-                </button>
-              ))
-            )}
-          </div>
-        </section>
-
-        {/* City comes after the broadcast, gaming, and podcast rows. */}
-        <PhoneCityBuildings onOpen={open}/>
-        <div className="flex justify-center gap-3 pb-1 text-[9px] text-slate-500"><Link to="/about">About</Link><Link to="/support">Support</Link><Link to="/legal/terms">Terms</Link><Link to="/legal/privacy">Privacy</Link></div>
+        <div id="maitroll-city-phone"><PhoneCityBuildings onOpen={go}/></div>
+        <footer className="flex justify-center gap-4 pb-2 text-[11px] text-[#aa8bc8]"><Link to="/about">About</Link><Link to="/support">Support</Link><Link to="/legal/terms">Terms</Link><Link to="/legal/privacy">Privacy</Link></footer>
       </main>
-      <MaiTrollRulesPopup />
+      <MaiTrollRulesPopup/>
       <style>{`.scrollbar-hide::-webkit-scrollbar{display:none}.scrollbar-hide{scrollbar-width:none;-ms-overflow-style:none}`}</style>
     </div>
   )

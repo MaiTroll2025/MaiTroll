@@ -47,8 +47,10 @@ export default function PhoneWebPage() {
   const user = useAuthStore((s) => s.user)
 
   useEffect(() => {
-    window.scrollTo(0, 0)
-  }, [pathname])
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+    document.documentElement.scrollTop = 0
+    document.body.scrollTop = 0
+  }, [pathname, location.key])
 
   if (!isPublicRoute(pathname) && !user) {
     return <Navigate to="/auth" replace />

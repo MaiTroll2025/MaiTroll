@@ -36,9 +36,7 @@ export default function ConsentBanner() {
 
   const handleToggle = (category: keyof ConsentPreferences) => {
     if (category === 'necessary') return;
-    const newPrefs = { ...preferences, [category]: !preferences[category] };
-    setPreferences(newPrefs);
-    updatePreferences(newPrefs);
+    setPreferences((current) => ({ ...current, [category]: !current[category] }));
   };
 
   const handleAcceptAll = () => {

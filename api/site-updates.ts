@@ -13,7 +13,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const supabase = getPublicSiteUpdatesClient()
     let query = supabase
       .from('site_updates')
-      .select(SITE_UPDATE_COLUMNS)
+      .select(SITE_UPDATE_COLUMNS, { count: 'exact' })
       .eq('is_published', true)
       .order('published_at', { ascending: false })
 
@@ -22,9 +22,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (typeof req.query.slug === 'string') query = query.eq('slug', req.query.slug)
     else query = query.limit(100)
 
-    const { data, error } = await query
+    const { data, error, count } = await query
     if (error) throw error
-    return res.status(200).json({ posts: data || [] })
+    return res.status(200).json({ posts: data || [], count: count ?? data?.length ?? 0 })
   } catch (error) {
     console.error('[SiteUpdates] Public query failed:', error)
     return res.status(500).json({ error: 'Failed to load site updates' })
