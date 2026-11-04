@@ -12,6 +12,7 @@ import { isStaffUser } from '../../lib/userUtils'
 import { supabase, getBlockedUserIds } from '../../lib/supabase'
 
 import { useAuthStore } from '../../lib/store'
+import { setActiveStreamSession } from '../../lib/activeStreamSession'
 import { useStreamStore } from '../../lib/streamStore'
 import { cn } from '../../lib/utils'
 import { getLiveKitRoomName } from '../../lib/liveUtils'
@@ -692,6 +693,12 @@ export function BroadcastPage() {
    // Accumulate gift amounts received while broadcasterProfile is still loading (null);
    // applied once the profile arrives via @see applyPendingGiftsEffect
 const isHost = stream?.user_id === user?.id
+
+  useEffect(() => {
+    const active = Boolean(stream?.id && stream.status === 'live' && stream.is_live === true)
+    setActiveStreamSession(active, 'broadcast', stream?.id)
+    return () => setActiveStreamSession(false, 'broadcast')
+  }, [stream?.id, stream?.is_live, stream?.status])
 
 useCreditActivityHeartbeat(
   stream?.id || streamId,

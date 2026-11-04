@@ -120,16 +120,24 @@ async function generateSitemap(supabase) {
     try {
       const { data: streams, error: streamError } = await supabase
         .from('streams')
-        .select('id, slug, status, updated_at, user_profiles!streams_broadcaster_id_fkey(username, is_banned, account_state)')
+        .select('id, status, is_live, updated_at, created_at, is_public, is_private, password_hash, user_profiles!streams_broadcaster_id_fkey(username, is_private, is_banned, account_state)')
         .eq('is_public', true)
-        .not('status', 'eq', 'deleted')
-        .not('slug', 'is', null)
-        .not('slug', 'eq', '');
+        .eq('is_private', false)
+        .eq('is_live', true)
+        .is('password_hash', null)
+        .not('status', 'in', '("deleted","suspended","ended")')
+        .order('created_at', { ascending: false })
+        .order('id', { ascending: true });
 
       if (!streamError && streams) {
         for (const stream of streams) {
           const username = stream.user_profiles?.username;
-          if (!username || stream.user_profiles?.is_banned || ['suspended', 'banned'].includes(stream.user_profiles?.account_state)) continue;
+          if (
+            !username ||
+            stream.user_profiles?.is_private !== false ||
+            stream.user_profiles?.is_banned === true ||
+            ['suspended', 'banned', 'jailed', 'exiled'].includes(stream.user_profiles?.account_state)
+          ) continue;
 
           const lastmod = stream.updated_at
             ? new Date(stream.updated_at).toISOString().split('T')[0]
@@ -140,7 +148,7 @@ async function generateSitemap(supabase) {
           const changefreq = isLive ? 'always' : 'daily';
 
           urls.push(`  <url>
-    <loc>${escapeXml(`${APP_URL}/${username}/live/${stream.slug}`)}</loc>
+    <loc>${escapeXml(`${APP_URL}/live/${encodeURIComponent(username)}`)}</loc>
     <lastmod>${lastmod}</lastmod>
     <changefreq>${changefreq}</changefreq>
     <priority>${priority}</priority>

@@ -20,6 +20,7 @@ import PresidentialOversightPanel from './components/PresidentialOversightPanel'
 import BetaCapacityMonitor from './components/BetaCapacityMonitor'
 import MaiPayPlusManager from './components/MaiPayPlusManager'
 import FirstCashoutMatch from './FirstCashoutMatch'
+import { useAdminNotifications } from '../../admin/AdminNotificationProvider'
 
 
 
@@ -483,6 +484,7 @@ function CoinSalesPanel({
 export default function AdminDashboard() {
   const { profile, user, setProfile, isLoading } = useAuthStore()
   const navigate = useNavigate()
+  const { unreadCounts } = useAdminNotifications()
   const [adminCheckLoading, setAdminCheckLoading] = useState(true)
   const [isAuthorized, setIsAuthorized] = useState(false)
   const isTempAdmin = profile?.role === UserRole.TEMP_CITY_ADMIN
@@ -1286,6 +1288,9 @@ export default function AdminDashboard() {
                 tax_reviews: taskCounts.taxReviews,
                 support: taskCounts.supportTickets,
                 applications: stats.pendingApps,
+                ...Object.fromEntries(
+                  Object.entries(unreadCounts).map(([key, value]) => [key.replace(/-/g, '_'), value]),
+                ),
               }}
             />
           </ErrorBoundary>

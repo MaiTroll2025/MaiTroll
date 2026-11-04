@@ -60,13 +60,14 @@ export default function AdditionalTasksGrid({
     color: route.tileColor || 'text-white',
     bgColor: route.tileBgColor || 'bg-white/5',
     borderColor: route.tileBorderColor,
-    count: route.id === 'user-forms' ? counts.user_forms : undefined
+    count: counts[route.id.replace(/-/g, '_')] || (route.id === 'user-forms' ? counts.user_forms : undefined)
   })
 
   const systemManagementGroup = {
     title: 'System Management',
     color: 'text-cyan-400',
     bgColor: 'bg-cyan-500/20',
+    count: counts.media_library,
     borderColor: 'border-cyan-500/30',
     tasks: systemManagementRoutes
       .filter((r) => !r.category || ['system', 'support'].includes(r.category))
@@ -164,7 +165,8 @@ export default function AdditionalTasksGrid({
            description: 'Audit staff actions & permissions',
            action: () => navigate('/admin/staff-audit'),
            color: 'text-red-400',
-           bgColor: 'bg-red-500/20'
+           bgColor: 'bg-red-500/20',
+           count: counts.staff_audit
          },
         ...systemManagementRoutes
           .filter((r) => ['users', 'moderation'].includes(r.category || ''))
@@ -199,7 +201,8 @@ export default function AdditionalTasksGrid({
           description: 'Moderate chat messages',
           action: pickTab('chat_moderation'),
           color: 'text-orange-400',
-          bgColor: 'bg-orange-500/20'
+          bgColor: 'bg-orange-500/20',
+          count: counts.chat_moderation
         },
         {
           icon: <Bell className="w-5 h-5" />,
@@ -207,7 +210,8 @@ export default function AdditionalTasksGrid({
           description: 'Send system announcements',
           action: pickTab('announcements'),
           color: 'text-yellow-400',
-          bgColor: 'bg-yellow-500/20'
+          bgColor: 'bg-yellow-500/20',
+          count: counts.announcements
         }
       ]
     },

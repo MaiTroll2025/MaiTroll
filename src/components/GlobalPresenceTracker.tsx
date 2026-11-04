@@ -18,11 +18,49 @@ import { usePresenceStore } from '../lib/presenceStore';
 export default function GlobalPresenceTracker() {
   const { user, profile } = useAuthStore();
   const setOnlineUserIds = usePresenceStore(state => state.setOnlineUserIds);
+  const setTotalUserCount = usePresenceStore(state => state.setTotalUserCount);
 
   useEffect(() => {
+    let cancelled = false;
+
+    const fetchTotalUserCount = async () => {
+      const { count, error } = await supabase
+        .from('user_profiles')
+        .select('id', { count: 'exact', head: true });
+
+      if (!cancelled) {
+        if (error) {
+          console.error('[GlobalPresenceTracker] Failed to fetch total user count:', error);
+          setTotalUserCount(null);
+        } else {
+          setTotalUserCount(count ?? 0);
+        }
+      }
+    };
+
+    void fetchTotalUserCount();
+
+    const accountChannel = supabase
+      .channel('global-user-count')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'user_profiles' }, () => {
+        void fetchTotalUserCount();
+      })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'user_profiles' }, () => {
+        void fetchTotalUserCount();
+      })
+      .subscribe();
+
+    const refreshTimer = window.setInterval(() => {
+      void fetchTotalUserCount();
+    }, 60000);
+
     if (!user?.id || !profile?.id) {
       setOnlineUserIds([]);
-      return;
+      return () => {
+        cancelled = true;
+        window.clearInterval(refreshTimer);
+        void supabase.removeChannel(accountChannel);
+      };
     }
 
     // Use a single global presence channel — Supabase Presence handles
@@ -56,11 +94,14 @@ export default function GlobalPresenceTracker() {
     });
 
     return () => {
+      cancelled = true;
+      window.clearInterval(refreshTimer);
       void channel.untrack();
       void supabase.removeChannel(channel);
+      void supabase.removeChannel(accountChannel);
       setOnlineUserIds([]);
     };
-  }, [user?.id, profile?.id, setOnlineUserIds]);
+  }, [user?.id, profile?.id, setOnlineUserIds, setTotalUserCount]);
 
   return null;
 }

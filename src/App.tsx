@@ -70,6 +70,7 @@ import {
   recordAnonymousArrest,
 } from "./services/ipTracking";
 import GlobalPresenceTracker from "./components/GlobalPresenceTracker";
+import MaiUserMonitor from "./components/MaiUserMonitor";
 import ChatBubble from "./components/ChatBubble";
 import IdleSessionPrompt from "./components/IdleSessionPrompt";
 import GlobalNotificationHandler from "./components/GlobalNotificationHandler";
@@ -87,6 +88,8 @@ import { useRobotsMeta } from "@/lib/seo/useRobotsMeta";
 import { useRouteTitle } from "@/lib/seo/useRouteTitle";
 import PhoneApp from "./phone/PhoneApp";
 import { hasPhoneNativeRoute } from "./phone/phoneRoutePatterns";
+import MaiElitePhone from "./phone/MaiElitePhone";
+import { getKeyboardShortcuts } from "./lib/keyboardShortcuts";
 
 // Animation components
 import { AnimationsContainer } from "./components/animations";
@@ -97,6 +100,7 @@ import OfficerAlertBanner from "./components/OfficerAlertBanner";
 import AdminOfficerQuickMenu from "./components/AdminOfficerQuickMenu";
 import { PageChannelProvider } from "./contexts/PageChannelContext";
 import { StaffWalkieTalkieProvider } from "./components/StaffWalkieTalkieProvider";
+import { AdminNotificationProvider } from "./admin/AdminNotificationProvider";
 
 const AdminErrors = lazyWithRetry(() => import("./pages/admin/AdminErrors"));
 const SubAnalytics = lazyWithRetry(() => import("./pages/admin/SubAnalytics"));
@@ -205,6 +209,7 @@ const GamblingDisclosure = lazyWithRetry(() => import("./pages/legal/GamblingDis
 const SEOAboutPage = lazyWithRetry(() => import("./pages/seo/AboutPage"));
 const SEOContactPage = lazyWithRetry(() => import("./pages/seo/ContactPage"));
 const SEOSupportPage = lazyWithRetry(() => import("./pages/seo/SupportPage"));
+const KeyboardShortcutsPage = lazyWithRetry(() => import("./pages/KeyboardShortcutsPage"));
 const SEOFAQPage = lazyWithRetry(() => import("./pages/seo/FAQPage"));
 const SEOPrivacyPage = lazyWithRetry(() => import("./pages/seo/PrivacyPage"));
 const SEOTermsPage = lazyWithRetry(() => import("./pages/seo/TermsPage"));
@@ -733,6 +738,34 @@ function AppContent() {
 
   const location = useLocation();
   const navigate = useNavigate();
+  const homepageShortcuts = getKeyboardShortcuts(profile);
+
+  useEffect(() => {
+    if (!userId || isJailed) return;
+    const handleHomepageShortcut = (event: KeyboardEvent) => {
+      if (
+        location.pathname !== '/' ||
+        event.repeat ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.altKey
+      ) return;
+      const target = event.target as HTMLElement | null;
+      if (
+        target?.isContentEditable ||
+        target?.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"], [role="textbox"]')
+      ) return;
+      const shortcut = homepageShortcuts.find(
+        (item) => !item.phone && item.key.toLowerCase() === event.key.toLowerCase(),
+      );
+      if (!shortcut?.path) return;
+      event.preventDefault();
+      navigate(shortcut.path);
+    };
+    window.addEventListener('keydown', handleHomepageShortcut);
+    return () => window.removeEventListener('keydown', handleHomepageShortcut);
+  }, [homepageShortcuts, isJailed, location.pathname, navigate, userId]);
+
   const mainRef = useRef<HTMLElement | null>(null);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [publicRunPopupDismissed, setPublicRunPopupDismissed] = useState(false);
@@ -1058,12 +1091,6 @@ function AppContent() {
         return
       }
 
-      // 'p' -> Pastor Dashboard
-      if ((event.key === 'p' || event.key === 'P') && profile?.is_pastor) {
-        navigate('/church/pastor', { replace: true })
-        return
-      }
-
       // 'v' -> Toggle Voice Notifications (Admin Only)
       if ((event.key === 'v' || event.key === 'V') && (profile?.role === 'admin' || profile?.is_admin)) {
         const currentState = localStorage.getItem('voiceNotificationsEnabled') === 'true';
@@ -1087,11 +1114,6 @@ function AppContent() {
       if (event.key === 'c' || event.key === 'C') {
         navigate('/city-hall');
         expandGroup('City Center');
-        return;
-      }
-      if (event.key === 'p' || event.key === 'P') {
-        navigate('/pool');
-        expandGroup('Social');
         return;
       }
       if (event.key === 's' || event.key === 'S') {
@@ -1679,6 +1701,7 @@ const appShell = (
            {user && <ChatBubble />}
            <StaffWalkieTalkieProvider>
               <RTCAdminMonitor headerDropdown />
+              <MaiUserMonitor />
              {import.meta.env.DEV && (profile?.is_admin || profile?.is_superadmin || ['admin','ceo','superadmin'].includes(profile?.role || '')) }
               <ErrorBoundary>
                 <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div></div>}>
@@ -2087,6 +2110,7 @@ const appShell = (
                   <Route path="/leaderboard" element={<Leaderboard />} />
                   <Route path="/credit-scores" element={<CreditScorePage />} />
                    <Route path="/support" element={<SEOSupportPage />} />
+                   <Route path="/keyboard-shortcuts" element={<KeyboardShortcutsPage />} />
             <Route path="/beta-feedback" element={<BetaFeedback />} />
                   <Route path="/survey/:surveyId" element={<SurveyPage />} />
                   <Route path="/under-construction" element={<UnderConstructionPage />} />
@@ -3014,15 +3038,18 @@ function App() {
               <ProfileFrameProvider>
                 <TabSwitchHandler>
                   <GhostDropInProvider>
-                    {isPhone && !useWebTree ? (
-                      <LiveContentProvider>
-                        <StaffWalkieTalkieProvider>
-                          <PhoneApp />
-                        </StaffWalkieTalkieProvider>
-                      </LiveContentProvider>
-                    ) : <AppContent />}
-                    <GhostBanner />
-                    <GlobalNotificationHandler />
+                    <AdminNotificationProvider>
+                      {isPhone && !useWebTree ? (
+                        <LiveContentProvider>
+                          <StaffWalkieTalkieProvider>
+                            <PhoneApp />
+                          </StaffWalkieTalkieProvider>
+                        </LiveContentProvider>
+                      ) : <AppContent />}
+                      <MaiElitePhone />
+                      <GhostBanner />
+                      <GlobalNotificationHandler />
+                    </AdminNotificationProvider>
                     <Toaster
                       position="top-right"
                       duration={5000}

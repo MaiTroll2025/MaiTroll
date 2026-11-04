@@ -32,6 +32,7 @@ import type {
   UtromailMessage,
 } from '@/types/mail'
 import { toast } from 'sonner'
+import { usePresenceStore } from '@/lib/presenceStore'
 
 type LocalMessage = UtromailMessage & {
   local_status?: 'sending' | 'sent' | 'failed'
@@ -70,17 +71,21 @@ function getInitial(name?: string | null): string {
   return (name || '?').charAt(0).toUpperCase()
 }
 
-export default function PhoneChat() {
+export default function PhoneChat({ compact = false, initialThreadId }: { compact?: boolean; initialThreadId?: string | null }) {
   const navigate = useNavigate()
   const { threadId } = useParams()
   const { user, profile } = useAuthStore()
+  const onlineUserIds = usePresenceStore((state) => state.onlineUserIds)
 
   const [threads, setThreads] = useState<UtromailThread[]>([])
   const [loadingThreads, setLoadingThreads] = useState(true)
 
   const [activeThreadId, setActiveThreadId] = useState<string | null>(
-    threadId || null,
+    initialThreadId || threadId || null,
   )
+  useEffect(() => {
+    if (initialThreadId) setActiveThreadId(initialThreadId)
+  }, [initialThreadId])
 
   const [messages, setMessages] = useState<LocalMessage[]>([])
   const [msgLoading, setMsgLoading] = useState(false)
@@ -750,13 +755,17 @@ export default function PhoneChat() {
 
   const openThread = (tid: string) => {
     setActiveThreadId(tid)
-    navigate(`/utromail/${tid}`)
+    if (!compact) {
+      navigate(`/utromail/${tid}`)
+    }
   }
 
   const backToThreads = () => {
     setActiveThreadId(null)
     setMessages([])
-    navigate('/utromail')
+    if (!compact) {
+      navigate('/utromail')
+    }
   }
 
   /*
@@ -821,6 +830,7 @@ export default function PhoneChat() {
     activeOther?.display_name ||
     activeOther?.username ||
     'Unknown'
+  const activeIsOnline = Boolean(activeOther?.id && onlineUserIds.has(activeOther.id))
 
   /*
    * ------------------------------------------------------------
@@ -829,10 +839,10 @@ export default function PhoneChat() {
    */
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-[#03040A] text-white">
+    <div className={`relative w-full overflow-hidden bg-[#03040A] text-white ${compact ? 'h-full' : 'min-h-screen'}`}>
       {/* PREMIUM ATMOSPHERE */}
 
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+      {!compact && <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -left-40 -top-40 h-[28rem] w-[28rem] rounded-full bg-[#00BFFF]/10 blur-[140px]" />
 
         <div className="absolute -right-40 top-0 h-[32rem] w-[32rem] rounded-full bg-[#BF00FF]/10 blur-[150px]" />
@@ -840,11 +850,11 @@ export default function PhoneChat() {
         <div className="absolute bottom-[-12rem] left-1/2 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full bg-[#00BFFF]/[0.045] blur-[140px]" />
 
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.035),transparent_35%)]" />
-      </div>
+      </div>}
 
       {/* TOP HEADER */}
 
-      <header className="sticky top-0 z-50 border-b border-white/[0.07] bg-[#05060D]/80 backdrop-blur-2xl">
+      {!compact && <header className="sticky top-0 z-50 border-b border-white/[0.07] bg-[#05060D]/80 backdrop-blur-2xl">
         <div className="mx-auto flex h-[68px] w-full max-w-3xl items-center justify-between px-4">
           <button
             type="button"
@@ -890,15 +900,15 @@ export default function PhoneChat() {
 
           <div className="h-10 w-10" />
         </div>
-      </header>
+      </header>}
 
-      <main className="relative z-10 mx-auto h-[calc(100vh-68px)] w-full max-w-3xl">
+      <main className={`relative z-10 mx-auto w-full max-w-3xl ${compact ? 'h-full' : 'h-[calc(100vh-68px)]'}`}>
         {!activeThreadId ? (
           /* INBOX */
           <div className="flex h-full flex-col">
             {/* Search */}
 
-            <div className="border-b border-white/[0.06] bg-[#05060D]/70 p-4 backdrop-blur-2xl">
+            {!compact && <div className="border-b border-white/[0.06] bg-[#05060D]/70 p-4 backdrop-blur-2xl">
               <div className="relative">
                 <Search
                   size={16}
@@ -920,11 +930,11 @@ export default function PhoneChat() {
                   </span>
                 </div>
               </div>
-            </div>
+            </div>}
 
             {/* Inbox heading */}
 
-            <div className="flex items-center justify-between px-5 pb-2 pt-5">
+            {!compact && <div className="flex items-center justify-between px-5 pb-2 pt-5">
               <div>
                 <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#00BFFF]">
                   Your inbox
@@ -943,7 +953,7 @@ export default function PhoneChat() {
                     : 'threads'}
                 </div>
               )}
-            </div>
+            </div>}
 
             {/* Thread list */}
 
@@ -1050,6 +1060,9 @@ export default function PhoneChat() {
                             {unread && (
                               <span className="absolute -right-0.5 -top-0.5 h-3.5 w-3.5 rounded-full border-2 border-[#080811] bg-[#00BFFF] shadow-[0_0_12px_rgba(0,191,255,0.9)]" />
                             )}
+                            {other?.id && onlineUserIds.has(other.id) && (
+                              <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#070812] bg-[#38FCA3] shadow-[0_0_9px_rgba(56,252,163,0.8)]" />
+                            )}
                           </div>
 
                           {/* Thread body */}
@@ -1092,6 +1105,9 @@ export default function PhoneChat() {
                             </div>
 
                             <div className="mt-1.5 flex items-center gap-2">
+                              <span className={`shrink-0 text-[8px] font-black uppercase tracking-wider ${other?.id && onlineUserIds.has(other.id) ? 'text-[#38FCA3]' : 'text-white/20'}`}>
+                                {other?.id && onlineUserIds.has(other.id) ? 'Online' : 'Offline'}
+                              </span>
                               <p
                                 className={`min-w-0 flex-1 truncate text-xs ${
                                   unread
@@ -1150,7 +1166,7 @@ export default function PhoneChat() {
                     )}
                   </div>
 
-                  <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#070812] bg-[#38FCA3] shadow-[0_0_9px_rgba(56,252,163,0.8)]" />
+                  <span className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#070812] ${activeIsOnline ? 'bg-[#38FCA3] shadow-[0_0_9px_rgba(56,252,163,0.8)]' : 'bg-white/25'}`} />
                 </div>
 
                 <div className="min-w-0 flex-1">
@@ -1159,10 +1175,10 @@ export default function PhoneChat() {
                   </p>
 
                   <div className="mt-0.5 flex items-center gap-1.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[#38FCA3] shadow-[0_0_6px_rgba(56,252,163,0.8)]" />
+                    <span className={`h-1.5 w-1.5 rounded-full ${activeIsOnline ? 'bg-[#38FCA3] shadow-[0_0_6px_rgba(56,252,163,0.8)]' : 'bg-white/25'}`} />
 
                     <p className="text-[8px] font-black uppercase tracking-[0.2em] text-white/35">
-                      Private conversation
+                      {activeIsOnline ? 'Online' : 'Offline'} · Private conversation
                     </p>
                   </div>
                 </div>
@@ -1171,7 +1187,7 @@ export default function PhoneChat() {
 
             {/* Messages */}
 
-            <div className="relative flex-1 overflow-y-auto">
+            <div className="relative min-h-0 flex-1 overflow-y-auto">
               <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_5%,rgba(0,191,255,0.055),transparent_28%),radial-gradient(circle_at_90%_15%,rgba(191,0,255,0.06),transparent_30%)]" />
 
               <div className="relative min-h-full px-4 pb-5 pt-4">
@@ -1318,12 +1334,12 @@ export default function PhoneChat() {
 
             {/* Composer */}
 
-            <div className="relative shrink-0 border-t border-white/[0.07] bg-[#05060D]/85 px-3 pb-[calc(10px+env(safe-area-inset-bottom,0px))] pt-3 backdrop-blur-2xl">
+            <div className="relative shrink-0 bg-[#05060D]/85 px-3 pb-2 pt-2 backdrop-blur-2xl">
               <div
-                className={`relative flex items-end gap-2 rounded-[1.35rem] border bg-white/[0.035] p-1.5 transition-all duration-200 ${
+                className={`relative flex items-end gap-2 rounded-[1.35rem] bg-white/[0.035] p-1.5 transition-all duration-200 ${
                   replyText.trim()
                     ? 'border-[#00BFFF]/30 bg-white/[0.045] shadow-[0_0_35px_rgba(0,191,255,0.08)]'
-                    : 'border-white/[0.08]'
+                    : ''
                 }`}
               >
                 <textarea
@@ -1371,7 +1387,7 @@ export default function PhoneChat() {
                 </button>
               </div>
 
-              <div className="mt-2 flex items-center justify-center gap-2 text-[8px] font-black uppercase tracking-[0.18em] text-white/15">
+              <div className="mt-1 flex items-center justify-center gap-2 text-[8px] font-black uppercase tracking-[0.18em] text-white/15">
                 <span>Enter to send</span>
                 <span className="h-0.5 w-0.5 rounded-full bg-white/15" />
                 <span>

@@ -15,13 +15,33 @@ import ProfileDropdown from './ui/ProfileDropdown'
 import PresidentialToolsModal from './PresidentialToolsModal'
 import RGBSearchBar from './header/RGBSearchBar'
 import GlobalTicker from './header/GlobalTicker'
+import useGlobalActivity from '../hooks/useGlobalActivity'
 import { isDesktopPlatform, getDesktopDownloadUrl } from '../utils/desktopDownload'
 import { useAutoUpdate } from '../hooks/useAutoUpdate'
 import { useIsPhone } from '../phone/useIsPhone'
 
+function formatCompactCount(value: number | null): string {
+  if (value === null) return '—'
+  if (value < 1000) return String(value)
+
+  const units = ['k', 'm', 'b']
+  let scaled = value
+  let unitIndex = -1
+
+  while (scaled >= 1000 && unitIndex < units.length - 1) {
+    scaled /= 1000
+    unitIndex += 1
+  }
+
+  const rounded = Math.round(scaled * 10) / 10
+  return `${Number.isInteger(rounded) ? rounded : rounded.toFixed(1)}${units[unitIndex]}`
+}
+
 const Header = () => {
   const { user, profile } = useAuthStore()
   const onlineCount = usePresenceStore((state) => state.onlineUserIds.size)
+  const totalUserCount = usePresenceStore((state) => state.totalUserCount)
+  const tickerEvents = useGlobalActivity()
   const headerFrame = useUserFrame(user?.id)
   const navigate = useNavigate()
   const location = useLocation()
@@ -50,6 +70,7 @@ const Header = () => {
   const [notificationsLoading, setNotificationsLoading] = useState(false)
   const [notificationDropdownOpen, setNotificationDropdownOpen] = useState(false)
   const notificationRef = useRef<HTMLDivElement>(null)
+  const notificationRefreshTimerRef = useRef<number | null>(null)
 
   const handleNotificationIconClick = () => {
     setNotificationDropdownOpen((prev) => !prev)
@@ -58,8 +79,10 @@ const Header = () => {
   const clearAllNotifications = async () => {
     if (!user?.id) return
     try {
-      await supabase.from('notifications').delete().eq('user_id', user.id)
-      await supabase.from('jail_notifications').update({ is_read: true }).eq('user_id', user.id)
+      const { error: deleteError } = await supabase.from('notifications').delete().eq('user_id', user.id)
+      if (deleteError) throw deleteError
+      const { error: jailError } = await supabase.from('jail_notifications').update({ is_read: true }).eq('user_id', user.id)
+      if (jailError) throw jailError
       setUnreadNotifications(0)
       setNotifications([])
       setNotificationDropdownOpen(false)
@@ -69,6 +92,12 @@ const Header = () => {
       toast.error('Failed to clear notifications')
     }
   }
+
+  useEffect(() => {
+    const syncFullscreenState = () => setIsFullscreen(Boolean(document.fullscreenElement))
+    document.addEventListener('fullscreenchange', syncFullscreenState)
+    return () => document.removeEventListener('fullscreenchange', syncFullscreenState)
+  }, [])
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -265,7 +294,16 @@ const Header = () => {
           p_user_id: user.id,
         })
 
-        if (!error && typeof count === 'number') {
+        if (error) {
+          const { count: fallbackCount, error: fallbackError } = await supabase
+            .from('notifications')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', user.id)
+            .eq('is_read', false)
+            .or('is_dismissed.is.null,is_dismissed.eq.false')
+          if (fallbackError) throw fallbackError
+          if (fallbackCount !== null) setUnreadNotifications(fallbackCount)
+        } else if (typeof count === 'number') {
           setUnreadNotifications(count)
         }
 
@@ -277,38 +315,34 @@ const Header = () => {
           .order('created_at', { ascending: false })
           .limit(20)
 
-        if (!rowsError && rows) {
-          setNotifications((rows as any[]).map((row) => ({
-            id: row.id,
-            title: row.title,
-            message: row.message,
-            type: row.type,
-            is_read: row.is_read,
-            created_at: row.created_at,
-            username: row.username,
-            avatar_url: row.avatar_url,
-            metadata: row.metadata,
-          })))
-        }
+        if (rowsError) throw rowsError
+        setNotifications((rows || []).map((row: any) => ({
+          id: row.id,
+          title: row.title,
+          message: row.message,
+          type: row.type,
+          is_read: row.is_read,
+          created_at: row.created_at,
+          username: row.username,
+          avatar_url: row.avatar_url,
+          metadata: row.metadata,
+        })))
       } catch (err) {
         console.error('Error fetching notifications:', err)
       } finally {
         setNotificationsLoading(false)
       }
-
-      const { count: fallbackCount, error: fallbackError } = await supabase
-        .from('notifications')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .eq('is_read', false)
-        .or('is_dismissed.is.null,is_dismissed.eq.false')
-
-      if (!fallbackError && fallbackCount !== null) {
-        setUnreadNotifications(fallbackCount)
-      }
     }
 
     void fetchNotifications()
+    const scheduleRefresh = () => {
+      if (notificationRefreshTimerRef.current !== null) {
+        window.clearTimeout(notificationRefreshTimerRef.current)
+      }
+      notificationRefreshTimerRef.current = window.setTimeout(() => {
+        void fetchNotifications()
+      }, 500)
+    }
 
     const channel = supabase
       .channel(`header-notifications:${user.id}`)
@@ -320,7 +354,7 @@ const Header = () => {
           table: 'notifications',
           filter: `user_id=eq.${user.id}`,
         },
-        () => fetchNotifications(),
+        () => scheduleRefresh(),
       )
       .on(
         'postgres_changes',
@@ -330,11 +364,15 @@ const Header = () => {
           table: 'notifications',
           filter: `user_id=eq.${user.id}`,
         },
-        () => fetchNotifications(),
+        () => scheduleRefresh(),
       )
       .subscribe()
 
     return () => {
+      if (notificationRefreshTimerRef.current !== null) {
+        window.clearTimeout(notificationRefreshTimerRef.current)
+        notificationRefreshTimerRef.current = null
+      }
       if (channel) {
         supabase.removeChannel(channel)
       }
@@ -361,6 +399,23 @@ const Header = () => {
       sessionStorage.setItem('logout_requested', 'true')
 
       try {
+        const registration = await navigator.serviceWorker?.ready
+        const subscription = await registration?.pushManager.getSubscription()
+        if (subscription) {
+          const endpoint = subscription.endpoint
+          const { error: subscriptionError } = await supabase
+            .from('web_push_subscriptions')
+            .update({ is_active: false })
+            .eq('endpoint', endpoint)
+          if (subscriptionError) console.warn('Could not deactivate push subscription:', subscriptionError)
+          await subscription.unsubscribe()
+          setHasDeviceSubscription(false)
+        }
+      } catch (pushError) {
+        console.warn('Could not unsubscribe push notifications during logout:', pushError)
+      }
+
+      try {
         const { error } = await supabase.auth.signOut()
         if (error) console.warn('supabase.signOut returned error:', error)
       } catch (innerErr: any) {
@@ -370,24 +425,8 @@ const Header = () => {
       await useAuthStore.getState().logout()
 
       try {
-        localStorage.clear()
-
-        const introSeen = sessionStorage.getItem('trollIntroSeen')
-        sessionStorage.clear()
-
-        if (introSeen) {
-          sessionStorage.setItem('trollIntroSeen', introSeen)
-        }
-
-        if (window.indexedDB && typeof window.indexedDB.databases === 'function') {
-          const dbs = await window.indexedDB.databases()
-
-          dbs.forEach((db: any) => {
-            if (db.name) {
-              window.indexedDB.deleteDatabase(db.name)
-            }
-          })
-        }
+        localStorage.removeItem('troll-city-auth')
+        sessionStorage.removeItem('logout_requested')
       } catch (storageError) {
         console.error('Error clearing storage:', storageError)
       }
@@ -463,24 +502,32 @@ const Header = () => {
             <div className="mr-2 hidden shrink-0 items-center gap-1.5 border-r border-white/10 pr-3 text-[9px] font-extrabold uppercase tracking-[.15em] text-[#69dced] 2xl:flex">
               <Radio className="h-3.5 w-3.5" /> CITY PULSE
             </div>
-            <div className="min-w-0 flex-1 overflow-hidden"><GlobalTicker /></div>
+            <div className="min-w-0 flex-1 overflow-hidden"><GlobalTicker events={tickerEvents} /></div>
           </div>
 
           <div className="relative z-20 ml-auto flex shrink-0 items-center gap-1 sm:gap-1.5 lg:gap-2">
           {user && <PresidentialToolsModal />}
 
-          {user && canOpenRtcMonitor && (
+          {user && (
             <button
               type="button"
-              onClick={openRtcMonitor}
+              onClick={() => {
+                if (canOpenRtcMonitor) {
+                  openRtcMonitor()
+                } else {
+                  window.dispatchEvent(new Event('maiuser-monitor:open'))
+                }
+              }}
               className="relative inline-flex h-9 items-center gap-1.5 rounded-xl border border-cyan-300/20 bg-cyan-400/[0.07] px-2 text-xs font-bold text-cyan-100 transition hover:border-cyan-300/40 hover:bg-cyan-400/15 sm:h-10 sm:px-2.5"
-              title={`Open RTC Admin Monitor — ${onlineCount} users online`}
-              aria-label={`Open RTC Admin Monitor, ${onlineCount} users online`}
+              title={`Open ${canOpenRtcMonitor ? 'RTC Admin Monitor' : 'MaiUser'} — ${onlineCount} online, ${totalUserCount ?? 'unknown'} total users`}
+              aria-label={`Open ${canOpenRtcMonitor ? 'RTC Admin Monitor' : 'MaiUser'}, ${onlineCount} users online and ${totalUserCount ?? 'unknown'} total users`}
             >
               <Radio className="h-4 w-4" />
-              <span className="hidden lg:inline">RTC</span>
-              <span className="min-w-[1.25rem] rounded-full bg-emerald-300 px-1 text-center text-[10px] font-black leading-5 text-black">
-                {onlineCount > 999 ? '999+' : onlineCount}
+              <span className="hidden lg:inline">{canOpenRtcMonitor ? 'RTC' : 'MaiUser'}</span>
+              <span className="flex items-center gap-1 rounded-lg bg-emerald-300 px-1.5 py-0.5 text-[10px] font-black leading-tight text-black">
+                <span>Online {formatCompactCount(onlineCount)}</span>
+                <span className="text-black/50">|</span>
+                <span>All {formatCompactCount(totalUserCount)}</span>
               </span>
             </button>
           )}
@@ -506,7 +553,7 @@ const Header = () => {
                 onClick={() => {
                   void enablePushNotifications()
                 }}
-                className="hidden xl:flex items-center gap-2 rounded-xl border border-cyan-300/20 bg-cyan-400/[0.07] px-3 py-2 text-xs font-semibold text-cyan-100 transition hover:bg-cyan-400/15"
+                className="flex items-center gap-2 rounded-xl border border-cyan-300/20 bg-cyan-400/[0.07] px-3 py-2 text-xs font-semibold text-cyan-100 transition hover:bg-cyan-400/15"
                 title="Enable Push Notifications"
                 type="button"
               >
@@ -521,7 +568,7 @@ const Header = () => {
                   href="https://play.google.com/store/apps/details?id=com.maitroll.app&pli=1"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hidden xl:flex items-center gap-2 rounded-xl border border-cyan-300/20 bg-cyan-400/[0.07] px-3 py-2 text-xs font-semibold text-cyan-100 transition hover:bg-cyan-400/15"
+                  className="flex items-center gap-2 rounded-xl border border-cyan-300/20 bg-cyan-400/[0.07] px-3 py-2 text-xs font-semibold text-cyan-100 transition hover:bg-cyan-400/15"
                   title="Get MaiTroll on Google Play"
                 >
                   <Smartphone className="w-4 h-4" />
@@ -715,7 +762,7 @@ const Header = () => {
         </div>
         <div className="relative z-10 flex h-20 items-center overflow-hidden border-t border-white/[0.055] bg-[#0a1120]/75 px-3 md:hidden">
           <span className="mr-2 shrink-0 text-[8px] font-extrabold uppercase tracking-wider text-[#60e0f0]">CITY PULSE</span>
-          <div className="min-w-0 flex-1 overflow-hidden"><GlobalTicker /></div>
+          <div className="min-w-0 flex-1 overflow-hidden"><GlobalTicker events={tickerEvents} /></div>
         </div>
       </header>
 

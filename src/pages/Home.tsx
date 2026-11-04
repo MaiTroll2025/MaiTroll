@@ -39,7 +39,6 @@ import BestTrollersRow from '@/components/home/BestTrollersRow'
 import PromoSlot from '@/components/promo/PromoSlot'
 import PodcastCentral from '@/pages/PodcastCentral'
 import { HOME_PAGE_PROMO_PLACEMENTS } from '@/types/cityAds'
-import HytroSpotButton from '@/components/HytroSpotButton'
 import LearnAboutMaiTrollBanner from '@/components/learn-about/LearnAboutMaiTrollBanner'
 import type { TabType } from '@/types/homeTabs'
 import MaiTrollRulesPopup from '@/components/MaiTrollRulesPopup'
@@ -923,7 +922,6 @@ export default function Home() {
           <PromoSlot placement={HOME_PAGE_PROMO_PLACEMENTS[0]} variant="featured" />
           <LearnAboutMaiTrollBanner />
           <PromoSlot placement={HOME_PAGE_PROMO_PLACEMENTS[1]} variant="featured" />
-          <HytroSpotButton variant="nav" size="md" onClick={() => window.dispatchEvent(new Event('open-hytrospot-modal'))} className="w-full justify-center" />
         </aside>
       </div>
 

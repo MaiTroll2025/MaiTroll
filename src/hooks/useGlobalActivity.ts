@@ -16,7 +16,7 @@ export interface ActivityEvent {
   }
 }
 
-const useGlobalActivity = () => {
+const useGlobalActivity = (enabled = true) => {
   const [events, setEvents] = useState<ActivityEvent[]>([])
 
   const normalizeEvent = useCallback((row: any): ActivityEvent => {
@@ -48,6 +48,7 @@ const useGlobalActivity = () => {
   }, [getEventKey])
 
   useEffect(() => {
+    if (!enabled) return
     let mounted = true
 
     const loadEvents = async () => {
@@ -105,7 +106,7 @@ const useGlobalActivity = () => {
         supabase.removeChannel(channel)
       }
     }
-  }, [normalizeEvent, dedupeEvents])
+  }, [dedupeEvents, enabled, normalizeEvent])
 
   return events
 }

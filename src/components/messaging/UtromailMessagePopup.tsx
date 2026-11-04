@@ -29,6 +29,7 @@ export default function UtromailMessagePopup({
   const { user } = useAuthStore()
   const [isBlocking, setIsBlocking] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
+  const [showMessage, setShowMessage] = useState(false)
   const popupRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -90,7 +91,7 @@ export default function UtromailMessagePopup({
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-sm font-black text-white truncate">{message.senderUsername}</p>
-            <p className="mt-1 text-xs text-slate-300 line-clamp-2">{message.content}</p>
+            <p className={`mt-1 text-xs text-slate-300 ${showMessage ? 'whitespace-pre-wrap' : 'line-clamp-2'}`}>{message.content}</p>
             <p className="mt-1 text-[10px] text-slate-500">
               {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </p>
@@ -103,6 +104,12 @@ export default function UtromailMessagePopup({
           </button>
         </div>
         <div className="flex items-center gap-2 border-t border-white/10 p-3">
+          <button
+            onClick={() => setShowMessage((value) => !value)}
+            className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-black text-slate-300 hover:bg-white/10 transition-colors"
+          >
+            {showMessage ? 'Hide' : 'Read'}
+          </button>
           <button
             onClick={() => onOpenThread(message.threadId)}
             className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl border border-cyan-400/30 bg-cyan-500/15 px-3 py-2 text-xs font-black text-cyan-300 hover:bg-cyan-500/25 transition-colors"

@@ -147,6 +147,7 @@ export default function SEOLayout({
               <h3 className="text-white font-semibold mb-4">Support</h3>
               <ul className="space-y-2">
                 <li><Link to="/support" className="text-slate-400 hover:text-purple-300 transition-colors">Help Center</Link></li>
+                <li><Link to="/keyboard-shortcuts" className="text-slate-400 hover:text-purple-300 transition-colors">Keyboard shortcuts</Link></li>
                 <li><Link to="/contact" className="text-slate-400 hover:text-purple-300 transition-colors">Submit a Ticket</Link></li>
                 <li><Link to="/contact" className="text-slate-400 hover:text-purple-300 transition-colors">Email Us</Link></li>
               </ul>

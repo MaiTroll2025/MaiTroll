@@ -54,13 +54,17 @@ serve(async (req) => {
 
     const { data: profile } = await supabase
       .from('user_profiles')
-      .select('role, is_admin')
+      .select('role, troll_role, is_admin')
       .eq('id', userData.user.id)
       .single();
 
-    const isAdmin = profile?.role === 'admin' || profile?.is_admin === true;
-    if (!isAdmin) {
-      return new Response(JSON.stringify({ error: 'Admin access required' }), {
+    const allowedRoles = ['admin', 'ceo', 'superadmin', 'tcnn_news_caster', 'tcnn_chief_news_caster'];
+    const canPublish =
+      profile?.is_admin === true ||
+      allowedRoles.includes(String(profile?.role || '').toLowerCase()) ||
+      allowedRoles.includes(String(profile?.troll_role || '').toLowerCase());
+    if (!canPublish) {
+      return new Response(JSON.stringify({ error: 'Ticker publishing permission required' }), {
         status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
@@ -144,11 +148,11 @@ serve(async (req) => {
             title,
             body: message,
             type: notifType,
-            icon: icon || (tickerType === 'breaking' ? 'alert' : 'newspaper'),
+            icon: icon || (original_type === 'tcnn_breaking' ? 'alert' : 'newspaper'),
             url: url || '/',
             data: {
-              original_type: original_type || (tickerType === 'breaking' ? 'tcnn_breaking' : 'tcnn_live'),
-              category: category || (tickerType === 'breaking' ? 'breaking_news' : 'ticker_message'),
+              original_type: original_type || 'tcnn_live',
+              category: category || 'ticker_message',
               source: 'global_ticker'
             }
           },

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 
 interface PresenceState {
   onlineCount: number;
+  totalUserCount: number | null;
   // Use Set for O(1) lookups instead of O(N) array scans.
   // This is critical for 1000+ online users — checking if a user is online
   // goes from O(N) array.includes() to O(1) Set.has().
@@ -10,11 +11,13 @@ interface PresenceState {
   roomViewerCounts: Record<string, number>;
 
   setOnlineUserIds: (userIds: string[]) => void;
+  setTotalUserCount: (count: number | null) => void;
   setRoomViewerCount: (roomId: string, count: number) => void;
 }
 
 export const usePresenceStore = create<PresenceState>((set) => ({
   onlineCount: 0,
+  totalUserCount: null,
   onlineUserIds: new Set<string>(),
   roomViewerCounts: {},
 
@@ -28,6 +31,10 @@ export const usePresenceStore = create<PresenceState>((set) => ({
     }
     return { onlineUserIds: nextIds, onlineCount: nextIds.size };
   }),
+
+  setTotalUserCount: (count) => set((state) => (
+    state.totalUserCount === count ? state : { totalUserCount: count }
+  )),
 
   setRoomViewerCount: (roomId, count) => set((state) => {
     // Only update if the count actually changed to avoid unnecessary re-renders

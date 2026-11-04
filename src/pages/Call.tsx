@@ -18,9 +18,11 @@ interface CallProps {
   roomId?: string;
   callType?: 'audio' | 'video';
   otherUserId?: string;
+  embedded?: boolean;
+  onCallEnded?: () => void;
 }
 
-export default function Call({ roomId: propRoomId, callType: propCallType, otherUserId: propOtherUserId }: CallProps) {
+export default function Call({ roomId: propRoomId, callType: propCallType, otherUserId: propOtherUserId, embedded = false, onCallEnded }: CallProps) {
   const { roomId: paramRoomId, type: paramType, userId: paramUserId } = useParams<{ roomId?: string; type?: string; userId?: string }>();
   const navigate = useNavigate();
   const { user, profile } = useAuthStore();
@@ -34,8 +36,14 @@ export default function Call({ roomId: propRoomId, callType: propCallType, other
   }, [user, profile, navigate]);
 
   const roomId = propRoomId || paramRoomId || '';
-  const callType = (propCallType || paramType || 'audio') as 'audio' | 'video';
+  const initialCallType = (propCallType || paramType || 'audio') as 'audio' | 'video';
+  const [callType, setCallType] = useState<'audio' | 'video'>(initialCallType);
   const otherUserId = propOtherUserId || paramUserId || '';
+  const isStaff = Boolean(
+    profile?.is_admin ||
+    ['admin', 'superadmin', 'owner', 'ceo'].includes(String(profile?.role || '').toLowerCase()) ||
+    ['admin', 'superadmin', 'ceo'].includes(String(profile?.troll_role || '').toLowerCase()),
+  );
 
   // LiveKit refs
   const roomRef = useRef<Room | null>(null);
@@ -104,8 +112,8 @@ export default function Call({ roomId: propRoomId, callType: propCallType, other
         const { data, error } = await supabase.rpc('get_call_balances', { p_user_id: user.id });
         if (error) throw error;
         
-        const audio = data?.audio_minutes || 0;
-        const video = data?.video_minutes || 0;
+        const audio = isStaff ? Number.MAX_SAFE_INTEGER : data?.audio_minutes || 0;
+        const video = isStaff ? Number.MAX_SAFE_INTEGER : data?.video_minutes || 0;
         setMinutes({ audio, video });
 
         // Check if user has enough minutes
@@ -114,7 +122,7 @@ export default function Call({ roomId: propRoomId, callType: propCallType, other
 
         if (!hasMinutes) {
           toast.error(`You don't have enough ${callType} minutes. Please purchase a package.`);
-          navigate('/utromail');
+          if (!embedded) navigate('/utromail');
           return;
         }
 
@@ -131,7 +139,7 @@ export default function Call({ roomId: propRoomId, callType: propCallType, other
     };
 
     loadMinutes();
-  }, [user?.id, callType, navigate]);
+  }, [user?.id, callType, navigate, isStaff]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -311,7 +319,7 @@ export default function Call({ roomId: propRoomId, callType: propCallType, other
       } catch (err: any) {
         console.error('[Call] LiveKit connection error:', err);
         toast.error('Failed to connect to call');
-        navigate('/utromail');
+        if (!embedded) navigate('/utromail');
       }
     };
 
@@ -340,7 +348,7 @@ export default function Call({ roomId: propRoomId, callType: propCallType, other
       }
       stopDialTone();
     };
-  }, [roomId, user, livekitToken, callType, navigate, handleParticipantJoined, handleParticipantLeft, handleTrackSubscribed, stopDialTone]);
+  }, [roomId, user, livekitToken, navigate, embedded, handleParticipantJoined, handleParticipantLeft, handleTrackSubscribed, stopDialTone]);
 
   // Get LiveKit Connection Details
   useEffect(() => {
@@ -353,7 +361,7 @@ export default function Call({ roomId: propRoomId, callType: propCallType, other
       } catch (err: any) {
         console.error('[Call] Token error:', err);
         toast.error('Failed to initialize call');
-        navigate('/utromail');
+        if (!embedded) navigate('/utromail');
       }
     };
 
@@ -407,7 +415,11 @@ export default function Call({ roomId: propRoomId, callType: propCallType, other
     } catch (error) {
       console.error('Error ending call:', error);
     } finally {
-      navigate('/messages');
+      if (embedded) {
+        onCallEnded?.();
+      } else {
+        navigate('/messages');
+      }
     }
   }, [roomId, user, otherUserId, callType, isEnding, navigate]);
 
@@ -444,7 +456,7 @@ export default function Call({ roomId: propRoomId, callType: propCallType, other
       }, 1000);
 
       // Start minute deduction (every 60 seconds)
-      minuteDeductionIntervalRef.current = setInterval(async () => {
+      minuteDeductionIntervalRef.current = isStaff ? null : setInterval(async () => {
         if (!user?.id) return;
 
         const deductionAmount = callType === 'audio' ? 1 : 2;
@@ -479,6 +491,24 @@ export default function Call({ roomId: propRoomId, callType: propCallType, other
       toast.error('Failed to start call');
     } finally {
       setIsStartingCall(false);
+    }
+  };
+
+  const switchToVideo = async () => {
+    if (callType === 'video' || !roomRef.current || !isCallStarted) return;
+    try {
+      const videoTrack = await (LocalVideoTrack as any).create(VideoPresets.h720);
+      localVideoTrackRef.current = videoTrack;
+      await roomRef.current.localParticipant.publishTrack(videoTrack);
+      setIsVideoOff(false);
+      setCallType('video');
+      if (videoRef.current) {
+        const mediaElement = videoTrack.attach();
+        videoRef.current.srcObject = mediaElement.srcObject;
+      }
+    } catch (error) {
+      console.error('[Call] Could not switch audio call to video:', error);
+      toast.error('Unable to enable video. Check your camera permission.');
     }
   };
 
@@ -562,6 +592,15 @@ export default function Call({ roomId: propRoomId, callType: propCallType, other
 
       {/* Video Area */}
       <div className="flex-1 relative bg-black">
+        {callType === 'audio' && (
+          <button
+            onClick={() => void switchToVideo()}
+            className="p-4 rounded-full bg-gray-700 text-white hover:bg-opacity-80 transition"
+            aria-label="Switch to video"
+          >
+            <Video className="w-6 h-6" />
+          </button>
+        )}
         {callType === 'video' && (
           <>
             {/* Remote Video */}

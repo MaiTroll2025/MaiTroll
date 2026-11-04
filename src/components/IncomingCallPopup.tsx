@@ -3,6 +3,7 @@ import { Phone, PhoneOff, Video } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../lib/store';
 import { supabase } from '../lib/supabase';
+import { hasActiveStreamSession } from '../lib/activeStreamSession';
 
 interface IncomingCallPopupProps {
   isOpen: boolean;
@@ -34,9 +35,33 @@ export default function IncomingCallPopup({
   const audioCtxRef = useRef<AudioContext | null>(null);
   const oscillatorRef = useRef<OscillatorNode | null>(null);
   const [ringtoneSrc, setRingtoneSrc] = React.useState('/sounds/calls/ringtone-classic.mp3');
+  const ignoredLiveCallRef = useRef(false);
+
+  const [isActiveStream, setIsActiveStream] = React.useState(hasActiveStreamSession);
 
   useEffect(() => {
-    if (!isOpen) return;
+    const update = () => setIsActiveStream(hasActiveStreamSession());
+    window.addEventListener('maitroll-stream-session-change', update);
+    return () => window.removeEventListener('maitroll-stream-session-change', update);
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen || !isActiveStream || ignoredLiveCallRef.current || !user?.id) return;
+    ignoredLiveCallRef.current = true;
+    void supabase.rpc('record_maielite_call', {
+      p_caller_id: callerId,
+      p_call_type: callType,
+      p_status: 'missed',
+    }).catch((error) => console.error('[IncomingCallPopup] Could not record missed call:', error));
+    onDecline();
+  }, [callType, callerId, isActiveStream, isOpen, onDecline, user?.id]);
+
+  useEffect(() => {
+    if (!isOpen) ignoredLiveCallRef.current = false;
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen || isActiveStream) return;
 
     const loadActiveRingtone = async () => {
       if (!user?.id) return;
@@ -120,7 +145,7 @@ export default function IncomingCallPopup({
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [isOpen, onDecline, user?.id, ringtoneSrc]);
+  }, [isActiveStream, isOpen, onDecline, user?.id, ringtoneSrc]);
 
   const handleAccept = () => {
     if (audioRef.current) {
@@ -169,7 +194,7 @@ export default function IncomingCallPopup({
     onDecline();
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || isActiveStream) return null;
 
   return (
     <>
@@ -220,4 +245,3 @@ export default function IncomingCallPopup({
     </>
   );
 }
-

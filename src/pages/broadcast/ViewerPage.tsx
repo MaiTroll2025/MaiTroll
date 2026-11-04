@@ -10,6 +10,7 @@ import type { Stream } from '../../types/broadcast'
 import type { BroadcastGift } from '../../hooks/useBroadcastRealtime'
 import { supabase, getBlockedUserIds } from '../../lib/supabase'
 import { useAuthStore } from '../../lib/store'
+import { setActiveStreamSession } from '../../lib/activeStreamSession'
 import { useCreditActivityHeartbeat } from '../../lib/hooks/useCreditActivityHeartbeat'
 import { cn } from '../../lib/utils'
 import { getLiveKitRoomName } from '../../lib/liveUtils'
@@ -2190,6 +2191,11 @@ const roomId = String(getLiveKitRoomName(stream as Stream | null, streamId) || '
   const localAudioTrack = liveKitRoom.localAudioTrack
   const isPublishing = liveKitRoom.isPublishing
   const isConnected = liveKitRoom.isConnected
+
+  useEffect(() => {
+    setActiveStreamSession(Boolean(isActive && isConnected && streamId), 'viewer', streamId)
+    return () => setActiveStreamSession(false, 'viewer')
+  }, [isActive, isConnected, streamId])
   const joinAsAudience = liveKitRoom.joinAsAudience
   const leaveRoom = liveKitRoom.leaveRoom
   const [battleRoomSuspended, setBattleRoomSuspended] = useState(false)

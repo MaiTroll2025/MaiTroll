@@ -19,6 +19,8 @@ import {
   ChevronLeft
 } from 'lucide-react'
 import MobileIssues from '../../components/admin/MobileIssues'
+import { useAdminNotifications } from '../../admin/AdminNotificationProvider'
+import type { AdminNotificationTab } from '../../admin/adminNotificationConfig'
 
 interface DashboardStats {
   totalLiability: number
@@ -51,6 +53,7 @@ type TabId = 'applications' | 'payouts' | 'reports' | 'earnings' | 'mobile_issue
 
 export default function MobileAdminDashboard() {
   const { user, profile, logout, isLoading } = useAuthStore()
+  const { unreadCounts, markTabRead } = useAdminNotifications()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<TabId>('applications')
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
@@ -119,6 +122,7 @@ export default function MobileAdminDashboard() {
 
   const handleSubItemClick = (item: SubItem) => {
     if (item.type === 'tab') {
+      void markTabRead(item.value as AdminNotificationTab)
       setActiveTab(item.value as TabId)
       setSidebarOpen(false)
       setSelectedCategory(null)
@@ -126,6 +130,9 @@ export default function MobileAdminDashboard() {
       navigate(item.value)
     }
   }
+
+  const notificationCount = (tab: AdminNotificationTab, fallback: number) =>
+    unreadCounts[tab] ?? fallback
 
   // Currency formatter
   const formatCurrency = (amount: number) => {
@@ -461,11 +468,11 @@ export default function MobileAdminDashboard() {
       <div className="fixed bottom-0 left-0 right-0 bg-[#0D0D0D] border-t border-purple-500/30 px-2 py-2 safe-area-bottom">
         <div className="grid grid-cols-5 gap-1">
           {([
-            { id: 'applications' as TabId, label: 'Apps', icon: FileText, badge: stats.newApplications },
-            { id: 'payouts' as TabId, label: 'Payouts', icon: DollarSign, badge: stats.newPayouts },
-            { id: 'reports' as TabId, label: 'Reports', icon: AlertTriangle, badge: stats.newReports },
+            { id: 'applications' as TabId, label: 'Apps', icon: FileText, badge: notificationCount('applications', stats.newApplications) },
+            { id: 'payouts' as TabId, label: 'Payouts', icon: DollarSign, badge: notificationCount('payout-batches', stats.newPayouts) },
+            { id: 'reports' as TabId, label: 'Reports', icon: AlertTriangle, badge: notificationCount('reports-queue', stats.newReports) },
             { id: 'earnings' as TabId, label: 'Earnings', icon: TrendingUp, badge: 0 },
-            { id: 'mobile_issues' as TabId, label: 'Issues', icon: AlertTriangle, badge: stats.newMobileIssues }
+            { id: 'mobile_issues' as TabId, label: 'Issues', icon: AlertTriangle, badge: notificationCount('system-errors', stats.newMobileIssues) }
           ]).map(({ id, label, icon: Icon, badge }) => (
             <button
               key={id}

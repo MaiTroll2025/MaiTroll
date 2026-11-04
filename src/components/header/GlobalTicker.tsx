@@ -6,7 +6,8 @@ import { useTCNNRoles } from '../../hooks/useTCNNRoles'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
-import { Home, Mail, HelpCircle, MessageCircle, Shield, FileText, Download, Heart } from 'lucide-react'
+import { getKeyboardShortcuts } from '@/lib/keyboardShortcuts'
+import { Home, Mail, HelpCircle, MessageCircle, Shield, FileText, Download, Heart, Keyboard } from 'lucide-react'
 import '../../styles/ticker.css'
 
 const seoLinks = [
@@ -20,25 +21,29 @@ const seoLinks = [
   { path: '/donate', label: 'Support Our City ❤️', icon: Heart },
 ]
 
-const GlobalTicker = ({ showSeoLinks = true }: { showSeoLinks?: boolean }) => {
-  const events = useGlobalActivity()
+const GlobalTicker = ({ showSeoLinks = true, events: providedEvents }: { showSeoLinks?: boolean; events?: ActivityEvent[] }) => {
+  const internalEvents = useGlobalActivity(!providedEvents)
+  const events = providedEvents || internalEvents
   const navigate = useNavigate()
   const { user, profile } = useAuthStore()
   const { isNewsCaster, isChiefNewsCaster } = useTCNNRoles(user?.id)
   const [isHeartbeating, setIsHeartbeating] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
+  const [showShortcutsModal, setShowShortcutsModal] = useState(false)
   const [tickerMessage, setTickerMessage] = useState('')
   const [tickerType, setTickerType] = useState<'standard' | 'breaking'>('standard')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const isAdmin = profile?.role === 'admin' || profile?.is_admin
   const canEditTicker = isAdmin || isNewsCaster || isChiefNewsCaster
+  const keyboardShortcuts = getKeyboardShortcuts(profile)
 
   const [currentEventIndex, setCurrentEventIndex] = useState(0)
 
   const handleTickerClick = (event: ActivityEvent) => {
-    if (event.metadata?.url) {
-      navigate(event.metadata.url)
+    const url = event.metadata?.url
+    if (url && url.startsWith('/') && !url.startsWith('//')) {
+      navigate(url)
     }
   }
 
@@ -74,7 +79,7 @@ const GlobalTicker = ({ showSeoLinks = true }: { showSeoLinks?: boolean }) => {
 
       try {
         const notifTitle = getNotificationTitle(tickerType)
-        await supabase.functions.invoke('global-ticker-notify', {
+        const { error: notifyError } = await supabase.functions.invoke('global-ticker-notify', {
           body: {
             title: notifTitle,
             message: cleanMessage,
@@ -85,8 +90,10 @@ const GlobalTicker = ({ showSeoLinks = true }: { showSeoLinks?: boolean }) => {
             url: '/',
           },
         })
+        if (notifyError) throw notifyError
       } catch (notifyErr: any) {
-        console.warn('Failed to send ticker notifications:', notifyErr)
+        console.error('Failed to send ticker notifications:', notifyErr)
+        toast.warning('Ticker published, but notifications could not be sent.')
       }
 
       toast.success(tickerType === 'breaking' ? 'Breaking news pushed!' : 'Ticker message pushed!')
@@ -154,6 +161,10 @@ const GlobalTicker = ({ showSeoLinks = true }: { showSeoLinks?: boolean }) => {
   const currentEvent = visibleEvents[currentEventIndex] || null
 
   useEffect(() => {
+    setCurrentEventIndex((index) => Math.min(index, Math.max(0, visibleEvents.length - 1)))
+  }, [visibleEvents.length])
+
+  useEffect(() => {
     if (visibleEvents.length <= 1) return
     const interval = setInterval(() => {
       setCurrentEventIndex((prev) => (prev + 1) % visibleEvents.length)
@@ -176,6 +187,12 @@ const GlobalTicker = ({ showSeoLinks = true }: { showSeoLinks?: boolean }) => {
                 key={`${currentEvent.id}-${currentEvent.type}`}
                 className={`ticker-item ${getEventStyles(currentEvent)} ${currentEvent.metadata?.url ? 'cursor-pointer hover:underline' : ''} animate-slide-right-to-left`}
                 onClick={() => currentEvent.metadata?.url && handleTickerClick(currentEvent)}
+                onKeyDown={(event) => {
+                  if ((event.key === 'Enter' || event.key === ' ') && currentEvent.metadata?.url) {
+                    event.preventDefault()
+                    handleTickerClick(currentEvent)
+                  }
+                }}
                 role={currentEvent.metadata?.url ? 'button' : undefined}
                 tabIndex={currentEvent.metadata?.url ? 0 : undefined}
               >
@@ -206,18 +223,77 @@ const GlobalTicker = ({ showSeoLinks = true }: { showSeoLinks?: boolean }) => {
               {seoLinks.map((link) => {
                 const Icon = link.icon
                 return (
-                  <li key={link.path}>
-                    <Link to={link.path} className="ticker-seo-link">
-                      <Icon className="w-3 h-3" />
-                      <span>{link.label}</span>
-                    </Link>
-                  </li>
+                  <React.Fragment key={link.path}>
+                    <li>
+                      <Link to={link.path} className="ticker-seo-link">
+                        <Icon className="w-3 h-3" />
+                        <span>{link.label}</span>
+                      </Link>
+                    </li>
+                    {link.path === '/app-downloads' && (
+                      <li>
+                        <button
+                          type="button"
+                          className="ticker-seo-link"
+                          onClick={() => setShowShortcutsModal(true)}
+                          aria-label="Show keyboard shortcuts"
+                        >
+                          <Keyboard className="w-3 h-3" />
+                          <span>Keyboard Shortcuts</span>
+                        </button>
+                      </li>
+                    )}
+                  </React.Fragment>
                 )
               })}
             </ul>
           </nav>
         )}
       </div>
+
+      <Dialog open={showShortcutsModal} onOpenChange={setShowShortcutsModal}>
+        <DialogContent className="max-w-md border-slate-700 bg-slate-950 text-white">
+          <div className="space-y-4">
+            <div>
+              <h2 className="text-lg font-bold">Keyboard shortcuts</h2>
+              <p className="mt-1 text-xs text-slate-400">
+                On the homepage, press a letter to open a page. Shortcuts pause while you type.
+              </p>
+            </div>
+            <div className="max-h-[55vh] space-y-1 overflow-y-auto">
+              {keyboardShortcuts.map((shortcut) => (
+                <div key={shortcut.key} className="flex items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-white/5">
+                  <button
+                    type="button"
+                    className="grid h-8 w-8 shrink-0 place-items-center rounded border border-purple-400/50 bg-purple-950 font-bold text-purple-100"
+                    aria-label={`Use ${shortcut.key} to ${shortcut.label}`}
+                    onClick={() => {
+                      setShowShortcutsModal(false)
+                      if (shortcut.phone) {
+                        window.dispatchEvent(new CustomEvent('mai-elite-phone-open'))
+                      } else if (shortcut.path) {
+                        navigate(shortcut.path)
+                      }
+                    }}
+                  >
+                    {shortcut.key}
+                  </button>
+                  <span className="flex-1 text-sm">{shortcut.label}</span>
+                  {!shortcut.phone && shortcut.path && (
+                    <Link
+                      to={shortcut.path}
+                      onClick={() => setShowShortcutsModal(false)}
+                      className="text-xs text-purple-300 hover:text-white"
+                    >
+                      Open
+                    </Link>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {showEditModal && (
         <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
