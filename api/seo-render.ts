@@ -8,6 +8,80 @@ const HOME_TITLE = 'MaiTroll | The Live Broadcasting App & Social Media Network'
 const HOME_DESCRIPTION = 'MaiTroll is a new live broadcasting app and social media platform built for creators. Stream games instantly, build a broadcast career with daily cashouts, and engage with an interactive virtual community.'
 
 const STATIC_PAGES: Record<string, { title: string; description: string; paragraphs: string[]; canonicalPath?: string }> = {
+  '/': {
+    title: 'MaiTroll | Live Broadcasting and Creator Community',
+    description: 'Discover MaiTroll, a live broadcasting and social community platform for creators and viewers. Watch public broadcasts, connect through live chat, share content, and explore interactive community features.',
+    paragraphs: [
+      'MaiTroll brings live broadcasting, creator profiles, short-form video, chat, and interactive community experiences together in one platform.',
+      'Discover public broadcasts, connect with creators and viewers, and explore the features available across the MaiTroll community.',
+    ],
+  },
+  '/about': {
+    title: 'About MAiTROLL | Virtual Business City for Students & Entrepreneurs | MaiTroll',
+    description: 'Learn about MAiTROLL, a virtual city connecting education, entrepreneurship, broadcasting, commerce, and community for students, instructors, and entrepreneurs.',
+    paragraphs: [
+      'MAiTROLL connects education, entrepreneurship, broadcasting, commerce, and community in an interactive virtual city.',
+      'Explore how students, instructors, creators, and entrepreneurs can participate in community experiences and platform features.',
+    ],
+  },
+  '/contact': {
+    title: 'Contact Us | Mai Troll | MaiTroll',
+    description: 'Contact the MaiTroll support team for account help, issue reports, or feedback. Find support resources and ways to get in touch.',
+    paragraphs: [
+      'Contact MaiTroll for help with your account, to report an issue, or to share feedback about the platform.',
+      'For common questions, browse the FAQ or visit the support center.',
+    ],
+  },
+  '/faq': {
+    title: 'Frequently Asked Questions | MAiTROLL | MaiTroll',
+    description: 'Find answers about MAiTROLL, including education, entrepreneurship, broadcasting, Troll Coins, payments, safety, and community features.',
+    paragraphs: [
+      'Find answers to common questions about MaiTroll accounts, broadcasting, creator tools, community features, payments, and safety.',
+      'If you need additional help, contact the MaiTroll support team.',
+    ],
+  },
+  '/privacy': {
+    title: 'Privacy Policy | Troll City | MaiTroll',
+    description: 'Read the MaiTroll privacy policy to learn how personal information is collected, used, and protected when you use the platform.',
+    paragraphs: [
+      'The MaiTroll privacy policy explains how information is handled when you use the website, applications, and community features.',
+      'Review the full policy for details about data collection, use, sharing, and your privacy choices.',
+    ],
+  },
+  '/privacy-policy': {
+    title: 'Privacy Policy | Troll City | MaiTroll',
+    description: 'Read the MaiTroll privacy policy to learn how personal information is collected, used, and protected when you use the platform.',
+    paragraphs: [
+      'The MaiTroll privacy policy explains how information is handled when you use the website, applications, and community features.',
+      'Review the full policy for details about data collection, use, sharing, and your privacy choices.',
+    ],
+    canonicalPath: '/privacy',
+  },
+  '/legal/privacy': {
+    title: 'Privacy Policy | Troll City | MaiTroll',
+    description: 'Read the MaiTroll privacy policy to learn how personal information is collected, used, and protected when you use the platform.',
+    paragraphs: [
+      'The MaiTroll privacy policy explains how information is handled when you use the website, applications, and community features.',
+      'Review the full policy for details about data collection, use, sharing, and your privacy choices.',
+    ],
+    canonicalPath: '/privacy',
+  },
+  '/app-downloads': {
+    title: 'App Downloads | MaiTroll',
+    description: 'Download official MaiTroll Android APK releases and review app version details.',
+    paragraphs: [
+      'Find official MaiTroll app downloads and version information.',
+      'Review release details and install instructions before downloading an app package.',
+    ],
+  },
+  '/donate': {
+    title: 'Support MaiTroll City | Help Our Live Streaming Community Grow',
+    description: 'Help MaiTroll City grow! Support live-streaming infrastructure, platform development, future hiring, and community expansion through secure PayPal contributions.',
+    paragraphs: [
+      'MaiTroll is an independently growing platform that brings live broadcasting, creator communities, and interactive virtual city experiences together.',
+      'Voluntary contributions support the platform as a whole. MaiTroll is a commercial platform, not a charitable organization, and contributions are not tax-deductible.',
+    ],
+  },
   '/terms': {
     title: 'Terms of Service | MaiTroll',
     description: 'Review the MaiTroll Terms of Service for information about using the website, applications, community, broadcasts, and related platform features.',
@@ -123,14 +197,6 @@ const STATIC_PAGES: Record<string, { title: string; description: string; paragra
       'Explore public content and participate in the MaiTroll community.',
     ],
   },
-  '/donate': {
-    title: 'Support MaiTroll City | Help Our Live Streaming Community Grow',
-    description: 'Help MaiTroll City grow! Support live-streaming infrastructure, platform development, future hiring, and community expansion through secure PayPal contributions.',
-    paragraphs: [
-      'MaiTroll is more than a live-streaming platform. We are building an interactive digital city where people can broadcast, compete in live battles, connect, create content, and build communities.',
-      'As an independently growing platform, we welcome voluntary financial contributions from people who believe in our vision.',
-    ],
-  },
 }
 
 function escapeHtml(value: unknown): string {
@@ -207,7 +273,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   let canonicalPath = pathname
   let bodyHtml: string | undefined
   let statusCode = 200
-  let noindex = /^\/(admin|account|settings|wallet)(\/|$)/i.test(pathname)
+  let noindex = /^\/(admin|account|settings|wallet|bank|coins|earnings|cashout|payouts|search|tromail|utromail|notifications|following|messages|blocked-users|trollifications|trollifieds|jail|inmates|onboarding|creator-onboarding|broadcast\/setup|live\/command-center|live\/overlay|officer|lead-officer|president|agency-dashboard)(\/|$)/i.test(pathname)
   let articleStructuredData: Record<string, unknown> | null = null
 
   const staticPage = STATIC_PAGES[pathname]

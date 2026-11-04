@@ -12,7 +12,7 @@ const APP_URL = process.env.VITE_APP_URL || process.env.APP_URL || 'https://www.
 /**
  * Generate the full sitemap XML
  */
-async function generateSitemap(supabase) {
+async function generateSitemap(supabase, { includeStatic = true } = {}) {
   const urls = [];
   const now = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
 
@@ -21,6 +21,13 @@ async function generateSitemap(supabase) {
   // ============================================================
   const staticPages = [
     { loc: `${APP_URL}/`, priority: 1.0, changefreq: 'daily' },
+    { loc: `${APP_URL}/about`, priority: 0.8, changefreq: 'monthly' },
+    { loc: `${APP_URL}/contact`, priority: 0.5, changefreq: 'monthly' },
+    { loc: `${APP_URL}/faq`, priority: 0.6, changefreq: 'monthly' },
+    { loc: `${APP_URL}/privacy`, priority: 0.3, changefreq: 'yearly' },
+    { loc: `${APP_URL}/terms`, priority: 0.3, changefreq: 'yearly' },
+    { loc: `${APP_URL}/app-downloads`, priority: 0.7, changefreq: 'monthly' },
+    { loc: `${APP_URL}/donate`, priority: 0.5, changefreq: 'monthly' },
     { loc: `${APP_URL}/features/broadcasting-app`, priority: 0.8, changefreq: 'monthly' },
     { loc: `${APP_URL}/features/social-media`, priority: 0.8, changefreq: 'monthly' },
     { loc: `${APP_URL}/updates`, priority: 0.8, changefreq: 'daily' },
@@ -52,13 +59,15 @@ async function generateSitemap(supabase) {
     { loc: `${APP_URL}/terms`, priority: 0.3, changefreq: 'monthly' },
   ];
 
-  for (const page of staticPages) {
-    urls.push(`  <url>
+  if (includeStatic) {
+    for (const page of staticPages) {
+      urls.push(`  <url>
     <loc>${escapeXml(page.loc)}</loc>
     <lastmod>${now}</lastmod>
     <changefreq>${page.changefreq}</changefreq>
     <priority>${page.priority}</priority>
   </url>`);
+    }
   }
 
   // ============================================================
@@ -92,13 +101,18 @@ async function generateSitemap(supabase) {
     try {
       const { data: profiles, error: profileError } = await supabase
         .from('user_profiles')
-        .select('username, updated_at')
+        .select('username, updated_at, is_private, is_banned, account_state')
         .eq('is_banned', false)
         .not('username', 'is', null)
         .not('username', 'eq', '');
 
       if (!profileError && profiles) {
         for (const profile of profiles) {
+          if (
+            profile.is_private ||
+            profile.is_banned ||
+            ['suspended', 'banned', 'jailed', 'exiled'].includes(profile.account_state)
+          ) continue;
           const lastmod = profile.updated_at
             ? new Date(profile.updated_at).toISOString().split('T')[0]
             : now;

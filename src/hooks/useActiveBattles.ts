@@ -19,6 +19,7 @@ const ACTIVE_STATUSES = ['active', 'starting', 'ready'];
 export function useActiveBattles(currentBattleId?: string | null) {
   const [battles, setBattles] = useState<ActiveBattle[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const refetchRef = useRef<number | null>(null);
 
   const load = useCallback(async () => {
@@ -29,6 +30,7 @@ export function useActiveBattles(currentBattleId?: string | null) {
         .in('status', ACTIVE_STATUSES);
       if (error) {
         console.warn('[ActiveBattles] load error', error);
+        setError(error.message);
         return;
       }
       const list = (rows || []) as ActiveBattle[];
@@ -52,8 +54,10 @@ export function useActiveBattles(currentBattleId?: string | null) {
         }))
         .filter((battle) => battle.id !== currentBattleId);
       setBattles(merged);
+      setError(null);
     } catch (error) {
       console.warn('[ActiveBattles] load threw', error);
+      setError(error instanceof Error ? error.message : 'Unexpected error loading battles');
     } finally {
       setLoading(false);
     }
@@ -74,5 +78,5 @@ export function useActiveBattles(currentBattleId?: string | null) {
     };
   }, [load]);
 
-  return { battles, loading, reload: load };
+  return { battles, loading, error, reload: load };
 }

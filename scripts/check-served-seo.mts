@@ -79,6 +79,28 @@ for (const path of ['/sitemap.xml', '/sitemap-dynamic.xml']) {
   ok(`${path} — 200, valid XML, ${count} URLs`)
 }
 
+{
+  const { body } = await get('/sitemap.xml')
+  for (const pathname of [
+    '/about',
+    '/app-downloads',
+    '/contact',
+    '/faq',
+    '/privacy',
+    '/terms',
+    '/features/broadcasting-app',
+    '/features/social-media',
+    '/blog',
+    '/updates',
+  ]) {
+    if (body.includes(`<loc>https://www.maitroll.com${pathname}</loc>`)) {
+      ok(`/sitemap.xml lists ${pathname}`)
+    } else {
+      fail(`/sitemap.xml is missing ${pathname}`)
+    }
+  }
+}
+
 // robots.txt must be plain text, reference both sitemaps, and not be the SPA.
 {
   const { res, body } = await get('/robots.txt')
@@ -90,6 +112,16 @@ for (const path of ['/sitemap.xml', '/sitemap-dynamic.xml']) {
   } else if (!/Sitemap:\s*https:\/\/www\.maitroll\.com\/sitemap-dynamic\.xml/.test(body)) {
     fail('robots.txt does not declare sitemap-dynamic.xml')
   } else ok(`robots.txt — 200, declares both sitemaps`)
+}
+
+{
+  const { res, body } = await get('/utromail')
+  const robots = /<meta name="robots" content="([^"]+)"/i.exec(body)?.[1]
+  if (res.status === 200 && robots === 'noindex, nofollow') {
+    ok('/utromail — private messaging route is noindex')
+  } else {
+    fail('/utromail is missing its noindex directive')
+  }
 }
 
 // Blog collection and published articles must be discoverable as real URLs,
@@ -108,6 +140,9 @@ for (const path of ['/sitemap.xml', '/sitemap-dynamic.xml']) {
   }
 
   const { res: sitemapRes, body: sitemap } = await get('/sitemap-dynamic.xml')
+  if (sitemap.includes('<loc>https://www.maitroll.com/about</loc>')) {
+    fail('/sitemap-dynamic.xml should contain dynamic URLs only')
+  }
   const articleUrl = /<loc>(https:\/\/www\.maitroll\.com\/blog\/[^<]+)<\/loc>/.exec(sitemap)?.[1]
   if (sitemapRes.status !== 200 || !articleUrl) {
     fail('/sitemap-dynamic.xml does not list a published blog article URL')
@@ -129,6 +164,28 @@ for (const path of ['/sitemap.xml', '/sitemap-dynamic.xml']) {
 
 // Deep links must return route-specific metadata in the initial HTML response.
 {
+  const expectedPages = [
+    ['/', 'MaiTroll | Live Broadcasting and Creator Community', 'https://www.maitroll.com/'],
+    ['/about', 'About MAiTROLL | Virtual Business City for Students & Entrepreneurs | MaiTroll', 'https://www.maitroll.com/about'],
+    ['/contact', 'Contact Us | Mai Troll | MaiTroll', 'https://www.maitroll.com/contact'],
+    ['/faq', 'Frequently Asked Questions | MAiTROLL | MaiTroll', 'https://www.maitroll.com/faq'],
+    ['/privacy', 'Privacy Policy | Troll City | MaiTroll', 'https://www.maitroll.com/privacy'],
+    ['/app-downloads', 'App Downloads | MaiTroll', 'https://www.maitroll.com/app-downloads'],
+    ['/donate', 'Support MaiTroll City | Help Our Live Streaming Community Grow', 'https://www.maitroll.com/donate'],
+  ] as const
+  for (const [route, expectedTitle, expectedCanonical] of expectedPages) {
+    const { res, body } = await get(route)
+    const title = /<title>(.*?)<\/title>/i.exec(body)?.[1]?.replace(/&amp;/g, '&')
+    const canonical = /<link rel="canonical" href="([^"]+)"/i.exec(body)?.[1]
+    const robots = /<meta name="robots" content="([^"]+)"/i.exec(body)?.[1]
+    if (res.status === 200 && title === expectedTitle && canonical === expectedCanonical
+      && robots === 'index, follow' && body.includes('<div id="root"><main>')) {
+      ok(`${route} — route-specific title, canonical, and server-rendered content`)
+    } else {
+      fail(`${route} returned ${res.status} without expected indexable metadata/content`)
+    }
+  }
+
   for (const route of ['/terms', '/terms-of-service', '/legal/terms']) {
     const { res, body } = await get(route)
     const title = /<title>(.*?)<\/title>/i.exec(body)?.[1]

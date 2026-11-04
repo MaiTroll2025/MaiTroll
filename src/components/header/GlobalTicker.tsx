@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate, Link } from 'react-router-dom'
 import useGlobalActivity, { ActivityEvent } from '../../hooks/useGlobalActivity'
 import { useAuthStore } from '../../lib/store'
@@ -251,49 +252,52 @@ const GlobalTicker = ({ showSeoLinks = true, events: providedEvents }: { showSeo
         )}
       </div>
 
-      <Dialog open={showShortcutsModal} onOpenChange={setShowShortcutsModal}>
-        <DialogContent className="max-w-md border-slate-700 bg-slate-950 text-white">
-          <div className="space-y-4">
-            <div>
-              <h2 className="text-lg font-bold">Keyboard shortcuts</h2>
-              <p className="mt-1 text-xs text-slate-400">
-                On the homepage, press a letter to open a page. Shortcuts pause while you type.
-              </p>
-            </div>
-            <div className="max-h-[55vh] space-y-1 overflow-y-auto">
-              {keyboardShortcuts.map((shortcut) => (
-                <div key={shortcut.key} className="flex items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-white/5">
-                  <button
-                    type="button"
-                    className="grid h-8 w-8 shrink-0 place-items-center rounded border border-purple-400/50 bg-purple-950 font-bold text-purple-100"
-                    aria-label={`Use ${shortcut.key} to ${shortcut.label}`}
-                    onClick={() => {
-                      setShowShortcutsModal(false)
-                      if (shortcut.phone) {
-                        window.dispatchEvent(new CustomEvent('mai-elite-phone-open'))
-                      } else if (shortcut.path) {
-                        navigate(shortcut.path)
-                      }
-                    }}
-                  >
-                    {shortcut.key}
-                  </button>
-                  <span className="flex-1 text-sm">{shortcut.label}</span>
-                  {!shortcut.phone && shortcut.path && (
-                    <Link
-                      to={shortcut.path}
-                      onClick={() => setShowShortcutsModal(false)}
-                      className="text-xs text-purple-300 hover:text-white"
+      {typeof document !== 'undefined' && createPortal(
+        <Dialog open={showShortcutsModal} onOpenChange={setShowShortcutsModal}>
+          <DialogContent className="max-h-[85vh] w-[calc(100vw-2rem)] max-w-md overflow-y-auto border-slate-700 bg-slate-950 text-white">
+            <div className="space-y-4">
+              <div>
+                <h2 className="text-lg font-bold">Keyboard shortcuts</h2>
+                <p className="mt-1 text-xs text-slate-400">
+                  On the homepage, press a letter to open a page. Shortcuts pause while you type.
+                </p>
+              </div>
+              <div className="max-h-[65vh] space-y-1 overflow-y-auto">
+                {keyboardShortcuts.map((shortcut) => (
+                  <div key={shortcut.key} className="flex items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-white/5">
+                    <button
+                      type="button"
+                      className="grid h-8 w-8 shrink-0 place-items-center rounded border border-purple-400/50 bg-purple-950 font-bold text-purple-100"
+                      aria-label={`Use ${shortcut.key} to ${shortcut.label}`}
+                      onClick={() => {
+                        setShowShortcutsModal(false)
+                        if (shortcut.phone) {
+                          window.dispatchEvent(new CustomEvent('mai-elite-phone-open'))
+                        } else if (shortcut.path) {
+                          navigate(shortcut.path)
+                        }
+                      }}
                     >
-                      Open
-                    </Link>
-                  )}
-                </div>
-              ))}
+                      {shortcut.key}
+                    </button>
+                    <span className="flex-1 text-sm">{shortcut.label}</span>
+                    {!shortcut.phone && shortcut.path && (
+                      <Link
+                        to={shortcut.path}
+                        onClick={() => setShowShortcutsModal(false)}
+                        className="text-xs text-purple-300 hover:text-white"
+                      >
+                        Open
+                      </Link>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>,
+        document.body,
+      )}
 
       {showEditModal && (
         <Dialog open={showEditModal} onOpenChange={setShowEditModal}>

@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "node ./scripts/generate-version.js && vite",
-    "server": "node ./server/index.js",
+    "server": "node ./server/index.js --render",
     "render:start": "node ./server/index.js --render",
     "server:watch": "tsx watch ./server/index.ts",
     "build": "node ./scripts/generate-version.js && vite build",

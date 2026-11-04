@@ -212,6 +212,22 @@ app.get('/sitemap.xml', async (req, res) => {
   }
 });
 
+app.get('/sitemap-dynamic.xml', async (req, res) => {
+  try {
+    if (!supabase) {
+      res.status(200).sendFile(path.join(__dirname, '../public/sitemap-dynamic.xml'));
+      return;
+    }
+
+    const sitemap = await generateSitemap(supabase, { includeStatic: false });
+    res.setHeader('Content-Type', 'application/xml');
+    res.status(200).send(sitemap);
+  } catch (error) {
+    console.error('[Sitemap] Error:', error);
+    res.status(500).send('Error generating dynamic sitemap');
+  }
+});
+
 // Serve static files from public directory
 app.use(express.static(path.join(__dirname, '../public'), {
   maxAge: '1h',
@@ -626,20 +642,6 @@ app.get('/wall/:postId', (req, res, _next) => {
 // ============================================================================
 app.get('/api/social/stream/:username/:slug', async (req, res) => {
   await profileSEO.handleStreamSEO(req, res);
-});
-
-// ============================================================================
-// DYNAMIC SITEMAP
-// ============================================================================
-app.get('/sitemap-dynamic.xml', async (req, res) => {
-  try {
-    const sitemap = await generateSitemap(supabase);
-    res.setHeader('Content-Type', 'application/xml');
-    res.status(200).send(sitemap);
-  } catch (error) {
-    console.error('[Sitemap] Error:', error);
-    res.status(500).send('Error generating sitemap');
-  }
 });
 
 // Social Media Preview Endpoint - Returns HTML with Open Graph and Twitter Card meta tags
@@ -1129,6 +1131,87 @@ app.get(/^\/([a-zA-Z0-9_-]{2,30})\/live\/([a-zA-Z0-9_-]+)$/, async (req, res, ne
 });
 
 const SEO_PAGE_METADATA = {
+  '/': {
+    title: 'MaiTroll | Live Broadcasting and Creator Community',
+    description: 'Discover MaiTroll, a live broadcasting and social community platform for creators and viewers. Watch public broadcasts, connect through live chat, share content, and explore interactive community features.',
+    canonicalPath: '/',
+    body: [
+      'MaiTroll brings live broadcasting, creator profiles, short-form video, chat, and interactive community experiences together in one platform.',
+      'Discover public broadcasts, connect with creators and viewers, and explore the features available across the MaiTroll community.',
+    ],
+  },
+  '/about': {
+    title: 'About MAiTROLL | Virtual Business City for Students & Entrepreneurs | MaiTroll',
+    description: 'Learn about MAiTROLL, a virtual city connecting education, entrepreneurship, broadcasting, commerce, and community for students, instructors, and entrepreneurs.',
+    canonicalPath: '/about',
+    body: [
+      'MAiTROLL connects education, entrepreneurship, broadcasting, commerce, and community in an interactive virtual city.',
+      'Explore how students, instructors, creators, and entrepreneurs can participate in community experiences and platform features.',
+    ],
+  },
+  '/contact': {
+    title: 'Contact Us | Mai Troll | MaiTroll',
+    description: "Contact the MaiTroll support team for account help, issue reports, or feedback. Find support resources and ways to get in touch.",
+    canonicalPath: '/contact',
+    body: [
+      'Contact MaiTroll for help with your account, to report an issue, or to share feedback about the platform.',
+      'For common questions, browse the FAQ or visit the support center.',
+    ],
+  },
+  '/faq': {
+    title: 'Frequently Asked Questions | MAiTROLL | MaiTroll',
+    description: 'Find answers about MAiTROLL, including education, entrepreneurship, broadcasting, Troll Coins, payments, safety, and community features.',
+    canonicalPath: '/faq',
+    body: [
+      'Find answers to common questions about MaiTroll accounts, broadcasting, creator tools, community features, payments, and safety.',
+      'If you need additional help, contact the MaiTroll support team.',
+    ],
+  },
+  '/privacy': {
+    title: 'Privacy Policy | Troll City | MaiTroll',
+    description: 'Read the MaiTroll privacy policy to learn how personal information is collected, used, and protected when you use the platform.',
+    canonicalPath: '/privacy',
+    body: [
+      'The MaiTroll privacy policy explains how information is handled when you use the website, applications, and community features.',
+      'Review the full policy for details about data collection, use, sharing, and your privacy choices.',
+    ],
+  },
+  '/privacy-policy': {
+    title: 'Privacy Policy | Troll City | MaiTroll',
+    description: 'Read the MaiTroll privacy policy to learn how personal information is collected, used, and protected when you use the platform.',
+    canonicalPath: '/privacy',
+    body: [
+      'The MaiTroll privacy policy explains how information is handled when you use the website, applications, and community features.',
+      'Review the full policy for details about data collection, use, sharing, and your privacy choices.',
+    ],
+  },
+  '/legal/privacy': {
+    title: 'Privacy Policy | Troll City | MaiTroll',
+    description: 'Read the MaiTroll privacy policy to learn how personal information is collected, used, and protected when you use the platform.',
+    canonicalPath: '/privacy',
+    body: [
+      'The MaiTroll privacy policy explains how information is handled when you use the website, applications, and community features.',
+      'Review the full policy for details about data collection, use, sharing, and your privacy choices.',
+    ],
+  },
+  '/app-downloads': {
+    title: 'App Downloads | MaiTroll',
+    description: 'Download official MaiTroll Android APK releases and review app version details.',
+    canonicalPath: '/app-downloads',
+    body: [
+      'Find official MaiTroll app downloads and version information.',
+      'Review release details and install instructions before downloading an app package.',
+    ],
+  },
+  '/donate': {
+    title: 'Support MaiTroll City | Help Our Live Streaming Community Grow',
+    description: 'Help MaiTroll City grow! Support live-streaming infrastructure, platform development, future hiring, and community expansion through secure PayPal contributions.',
+    canonicalPath: '/donate',
+    body: [
+      'MaiTroll is an independently growing platform that brings live broadcasting, creator communities, and interactive virtual city experiences together.',
+      'Voluntary contributions support the platform as a whole. MaiTroll is a commercial platform, not a charitable organization, and contributions are not tax-deductible.',
+    ],
+  },
   '/terms': {
     title: 'Terms of Service | MaiTroll',
     description: 'Read the MaiTroll Terms of Service for accounts, community participation, broadcasting, virtual city features, content, and platform rules.',
@@ -1191,14 +1274,13 @@ async function renderSeoIndex(req, res, next) {
   const normalizedPath = pathname.length > 1 ? pathname.replace(/\/+$/, '') : '/';
   const pageMetadata = SEO_PAGE_METADATA[normalizedPath];
   if (pageMetadata) {
-    ({ title, description, body: bodyHtml } = pageMetadata);
+    ({ title, description } = pageMetadata);
     canonicalPath = pageMetadata.canonicalPath || normalizedPath;
-    if (!bodyHtml) {
-      bodyHtml = makeSEOBody('Terms of Service', [
-        'Review the MaiTroll Terms of Service for information about using the website, applications, community, broadcasts, and related platform features.',
-        'For questions about these terms, contact the MaiTroll support team.',
-      ]);
-    }
+    const paragraphs = pageMetadata.body || [
+      'Review the MaiTroll Terms of Service for information about using the website, applications, community, broadcasts, and related platform features.',
+      'For questions about these terms, contact the MaiTroll support team.',
+    ];
+    bodyHtml = makeSEOBody(title, paragraphs);
   }
 
   const profileMatch = normalizedPath.match(/^\/profile\/([a-zA-Z0-9_-]{2,30})$/);
@@ -1304,7 +1386,13 @@ async function renderSeoIndex(req, res, next) {
     }
     html = replaceMetaTag(html, /<link\s+rel=["']canonical["'][^>]*>/i, `<link rel="canonical" href="${escapeHtml(pageUrl)}" />`);
     html = html.replace(/<meta\s+property=["']og:url["'][^>]*>/i, `<meta property="og:url" content="${escapeHtml(pageUrl)}" />`);
-    const noindexPathPrefixes = ['/admin', '/account', '/settings', '/wallet', '/profile/settings', '/profile/setup', '/profile/delete'];
+    const noindexPathPrefixes = [
+      '/admin', '/account', '/settings', '/wallet', '/bank', '/coins', '/earnings', '/cashout', '/payouts',
+      '/profile/settings', '/profile/setup', '/profile/delete', '/search', '/tromail', '/utromail',
+      '/notifications', '/following', '/messages', '/blocked-users', '/trollifications', '/trollifieds',
+      '/jail', '/inmates', '/onboarding', '/creator-onboarding', '/broadcast/setup',
+      '/live/command-center', '/live/overlay', '/officer', '/president', '/agency-dashboard',
+    ];
     const shouldNoindex = statusCode >= 400
       || noindexPathPrefixes.some((prefix) => normalizedPath === prefix || normalizedPath.startsWith(`${prefix}/`));
     const robotsMeta = `<meta name="robots" content="${shouldNoindex ? 'noindex, nofollow' : 'index, follow'}" />`;

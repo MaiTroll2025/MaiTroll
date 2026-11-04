@@ -436,17 +436,6 @@ const shouldIgnoreNetworkErrorForBugCenter = (url: string) => {
     };
 
 
-    // Clean up any stale service workers from previous builds that may
-    // intercept or block network requests (including edge function calls).
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then((regs) => {
-        for (const r of regs) {
-          console.log('[main] Unregistering stale service worker:', r.active?.scriptURL)
-          r.unregister().catch(() => {})
-        }
-      }).catch(() => {})
-    }
-
    // Initialize offline notification system
    // This will deliver queued notifications when user comes back online
    // initializeOfflineNotifications()
