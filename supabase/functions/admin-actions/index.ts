@@ -241,8 +241,8 @@ Deno.serve(async (req) => {
         const canViewEmails = profile.role === 'admin' || profile.is_admin === true;
 
         const selectFields = canViewEmails
-? 'id, username, email, role, troll_coins, paid_coin_balance, free_coin_balance, level, is_troll_officer, is_lead_officer, is_admin, is_troller, created_at, full_name, phone, onboarding_completed, terms_accepted, id_verification_status, bypass_broadcast_restriction, glowing_username_color, rgb_username_expires_at, is_gold, username_style, badge'
-        : 'id, username, role, troll_coins, paid_coin_balance, free_coin_balance, level, is_troll_officer, is_lead_officer, is_admin, is_troller, created_at, full_name, phone, onboarding_completed, terms_accepted, id_verification_status, bypass_broadcast_restriction, glowing_username_color, rgb_username_expires_at, is_gold, username_style, badge';
+          ? 'id, username, email, role, troll_coins, trollmonds, level, is_troll_officer, is_lead_officer, is_admin, is_troller, created_at, full_name, phone, onboarding_completed, terms_accepted, id_verification_status, bypass_broadcast_restriction, glowing_username_color, rgb_username_expires_at, is_gold, username_style, badge, is_temporary_review_account, temporary_review_activated_at, temporary_review_expires_at'
+          : 'id, username, role, troll_coins, trollmonds, level, is_troll_officer, is_lead_officer, is_admin, is_troller, created_at, full_name, phone, onboarding_completed, terms_accepted, id_verification_status, bypass_broadcast_restriction, glowing_username_color, rgb_username_expires_at, is_gold, username_style, badge, is_temporary_review_account, temporary_review_activated_at, temporary_review_expires_at';
 
         let query = supabaseAdmin
           .from('user_profiles')
@@ -261,7 +261,371 @@ Deno.serve(async (req) => {
         const { data, error, count } = await query;
 
         if (error) throw error;
-        result = { data, count };
+
+        const userIds = (data ?? []).map((reviewedUser: { id: string }) => reviewedUser.id);
+        const { data: reviewAudit, error: auditError } = userIds.length > 0
+          ? await supabaseAdmin
+            .from('temporary_review_account_audit')
+            .select('user_id, status, activated_at, expires_at, deleted_at, deletion_attempts')
+            .in('user_id', userIds)
+          : { data: [], error: null };
+        if (auditError) throw auditError;
+
+        const reviewAuditByUser = new Map(
+          (reviewAudit ?? []).map((audit: {
+            user_id: string;
+            status: string;
+            expires_at: string;
+          }) => [
+            audit.user_id,
+            audit.status === 'deletion_pending'
+              ? 'deletion_pending'
+              : new Date(audit.expires_at).getTime() <= Date.now()
+                ? 'expired'
+                : 'active',
+          ]),
+        );
+
+        result = {
+          data: (data ?? []).map((reviewedUser: { id: string; is_temporary_review_account?: boolean }) => ({
+            ...reviewedUser,
+            temporary_review_status: reviewedUser.is_temporary_review_account
+              ? reviewAuditByUser.get(reviewedUser.id) ?? 'expired'
+              : null,
+          })),
+          count,
+        };
+        break;
+      }
+
+      case "get_temporary_review_account_audit": {
+        if (!isAdmin && !isSecretary) throw new Error("Unauthorized");
+
+        const { data, error } = await supabaseAdmin
+          .from('temporary_review_account_audit')
+          .select('user_id, status, activated_at, expires_at, deleted_at, deletion_attempts')
+          .order('created_at', { ascending: false })
+          .limit(100);
+
+        if (error) throw error;
+        result = { data: data ?? [] };
+        break;
+      }
+
+      case "create_temporary_review_account": {
+        if (!isAdmin) throw new Error("Unauthorized: Admin only");
+
+        const email = String(params.email ?? '').trim().toLowerCase();
+        const username = String(params.username ?? '').trim();
+        const password = String(params.password ?? '');
+        if (!email.includes('@') || !username || username.length > 50 || password.length < 12) {
+          throw new Error("Enter a valid email, username, and password of at least 12 characters");
+        }
+
+        const marker = crypto.randomUUID();
+        const { data: createdAuthUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+          email,
+          password,
+          email_confirm: true,
+          user_metadata: { username, full_name: username },
+          app_metadata: {
+            temporary_review_created: true,
+            temporary_review_marker: marker,
+          },
+        });
+
+        if (createError || !createdAuthUser.user) {
+          console.error("[temporary-review-account] Auth user creation failed", createError);
+          throw new Error("Failed to create a temporary review account");
+        }
+
+        const newUserId = createdAuthUser.user.id;
+        try {
+          const { data: existingProfile, error: profileLookupError } = await supabaseAdmin
+            .from('user_profiles')
+            .select('*')
+            .eq('id', newUserId)
+            .maybeSingle();
+
+          if (profileLookupError) throw profileLookupError;
+
+          if (!existingProfile) {
+            const { error: profileInsertError } = await supabaseAdmin
+              .from('user_profiles')
+              .insert({
+                id: newUserId,
+                username,
+                email,
+                role: 'user',
+                bio: 'Temporary review account',
+                created_at: new Date().toISOString(),
+                is_broadcaster: false,
+                is_creator_onboarded: false,
+                troll_coins: 0,
+                total_earned_coins: 0,
+                total_spent_coins: 0,
+                tier: 'Bronze',
+              });
+
+            if (profileInsertError) throw profileInsertError;
+          }
+
+          const profile = existingProfile ?? (
+            await supabaseAdmin
+              .from('user_profiles')
+              .select('*')
+              .eq('id', newUserId)
+              .single()
+          ).data;
+
+          if (!profile
+            || createdAuthUser.user.app_metadata?.temporary_review_created !== true
+            || createdAuthUser.user.app_metadata?.temporary_review_marker !== marker
+            || !profile.created_at
+            || Date.now() - new Date(profile.created_at).getTime() > 10 * 60 * 1000) {
+            throw new Error("Could not verify the newly created review account");
+          }
+
+          const { data: signupFollows, error: signupFollowsError } = await supabaseAdmin
+            .from('user_follows')
+            .select('follower_id')
+            .eq('following_id', newUserId);
+          if (signupFollowsError) throw signupFollowsError;
+
+          if (signupFollows?.length) {
+            const followerIds = [...new Set(signupFollows.map((follow) => follow.follower_id))];
+            const { data: followerProfiles, error: followerProfilesError } = await supabaseAdmin
+              .from('user_profiles')
+              .select('id, role, is_admin')
+              .in('id', followerIds);
+            if (followerProfilesError) throw followerProfilesError;
+
+            const adminFollowerIds = new Set(
+              (followerProfiles ?? [])
+                .filter((follower) => follower.is_admin === true
+                  || ['admin', 'superadmin', 'ceo', 'owner', 'president', 'secretary'].includes(follower.role))
+                .map((follower) => follower.id),
+            );
+
+            if (!signupFollows.every((follow) => adminFollowerIds.has(follow.follower_id))) {
+              throw new Error("The new account has non-system follow records and cannot be enrolled");
+            }
+
+            const { data: removedSignupFollows, error: removeSignupFollowsError } = await supabaseAdmin
+              .from('user_follows')
+              .delete()
+              .eq('following_id', newUserId)
+              .in('follower_id', [...adminFollowerIds])
+              .select('follower_id');
+            if (removeSignupFollowsError) throw removeSignupFollowsError;
+            if (removedSignupFollows?.length !== signupFollows.length) {
+              throw new Error("Could not verify removal of automatic signup follows");
+            }
+          }
+
+          const { data: signupTransactions, error: signupTransactionsError } = await supabaseAdmin
+            .from('coin_transactions')
+            .select('id, transaction_type, type, coin_type, status, amount, coins, coin_delta, description, metadata')
+            .eq('user_id', newUserId);
+          if (signupTransactionsError) throw signupTransactionsError;
+
+          const seenSignupTransactionTypes = new Set<string>();
+          const bootstrapTransactionIds: string[] = [];
+          for (const transaction of signupTransactions ?? []) {
+            const metadata = transaction.metadata && typeof transaction.metadata === 'object'
+              ? transaction.metadata as Record<string, unknown>
+              : {};
+            const isWelcomeBonus = transaction.type === 'welcome_bonus'
+              && transaction.description === 'Welcome bonus coins!'
+              && Object.keys(metadata).length === 0;
+            const isBattleStarterBonus = transaction.type === 'battle_starter_bonus'
+              && transaction.description === '100 Battle Starter Coins'
+              && metadata.source === 'battle_starter_signup_grant'
+              && metadata.cashout_balance === true;
+
+            if ((!isWelcomeBonus && !isBattleStarterBonus)
+              || transaction.transaction_type !== 'adjustment'
+              || transaction.coin_type !== 'troll_coins'
+              || transaction.status !== 'completed'
+              || Number(transaction.amount ?? 0) !== 0
+              || Number(transaction.coins ?? 0) !== 0
+              || transaction.coin_delta !== null
+              || seenSignupTransactionTypes.has(transaction.type)) {
+              throw new Error("The new account has non-bootstrap coin transactions and cannot be enrolled");
+            }
+
+            seenSignupTransactionTypes.add(transaction.type);
+            bootstrapTransactionIds.push(transaction.id);
+          }
+
+          if (bootstrapTransactionIds.length) {
+            const { data: removedBootstrapTransactions, error: removeBootstrapTransactionsError } =
+              await supabaseAdmin
+                .from('coin_transactions')
+                .delete()
+                .in('id', bootstrapTransactionIds)
+                .eq('user_id', newUserId)
+                .select('id');
+            if (removeBootstrapTransactionsError) throw removeBootstrapTransactionsError;
+            if (removedBootstrapTransactions?.length !== bootstrapTransactionIds.length) {
+              throw new Error("Could not verify removal of signup coin bonuses");
+            }
+          }
+
+          const { data: starterGrants, error: starterGrantsError } = await supabaseAdmin
+            .from('battle_starter_coin_grants')
+            .select('amount, granted_at')
+            .eq('user_id', newUserId);
+          if (starterGrantsError) throw starterGrantsError;
+
+          if (starterGrants?.length) {
+            if (starterGrants.length !== 1
+              || starterGrants[0].amount !== 100
+              || !seenSignupTransactionTypes.has('battle_starter_bonus')
+              || Math.abs(new Date(starterGrants[0].granted_at).getTime()
+                - new Date(createdAuthUser.user.created_at).getTime()) > 10_000) {
+              throw new Error("The new account has non-bootstrap battle grant records and cannot be enrolled");
+            }
+
+            const { data: removedStarterGrants, error: removeStarterGrantsError } = await supabaseAdmin
+              .from('battle_starter_coin_grants')
+              .delete()
+              .eq('user_id', newUserId)
+              .eq('amount', 100)
+              .select('user_id');
+            if (removeStarterGrantsError) throw removeStarterGrantsError;
+            if (removedStarterGrants?.length !== 1) {
+              throw new Error("Could not verify removal of the signup battle grant");
+            }
+          } else if (seenSignupTransactionTypes.has('battle_starter_bonus')) {
+            throw new Error("The new account has an unmatched battle grant transaction");
+          }
+
+          const { data: creditAccounts, error: creditAccountsError } = await supabaseAdmin
+            .from('user_credit_accounts')
+            .select('credit_limit, current_balance, available_credit, account_status, created_at')
+            .eq('user_id', newUserId);
+          if (creditAccountsError) throw creditAccountsError;
+
+          if (creditAccounts?.length) {
+            const defaultCreditAccount = creditAccounts.length === 1
+              && Number(creditAccounts[0].current_balance) === 0
+              && Number(creditAccounts[0].available_credit) === Number(creditAccounts[0].credit_limit)
+              && creditAccounts[0].account_status === 'active'
+              && Math.abs(new Date(creditAccounts[0].created_at).getTime()
+                - new Date(createdAuthUser.user.created_at).getTime()) <= 10_000;
+            if (!defaultCreditAccount) {
+              throw new Error("The new account has non-default credit activity and cannot be enrolled");
+            }
+
+            const { data: removedCreditAccounts, error: removeCreditAccountsError } = await supabaseAdmin
+              .from('user_credit_accounts')
+              .delete()
+              .eq('user_id', newUserId)
+              .eq('current_balance', 0)
+              .select('user_id');
+            if (removeCreditAccountsError) throw removeCreditAccountsError;
+            if (removedCreditAccounts?.length !== 1) {
+              throw new Error("Could not verify removal of the unused signup credit account");
+            }
+          }
+
+          for (const table of [
+            'coin_ledger',
+            'coin_transactions',
+            'payout_requests',
+            'cashout_requests',
+            'payment_transactions',
+          ]) {
+            const { data: financialRecords, error: financialRecordsError } = await supabaseAdmin
+              .from(table)
+              .select('id')
+              .eq('user_id', newUserId)
+              .limit(1);
+            if (financialRecordsError) {
+              console.error(`[temporary-review-account] Could not verify ${table}`, financialRecordsError);
+              throw new Error("Could not verify the new account's financial activity");
+            }
+            if (financialRecords?.length) {
+              throw new Error("The new account already has financial records and cannot be enrolled");
+            }
+          }
+
+          const bootstrapBalanceFields = [
+            'troll_coins',
+            'trollmonds',
+            'paid_coin_balance',
+            'free_coin_balance',
+            'paid_coins',
+            'free_coins',
+            'free_troll_coins',
+            'cashout_coins',
+            'cashout_reserved_coins',
+            'reserved_troll_coins',
+            'gifted_coins',
+            'hype_coins',
+            'total_earned_coins',
+            'total_spent_coins',
+          ];
+          const hasBootstrapBalance = bootstrapBalanceFields
+            .some((field) => Number(profile[field] ?? 0) !== 0);
+
+          if (hasBootstrapBalance || profile.is_broadcaster === true) {
+            const bootstrapReset: Record<string, number | boolean> = { is_broadcaster: false };
+            for (const field of bootstrapBalanceFields) {
+              if (Object.prototype.hasOwnProperty.call(profile, field)) {
+                bootstrapReset[field] = 0;
+              }
+            }
+            const { error: bootstrapUpdateError } = await supabaseAdmin
+              .from('user_profiles')
+              .update(bootstrapReset)
+              .eq('id', newUserId);
+            if (bootstrapUpdateError) throw bootstrapUpdateError;
+          }
+
+          const { data: activation, error: activationError } = await supabaseClient.rpc(
+            'activate_temporary_review_account',
+            { p_user_id: newUserId, p_marker: marker },
+          );
+          if (activationError) throw activationError;
+
+          result = {
+            success: true,
+            userId: newUserId,
+            activatedAt: activation?.[0]?.activated_at,
+            expiresAt: activation?.[0]?.expires_at,
+          };
+        } catch (error) {
+          const { error: disableError } = await supabaseAdmin.auth.admin.updateUserById(newUserId, {
+            ban_duration: "876000h",
+            app_metadata: {
+              ...createdAuthUser.user.app_metadata,
+              temporary_review_created: true,
+              temporary_review_marker: marker,
+              temporary_review_activation_failed: true,
+            },
+          });
+
+          if (disableError) {
+            console.error("[temporary-review-account] Failed to disable account after activation failure", {
+              userId: newUserId,
+              error: disableError,
+            });
+            throw new Error(
+              "Review activation failed and the new account could not be disabled. An administrator must immediately disable it; it was not deleted.",
+            );
+          }
+
+          console.error("[temporary-review-account] Activation failed; account was retained and disabled", {
+            userId: newUserId,
+            error,
+          });
+          const reason = error instanceof Error ? error.message : "Unknown activation error";
+          throw new Error(
+            `Review access could not be activated: ${reason}. The newly created account has been disabled, not deleted; contact an administrator to resolve it.`,
+          );
+        }
         break;
       }
 
@@ -302,6 +666,20 @@ Deno.serve(async (req) => {
             p_reason: 'Admin Panel Update'
           });
           
+          if (error) throw error;
+        }
+
+        if (params.trollmonds !== undefined) {
+          const trollmonds = Number(params.trollmonds);
+          if (!Number.isSafeInteger(trollmonds) || trollmonds < 0) {
+            throw new Error("Trollmonds must be a non-negative whole number");
+          }
+
+          const { error } = await supabaseAdmin.rpc('admin_set_trollmonds_balance', {
+            p_user_id: userId,
+            p_trollmonds: trollmonds,
+            p_admin_id: user.id,
+          });
           if (error) throw error;
         }
 

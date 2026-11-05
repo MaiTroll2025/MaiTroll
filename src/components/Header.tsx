@@ -398,22 +398,24 @@ const Header = () => {
     try {
       sessionStorage.setItem('logout_requested', 'true')
 
-      try {
-        const registration = await navigator.serviceWorker?.ready
-        const subscription = await registration?.pushManager.getSubscription()
-        if (subscription) {
-          const endpoint = subscription.endpoint
+      void (async () => {
+        try {
+          if (!('serviceWorker' in navigator)) return
+          const registration = await navigator.serviceWorker.getRegistration()
+          const subscription = await registration?.pushManager.getSubscription()
+          if (!subscription) return
+
           const { error: subscriptionError } = await supabase
             .from('web_push_subscriptions')
             .update({ is_active: false })
-            .eq('endpoint', endpoint)
+            .eq('endpoint', subscription.endpoint)
           if (subscriptionError) console.warn('Could not deactivate push subscription:', subscriptionError)
           await subscription.unsubscribe()
           setHasDeviceSubscription(false)
+        } catch (pushError) {
+          console.warn('Could not unsubscribe push notifications during logout:', pushError)
         }
-      } catch (pushError) {
-        console.warn('Could not unsubscribe push notifications during logout:', pushError)
-      }
+      })()
 
       try {
         const { error } = await supabase.auth.signOut()

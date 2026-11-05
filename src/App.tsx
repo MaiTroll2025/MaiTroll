@@ -101,6 +101,7 @@ import AdminOfficerQuickMenu from "./components/AdminOfficerQuickMenu";
 import { PageChannelProvider } from "./contexts/PageChannelContext";
 import { StaffWalkieTalkieProvider } from "./components/StaffWalkieTalkieProvider";
 import { AdminNotificationProvider } from "./admin/AdminNotificationProvider";
+import TemporaryReviewSessionGuard from "./components/TemporaryReviewSessionGuard";
 
 const AdminErrors = lazyWithRetry(() => import("./pages/admin/AdminErrors"));
 const SubAnalytics = lazyWithRetry(() => import("./pages/admin/SubAnalytics"));
@@ -738,6 +739,9 @@ function AppContent() {
 
   const location = useLocation();
   const navigate = useNavigate();
+  const isLowActivityRoute =
+    requiresWebRenderer(location.pathname) ||
+    location.pathname === '/sell';
   const homepageShortcuts = getKeyboardShortcuts(profile);
 
   useEffect(() => {
@@ -1351,8 +1355,6 @@ function AppContent() {
     if (isDevBypassEnabled()) return
 
     let cancelled = false
-    let intervalId: ReturnType<typeof setInterval> | null = null
-
     const checkAnonIP = async () => {
       try {
         const ip = await getCurrentIP()
@@ -1381,13 +1383,8 @@ function AppContent() {
 
     checkAnonIP()
 
-    intervalId = setInterval(() => {
-      checkAnonIP()
-    }, 10000)
-
     return () => {
       cancelled = true
-      if (intervalId) clearInterval(intervalId)
     }
   }, [userId, navigate])
 
@@ -1693,10 +1690,11 @@ const appShell = (
        <HytroSpotComingSoonModal isOpen={hytroSpotModalOpen} onClose={() => setHytroSpotModalOpen(false)} />
 
       <SwipeNavigationProvider>
-      <LiveContentProvider>
+      <LiveContentProvider enabled={!isLowActivityRoute}>
+            <TemporaryReviewSessionGuard enabled={!isMobileUI}>
             <AppLayout showSidebar={!isMobileUI || isStandalone} showHeader={true} showBottomNav={true} isJailed={isJailed}>
              <PetFloatingButton />
-           <GlobalPresenceTracker />
+           <GlobalPresenceTracker enabled={!isLowActivityRoute} />
            {user && <AdminOfficerQuickMenu />}
            {user && <ChatBubble />}
            <StaffWalkieTalkieProvider>
@@ -2909,6 +2907,7 @@ const appShell = (
            <GlobalPodBanner />
            <BugAlertPopup />
            </AppLayout>
+           </TemporaryReviewSessionGuard>
          </LiveContentProvider>
        </SwipeNavigationProvider>
 

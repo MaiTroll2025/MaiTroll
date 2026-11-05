@@ -13,8 +13,10 @@ import {
   MessageCircle,
   Minimize2,
   Phone,
+  Search,
   Settings2,
   Sparkles,
+  Star,
   Smartphone,
   Video,
   Users as UsersIcon,
@@ -33,6 +35,14 @@ import { CALL_PACKAGES, purchaseCallMinutes, type CallPackage } from '@/lib/call
 import { findOrCreateDirectThread } from '@/services/utromailService'
 import { usePresenceStore } from '@/lib/presenceStore'
 import { toast } from 'sonner'
+import {
+  DEFAULT_PHONE_RINGTONES,
+  loadPhoneRingtonePreferences,
+  PHONE_RINGTONE_OPTIONS,
+  savePhoneRingtonePreference,
+  type PhoneRingtoneKind,
+  type PhoneRingtonePreferences,
+} from './maielitePhoneRingtones'
 
 /**
  * Web-only, floating MaiPhone Elite.
@@ -49,7 +59,7 @@ const EXPANDED_WIDTH = 388
 const EXPANDED_HEIGHT = 708
 
 type PhonePosition = { x: number; y: number }
-type PhonePage = 'home' | 'apps' | 'mail' | 'calls' | 'video' | 'city' | 'settings'
+type PhonePage = 'home' | 'apps' | 'mail' | 'calls' | 'video' | 'city' | 'settings' | 'contacts' | 'favorites'
 type PhoneTheme = 'violet' | 'cyan' | 'emerald'
 type PhoneContact = {
   user_id: string
@@ -254,6 +264,11 @@ export default function MaiElitePhone() {
   const [clock, setClock] = useState(() => new Date())
   const [online, setOnline] = useState(() => typeof navigator === 'undefined' ? true : navigator.onLine)
   const [contacts, setContacts] = useState<PhoneContact[]>([])
+  const [savedContactIds, setSavedContactIds] = useState<Set<string>>(new Set())
+  const [favoriteContactIds, setFavoriteContactIds] = useState<Set<string>>(new Set())
+  const [contactQuery, setContactQuery] = useState('')
+  const [contactView, setContactView] = useState<'directory' | 'saved'>('directory')
+  const [ringtonePreferences, setRingtonePreferences] = useState<PhoneRingtonePreferences>({ ...DEFAULT_PHONE_RINGTONES })
   const [phoneNumber, setPhoneNumber] = useState('')
   const [mailThreadId, setMailThreadId] = useState<string | null>(null)
   const [dialedNumber, setDialedNumber] = useState('')
@@ -296,9 +311,12 @@ export default function MaiElitePhone() {
   }, [])
 
   const loadPhoneData = useCallback(async () => {
-    const [directory, balances] = await Promise.all([
+    if (!user?.id) return
+    const [directory, balances, savedContacts, ringtoneSettings] = await Promise.all([
       supabase.rpc('get_maielite_phone_directory'),
       supabase.rpc('get_call_balances', { p_user_id: user?.id }),
+      supabase.from('maielite_phone_contacts').select('contact_id,is_favorite').eq('owner_id', user?.id),
+      user?.id ? loadPhoneRingtonePreferences(user.id) : Promise.resolve({}),
     ])
     if (directory.error) {
       console.error('[MaiElitePhone] Directory failed:', directory.error)
@@ -308,6 +326,14 @@ export default function MaiElitePhone() {
         is_online: onlineUserIds.has(contact.user_id),
       })))
     }
+    if (savedContacts.error) {
+      console.error('[MaiElitePhone] Saved contacts failed:', savedContacts.error)
+    } else {
+      const saved = savedContacts.data || []
+      setSavedContactIds(new Set(saved.map((entry) => entry.contact_id)))
+      setFavoriteContactIds(new Set(saved.filter((entry) => entry.is_favorite).map((entry) => entry.contact_id)))
+    }
+    setRingtonePreferences({ ...DEFAULT_PHONE_RINGTONES, ...ringtoneSettings })
     if (!balances.error) {
       setCallMinutes({
         audio: balances.data?.audio_minutes || 0,
@@ -341,14 +367,85 @@ export default function MaiElitePhone() {
     const { error } = await supabase.from('maielite_phone_contacts').upsert({
       owner_id: user.id,
       contact_id: contactId,
+      is_favorite: favoriteContactIds.has(contactId),
     }, { onConflict: 'owner_id,contact_id' })
     if (error) {
       console.error('[MaiElitePhone] Could not save contact:', error)
       toast.error('Unable to save contact.')
       return
     }
+    setSavedContactIds((ids) => new Set(ids).add(contactId))
     toast.success('Contact saved.')
+  }, [favoriteContactIds, user?.id])
+
+  const toggleFavorite = useCallback(async (contactId: string) => {
+    if (!user?.id) return
+    const isFavorite = favoriteContactIds.has(contactId)
+    const { error } = await supabase.from('maielite_phone_contacts').upsert({
+      owner_id: user.id,
+      contact_id: contactId,
+      is_favorite: !isFavorite,
+    }, { onConflict: 'owner_id,contact_id' })
+    if (error) {
+      console.error('[MaiElitePhone] Could not update favorite:', error)
+      toast.error('Unable to update favorite.')
+      return
+    }
+    setSavedContactIds((ids) => new Set(ids).add(contactId))
+    setFavoriteContactIds((ids) => {
+      const updated = new Set(ids)
+      if (isFavorite) updated.delete(contactId)
+      else updated.add(contactId)
+      return updated
+    })
+    toast.success(isFavorite ? 'Removed from favorites.' : 'Added to favorites.')
+  }, [favoriteContactIds, user?.id])
+
+  const removeContact = useCallback(async (contactId: string) => {
+    if (!user?.id) return
+    const { error } = await supabase
+      .from('maielite_phone_contacts')
+      .delete()
+      .eq('owner_id', user.id)
+      .eq('contact_id', contactId)
+    if (error) {
+      console.error('[MaiElitePhone] Could not remove contact:', error)
+      toast.error('Unable to remove contact.')
+      return
+    }
+    setSavedContactIds((ids) => {
+      const updated = new Set(ids)
+      updated.delete(contactId)
+      return updated
+    })
+    setFavoriteContactIds((ids) => {
+      const updated = new Set(ids)
+      updated.delete(contactId)
+      return updated
+    })
+    toast.success('Contact removed.')
   }, [user?.id])
+
+  const changeRingtonePreference = useCallback(async (kind: PhoneRingtoneKind, ringtone: string) => {
+    if (!user?.id) return
+    const error = await savePhoneRingtonePreference(user.id, kind, ringtone)
+    if (error) {
+      console.error('[MaiElitePhone] Could not save ringtone preference:', error)
+      toast.error('Unable to save ringtone preference.')
+      return
+    }
+    setRingtonePreferences((previous) => ({ ...previous, [kind]: ringtone }))
+    toast.success(`${kind === 'text' ? 'Text' : kind === 'audio' ? 'Audio call' : 'Video call'} ringtone saved.`)
+  }, [user?.id])
+
+  const previewRingtone = useCallback(async (ringtone: string) => {
+    try {
+      await new Audio(ringtone).play()
+    } catch (error) {
+      console.error('[MaiElitePhone] Ringtone preview failed:', error)
+      toast.error('Unable to play this ringtone preview.')
+    }
+  }, [])
 
   const messageContact = useCallback(async (contactId: string) => {
     if (!user?.id) return
@@ -361,6 +458,12 @@ export default function MaiElitePhone() {
       toast.error('Unable to open this contact thread.')
     }
   }, [user?.id])
+
+  const callContact = useCallback((contact: PhoneContact) => {
+    setSelectedContact(contact)
+    setActiveCall({ type: 'audio', contact })
+    setPage('calls')
+  }, [])
 
   const placeDialedCall = useCallback((type: 'audio' | 'video') => {
     const contact = contacts.find((entry) => entry.phone_number === dialedNumber)
@@ -450,6 +553,21 @@ export default function MaiElitePhone() {
   }, [isPhone, loadPhoneData, open, registerPhone, user?.id])
 
   useEffect(() => {
+    if (!open || !user?.id || isPhone) return
+    const refreshDirectory = () => {
+      if (document.visibilityState === 'visible') void loadPhoneData()
+    }
+    const refreshTimer = window.setInterval(refreshDirectory, 15_000)
+    window.addEventListener('focus', refreshDirectory)
+    document.addEventListener('visibilitychange', refreshDirectory)
+    return () => {
+      window.clearInterval(refreshTimer)
+      window.removeEventListener('focus', refreshDirectory)
+      document.removeEventListener('visibilitychange', refreshDirectory)
+    }
+  }, [isPhone, loadPhoneData, open, user?.id])
+
+  useEffect(() => {
     if (!user?.id || isPhone || !incomingMessage.visible || !incomingMessage.message) {
       if (!incomingMessage.visible) previousMessageRef.current = null
       return
@@ -523,6 +641,21 @@ export default function MaiElitePhone() {
   const currentTime = clock.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
   const currentDate = clock.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })
   const newMail = Boolean(incomingMessage.visible && incomingMessage.message)
+  const normalizedContactQuery = contactQuery.trim().toLowerCase()
+  const displayedContacts = contacts
+    .filter((contact) => page === 'favorites'
+      ? favoriteContactIds.has(contact.user_id)
+      : page === 'contacts' && contactView === 'saved'
+        ? savedContactIds.has(contact.user_id)
+        : true)
+    .filter((contact) => {
+      if (!normalizedContactQuery) return true
+      return [
+        contact.display_name,
+        contact.username,
+        contact.phone_number,
+      ].some((value) => value?.toLowerCase().includes(normalizedContactQuery))
+    })
   const openSite = (path: string) => {
     navigate(path)
     setMinimized(true)
@@ -596,14 +729,14 @@ export default function MaiElitePhone() {
                       <button type="button" onClick={() => goToPage('calls')} title="MaiCall" aria-label="MaiCall"><Phone /></button>
                       <button type="button" onClick={() => goToPage('mail')} title="Utromail" aria-label="Utromail"><MessageCircle /></button>
                       <button type="button" onClick={() => goToPage('city')} title="MaiTroll City" aria-label="MaiTroll City"><Compass /></button>
-                      <button type="button" onClick={() => goToPage('calls')} title="Contacts" aria-label="Contacts"><UsersIcon /></button>
+                      <button type="button" onClick={() => goToPage('contacts')} title="Contacts" aria-label="Contacts"><UsersIcon /></button>
                     </div>
                   </div>
                 ) : (
                   <div className="mei-page">
                     <div className="mei-page-header">
                       <button type="button" className="mei-back" onClick={() => setPage('home')} aria-label="Back to home"><ArrowLeft size={18} /></button>
-                      <div><h2 className="mei-page-title">{{ apps: 'App Library', mail: 'Utromail', calls: 'MaiCall', video: 'MaiVideo', city: 'MaiTroll City', settings: 'Settings', home: 'Home' }[page]}</h2><p className="mei-page-subtitle">MaiPhone ELITE</p></div>
+                      <div><h2 className="mei-page-title">{{ apps: 'App Library', mail: 'Utromail', calls: 'MaiCall', video: 'MaiVideo', city: 'MaiTroll City', settings: 'Settings', home: 'Home', contacts: 'Contacts', favorites: 'Favorites' }[page]}</h2><p className="mei-page-subtitle">MaiPhone ELITE</p></div>
                     </div>
 
                     {page === 'apps' && (
@@ -614,8 +747,86 @@ export default function MaiElitePhone() {
                           <AppButton label="MaiCall" tone="green" onClick={() => setPage('calls')}><Phone /></AppButton>
                           <AppButton label="MaiVideo" tone="pink" onClick={() => setPage('video')}><Video /></AppButton>
                           <AppButton label="MaiTroll" tone="blue" onClick={() => setPage('city')}><Home /></AppButton>
+                          <AppButton label="Contacts" tone="green" onClick={() => { setContactView('directory'); setContactQuery(''); setPage('contacts') }}><UsersIcon /></AppButton>
+                          <AppButton label="Favorites" tone="amber" onClick={() => { setContactQuery(''); setPage('favorites') }}><Star /></AppButton>
                           <AppButton label="Settings" tone="blue" onClick={() => setPage('settings')}><Settings2 /></AppButton>
                         </div>
+                      </>
+                    )}
+
+                    {(page === 'contacts' || page === 'favorites') && (
+                      <>
+                        <div className="mei-glass mei-card">
+                          <h3>{page === 'favorites' ? 'Your favorites' : 'Find people'}</h3>
+                          <p>{page === 'favorites' ? 'Your starred MaiTroll contacts.' : 'Search the MaiTroll directory and save people to your contacts.'}</p>
+                          {page === 'contacts' && (
+                            <div style={{ display: 'flex', gap: 7, marginTop: 10 }}>
+                              {(['directory', 'saved'] as const).map((view) => (
+                                <button
+                                  key={view}
+                                  type="button"
+                                  aria-pressed={contactView === view}
+                                  onClick={() => setContactView(view)}
+                                  className="mei-secondary"
+                                  style={{ marginTop: 0, borderColor: contactView === view ? '#c88cff' : undefined }}
+                                >
+                                  {view === 'directory' ? 'Directory' : `My contacts (${savedContactIds.size})`}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                          <div style={{ position: 'relative' }}>
+                            <Search size={16} style={{ position: 'absolute', top: 20, left: 10, color: '#cdbde3' }} />
+                            <input
+                              className="mei-number-input"
+                              style={{ paddingLeft: 34 }}
+                              value={contactQuery}
+                              onChange={(event) => setContactQuery(event.target.value)}
+                              placeholder="Search name, username, or phone"
+                              aria-label="Search contacts"
+                            />
+                          </div>
+                        </div>
+                        {displayedContacts.length ? displayedContacts.map((contact) => {
+                          const isSaved = savedContactIds.has(contact.user_id)
+                          const isFavorite = favoriteContactIds.has(contact.user_id)
+                          const contactName = contact.is_admin
+                            ? 'MaiTroll Admin'
+                            : contact.display_name || contact.username || 'MaiTroll user'
+                          return (
+                            <div key={contact.user_id} className="mei-list-button">
+                              <button
+                                type="button"
+                                onClick={() => void messageContact(contact.user_id)}
+                                style={{ display: 'flex', flex: 1, alignItems: 'center', gap: 8, minWidth: 0, background: 'none', border: 0, color: 'inherit', textAlign: 'left' }}
+                                aria-label={`Message ${contactName}`}
+                              >
+                                <span className="mei-avatar">{contact.is_online ? '●' : '☎'}</span>
+                                <span style={{ flex: 1, minWidth: 0 }}>
+                                  <strong>{contactName}</strong>
+                                  <small style={{ display: 'block' }}>
+                                    @{contact.username || 'user'} · {contact.is_online ? 'Online' : 'Offline'} · {contact.is_admin ? 'Private number' : contact.phone_number || 'No MaiElite number'}
+                                  </small>
+                                </span>
+                              </button>
+                              <button type="button" onClick={() => void toggleFavorite(contact.user_id)} aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'} title={isFavorite ? 'Remove from favorites' : 'Add to favorites'} style={{ background: 'none', border: 0, color: '#ffd36e', padding: 5 }}>
+                                <Star size={15} fill={isFavorite ? 'currentColor' : 'none'} />
+                              </button>
+                              <button type="button" onClick={() => callContact(contact)} aria-label={`Call ${contactName}`} title={`Call ${contactName}`} style={{ background: 'none', border: 0, color: '#a7f3d0', padding: 5 }}>
+                                <Phone size={15} />
+                              </button>
+                              {isSaved ? (
+                                <button type="button" onClick={() => void removeContact(contact.user_id)} aria-label="Remove contact" title="Remove contact" style={{ background: 'none', border: 0, color: '#d9a5ff', padding: 5 }}>−</button>
+                              ) : (
+                                <button type="button" onClick={() => void saveContact(contact.user_id)} aria-label="Save contact" title="Save contact" style={{ background: 'none', border: 0, color: '#d9a5ff', padding: 5 }}>+</button>
+                              )}
+                            </div>
+                          )
+                        }) : (
+                          <div className="mei-glass mei-card">
+                            <p>{page === 'favorites' ? 'No favorites match this search yet.' : contactView === 'saved' ? 'No saved contacts match this search.' : 'No users match this search.'}</p>
+                          </div>
+                        )}
                       </>
                     )}
 
@@ -699,6 +910,39 @@ export default function MaiElitePhone() {
                     {page === 'settings' && (
                       <>
                         <div className="mei-glass mei-card"><h3>Elite appearance</h3><p>Choose the phone&apos;s accent and wallpaper color.</p><div className="mei-theme-picks"><button className="mei-theme-violet" type="button" aria-pressed={theme === 'violet'} onClick={() => setTheme('violet')}>Violet {theme === 'violet' && <Check size={12} />}</button><button className="mei-theme-cyan" type="button" aria-pressed={theme === 'cyan'} onClick={() => setTheme('cyan')}>Cyan {theme === 'cyan' && <Check size={12} />}</button><button className="mei-theme-emerald" type="button" aria-pressed={theme === 'emerald'} onClick={() => setTheme('emerald')}>Emerald {theme === 'emerald' && <Check size={12} />}</button></div></div>
+                        <div className="mei-glass mei-card">
+                          <h3>Sounds</h3>
+                          <p>Set separate default alerts for text messages, audio calls, and video calls.</p>
+                          {([
+                            ['text', 'Text messages'],
+                            ['audio', 'Audio calls'],
+                            ['video', 'Video calls'],
+                          ] as const).map(([kind, label]) => (
+                            <label key={kind} style={{ display: 'block', marginTop: 12, fontSize: 11, color: '#e5d7f5' }}>
+                              {label}
+                              <div style={{ display: 'flex', gap: 7, alignItems: 'center' }}>
+                                <select
+                                  value={ringtonePreferences[kind]}
+                                  onChange={(event) => void changeRingtonePreference(kind, event.target.value)}
+                                  aria-label={`${label} ringtone`}
+                                  style={{ flex: 1, minWidth: 0, marginTop: 5, padding: 9, border: '1px solid #ffffff36', borderRadius: 10, background: '#17102b', color: 'white' }}
+                                >
+                                  {PHONE_RINGTONE_OPTIONS.map((option) => (
+                                    <option key={option.value} value={option.value}>{option.label}</option>
+                                  ))}
+                                </select>
+                                <button
+                                  type="button"
+                                  className="mei-secondary"
+                                  style={{ width: 'auto', marginTop: 5, padding: '9px 10px' }}
+                                  onClick={() => void previewRingtone(ringtonePreferences[kind])}
+                                >
+                                  Preview
+                                </button>
+                              </div>
+                            </label>
+                          ))}
+                        </div>
                         <div className="mei-glass mei-card"><h3>Phone window</h3><p>Press P to open anywhere on the desktop web app, except while typing. Drag by the status bar.</p><button className="mei-secondary" type="button" onClick={() => setExpanded((previous) => !previous)}>{expanded ? 'Use compact size' : 'Use expanded size'}</button></div>
                         <div className="mei-glass mei-card">
                           <h3>Phone number</h3>

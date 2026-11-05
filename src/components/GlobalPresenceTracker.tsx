@@ -15,12 +15,18 @@ import { usePresenceStore } from '../lib/presenceStore';
  * - Falls back to DB only for initial online status and visibility changes
  * - Does NOT log out users — just tracks presence
  */
-export default function GlobalPresenceTracker() {
+export default function GlobalPresenceTracker({ enabled = true }: { enabled?: boolean }) {
   const { user, profile } = useAuthStore();
   const setOnlineUserIds = usePresenceStore(state => state.setOnlineUserIds);
   const setTotalUserCount = usePresenceStore(state => state.setTotalUserCount);
 
   useEffect(() => {
+    if (!enabled) {
+      setOnlineUserIds([]);
+      setTotalUserCount(null);
+      return;
+    }
+
     let cancelled = false;
 
     const fetchTotalUserCount = async () => {
@@ -101,7 +107,7 @@ export default function GlobalPresenceTracker() {
       void supabase.removeChannel(accountChannel);
       setOnlineUserIds([]);
     };
-  }, [user?.id, profile?.id, setOnlineUserIds, setTotalUserCount]);
+  }, [enabled, user?.id, profile?.id, setOnlineUserIds, setTotalUserCount]);
 
   return null;
 }

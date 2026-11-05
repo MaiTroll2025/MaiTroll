@@ -30,7 +30,7 @@ export default function UserInventory({ embedded = false }: { embedded?: boolean
   const [userDeeds, setUserDeeds] = useState<any[]>([])
   const [selectedTitleDeed, setSelectedTitleDeed] = useState<any>(null)
   const [expandedSections, setExpandedSections] = useState({
-    perks: true,
+    perks: false,
     insurance: true,
     roleBonus: true,
     callSounds: true,

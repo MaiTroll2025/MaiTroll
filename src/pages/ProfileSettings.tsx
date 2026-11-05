@@ -66,6 +66,10 @@ export default function ProfileSettings() {
   const [isMinor, setIsMinor] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
 
+  const [messagePrice, setMessagePrice] = useState(0);
+  const [callPrice, setCallPrice] = useState(0);
+  const [profileViewPrice, setProfileViewPrice] = useState(0);
+
   const [creatorSubscriptionEnabled, setCreatorSubscriptionEnabled] =
     useState(false);
   const [creatorSubscriptionPrice, setCreatorSubscriptionPrice] = useState(100);
@@ -97,6 +101,9 @@ export default function ProfileSettings() {
       (profile as any).banner_notifications_enabled ?? true,
     );
     setIsMinor((profile as any).is_minor ?? false);
+    setMessagePrice(Number((profile as any).message_price) || 0);
+    setCallPrice(Number((profile as any).call_price) || 0);
+    setProfileViewPrice(Number((profile as any).profile_view_price) || 0);
     setCreatorSubscriptionEnabled(
       (profile as any).creator_subscription_enabled ?? false,
     );
@@ -159,6 +166,9 @@ export default function ProfileSettings() {
           platform: platform || null,
           banner_notifications_enabled: bannerNotifications,
           is_minor: isMinor,
+          message_price: messagePrice,
+          call_price: callPrice,
+          profile_view_price: profileViewPrice,
           updated_at: new Date().toISOString(),
         })
         .eq("id", user.id)
@@ -413,6 +423,59 @@ export default function ProfileSettings() {
               </select>
               <span className={`block text-xs ${MaiTrollTheme.text.muted}`}>
                 This may appear on your profile and in battle experiences.
+              </span>
+            </label>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <label className="space-y-2">
+              <span className={`text-sm ${MaiTrollTheme.text.muted}`}>
+                Message Price (Troll Coins)
+              </span>
+              <input
+                type="number"
+                min={0}
+                value={messagePrice}
+                onChange={(event) => setMessagePrice(Number(event.target.value) || 0)}
+                className={`w-full rounded-xl px-4 py-3 text-white outline-none ${MaiTrollTheme.components.input}`}
+                placeholder="0"
+              />
+              <span className={`block text-xs ${MaiTrollTheme.text.muted}`}>
+                Coins charged to message you.
+              </span>
+            </label>
+
+            <label className="space-y-2">
+              <span className={`text-sm ${MaiTrollTheme.text.muted}`}>
+                Call Price (Troll Coins)
+              </span>
+              <input
+                type="number"
+                min={0}
+                value={callPrice}
+                onChange={(event) => setCallPrice(Number(event.target.value) || 0)}
+                className={`w-full rounded-xl px-4 py-3 text-white outline-none ${MaiTrollTheme.components.input}`}
+                placeholder="0"
+              />
+              <span className={`block text-xs ${MaiTrollTheme.text.muted}`}>
+                Coins charged to call you.
+              </span>
+            </label>
+
+            <label className="space-y-2">
+              <span className={`text-sm ${MaiTrollTheme.text.muted}`}>
+                Profile View Price (Troll Coins)
+              </span>
+              <input
+                type="number"
+                min={0}
+                value={profileViewPrice}
+                onChange={(event) => setProfileViewPrice(Number(event.target.value) || 0)}
+                className={`w-full rounded-xl px-4 py-3 text-white outline-none ${MaiTrollTheme.components.input}`}
+                placeholder="0"
+              />
+              <span className={`block text-xs ${MaiTrollTheme.text.muted}`}>
+                Coins charged to view your profile.
               </span>
             </label>
           </div>

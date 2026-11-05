@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../lib/store';
 import { supabase } from '../lib/supabase';
 import { hasActiveStreamSession } from '../lib/activeStreamSession';
+import { DEFAULT_PHONE_RINGTONES, loadPhoneRingtonePreferences } from '../phone/maielitePhoneRingtones';
 
 interface IncomingCallPopupProps {
   isOpen: boolean;
@@ -34,7 +35,7 @@ export default function IncomingCallPopup({
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const oscillatorRef = useRef<OscillatorNode | null>(null);
-  const [ringtoneSrc, setRingtoneSrc] = React.useState('/sounds/calls/ringtone-classic.mp3');
+  const [ringtoneSrc, setRingtoneSrc] = React.useState(DEFAULT_PHONE_RINGTONES.audio);
   const ignoredLiveCallRef = useRef(false);
 
   const [isActiveStream, setIsActiveStream] = React.useState(hasActiveStreamSession);
@@ -52,7 +53,9 @@ export default function IncomingCallPopup({
       p_caller_id: callerId,
       p_call_type: callType,
       p_status: 'missed',
-    }).catch((error) => console.error('[IncomingCallPopup] Could not record missed call:', error));
+    }).then(({ error }) => {
+      if (error) console.error('[IncomingCallPopup] Could not record missed call:', error);
+    });
     onDecline();
   }, [callType, callerId, isActiveStream, isOpen, onDecline, user?.id]);
 
@@ -66,6 +69,13 @@ export default function IncomingCallPopup({
     const loadActiveRingtone = async () => {
       if (!user?.id) return;
       try {
+        const preferences = await loadPhoneRingtonePreferences(user.id);
+        const selectedRingtone = preferences[callType];
+        if (selectedRingtone) {
+          setRingtoneSrc(selectedRingtone);
+          return;
+        }
+
         const { data } = await supabase
           .from('user_call_sounds')
           .select('is_active,call_sound_catalog(asset_url,sound_type)')
@@ -85,12 +95,16 @@ export default function IncomingCallPopup({
           : null;
         if (soundCatalog?.asset_url) {
           setRingtoneSrc(soundCatalog.asset_url);
+        } else {
+          setRingtoneSrc(DEFAULT_PHONE_RINGTONES[callType]);
         }
-      } catch {
-        // ignore
+      } catch (error) {
+        console.error('[IncomingCallPopup] Could not load the selected ringtone:', error);
+        setRingtoneSrc(DEFAULT_PHONE_RINGTONES[callType]);
       }
     };
 
+    setRingtoneSrc(DEFAULT_PHONE_RINGTONES[callType]);
     loadActiveRingtone();
 
     const audioEl = audioRef.current;
@@ -145,7 +159,7 @@ export default function IncomingCallPopup({
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [isActiveStream, isOpen, onDecline, user?.id, ringtoneSrc]);
+  }, [callType, isActiveStream, isOpen, onDecline, user?.id, ringtoneSrc]);
 
   const handleAccept = () => {
     if (audioRef.current) {

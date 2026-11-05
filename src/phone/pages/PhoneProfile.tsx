@@ -68,6 +68,9 @@ type ProfileRow = {
   maipiks_story_base_price_coins?: number | null
   maipiks_story_subscriber_discount_mode?: string | null
   maipiks_story_paid_access_duration?: string | null
+  message_price?: number | null
+  call_price?: number | null
+  profile_view_price?: number | null
 }
 
 const PLATFORM_OPTIONS = [
@@ -173,6 +176,9 @@ export default function PhoneProfile() {
   const [platform, setPlatform] = useState('')
   const [bannerNotifications, setBannerNotifications] = useState(true)
   const [isMinor, setIsMinor] = useState(false)
+  const [messagePrice, setMessagePrice] = useState(0)
+  const [callPrice, setCallPrice] = useState(0)
+  const [profileViewPrice, setProfileViewPrice] = useState(0)
   const [gender, setGender] = useState<'male' | 'female' | 'nonbinary' | ''>('')
 
   /*
@@ -277,6 +283,10 @@ export default function PhoneProfile() {
 
       setGender(((row as any).gender as 'male' | 'female' | 'nonbinary' | '') ?? '')
 
+      setMessagePrice(Number(row.message_price) || 0)
+      setCallPrice(Number(row.call_price) || 0)
+      setProfileViewPrice(Number(row.profile_view_price) || 0)
+
       // ID Verification
       setIdVerificationStatus(((row as any).id_verification_status as 'not_submitted' | 'pending' | 'approved' | 'rejected') ?? 'not_submitted')
       setIdDocumentUrl((row as any).id_document_url || null)
@@ -316,6 +326,10 @@ export default function PhoneProfile() {
       setIsMinor(fallback?.is_minor ?? false)
 
       setGender((fallback?.gender as 'male' | 'female' | 'nonbinary' | '') ?? '')
+
+      setMessagePrice(Number(fallback?.message_price) || 0)
+      setCallPrice(Number(fallback?.call_price) || 0)
+      setProfileViewPrice(Number(fallback?.profile_view_price) || 0)
 
       // ID Verification
       setIdVerificationStatus((fallback?.id_verification_status as 'not_submitted' | 'pending' | 'approved' | 'rejected') ?? 'not_submitted')
@@ -370,6 +384,9 @@ export default function PhoneProfile() {
           maipiks_story_subscriber_discount_mode,
           maipiks_story_paid_access_duration,
           gender,
+          message_price,
+          call_price,
+          profile_view_price,
           id_verification_status,
           id_document_url,
           id_uploaded_at
@@ -556,6 +573,9 @@ export default function PhoneProfile() {
           banner_notifications_enabled:
             bannerNotifications,
           is_minor: isMinor,
+          message_price: messagePrice,
+          call_price: callPrice,
+          profile_view_price: profileViewPrice,
           updated_at: new Date().toISOString(),
         })
         .eq('id', user.id)
@@ -967,6 +987,63 @@ export default function PhoneProfile() {
                     ),
                   )}
                 </select>
+              </label>
+
+              <label className="block">
+                <span className="mb-2 block text-[9px] font-black uppercase tracking-wider text-white/40">
+                  Message Price
+                </span>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min={0}
+                    value={messagePrice}
+                    onChange={(event) => setMessagePrice(Number(event.target.value) || 0)}
+                    className="w-full rounded-xl border border-white/10 bg-white/[0.04] pl-9 py-3 text-sm text-white outline-none placeholder:text-white/20 focus:border-[#BF00FF]/40"
+                    placeholder="0"
+                  />
+                </div>
+                <span className="mt-1.5 block text-[8px] text-white/25">
+                  Coins charged to message you.
+                </span>
+              </label>
+
+              <label className="block">
+                <span className="mb-2 block text-[9px] font-black uppercase tracking-wider text-white/40">
+                  Call Price
+                </span>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min={0}
+                    value={callPrice}
+                    onChange={(event) => setCallPrice(Number(event.target.value) || 0)}
+                    className="w-full rounded-xl border border-white/10 bg-white/[0.04] pl-9 py-3 text-sm text-white outline-none placeholder:text-white/20 focus:border-[#BF00FF]/40"
+                    placeholder="0"
+                  />
+                </div>
+                <span className="mt-1.5 block text-[8px] text-white/25">
+                  Coins charged to call you.
+                </span>
+              </label>
+
+              <label className="block">
+                <span className="mb-2 block text-[9px] font-black uppercase tracking-wider text-white/40">
+                  Profile View Price
+                </span>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min={0}
+                    value={profileViewPrice}
+                    onChange={(event) => setProfileViewPrice(Number(event.target.value) || 0)}
+                    className="w-full rounded-xl border border-white/10 bg-white/[0.04] pl-9 py-3 text-sm text-white outline-none placeholder:text-white/20 focus:border-[#BF00FF]/40"
+                    placeholder="0"
+                  />
+                </div>
+                <span className="mt-1.5 block text-[8px] text-white/25">
+                  Coins charged to view your profile.
+                </span>
               </label>
 
               <PhoneButton

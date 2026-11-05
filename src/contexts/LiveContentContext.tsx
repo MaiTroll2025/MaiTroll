@@ -24,7 +24,7 @@ export interface LiveItem {
   velocityTrend?: string
 }
 
-export function LiveContentProvider({ children }: { children: React.ReactNode }) {
+export function LiveContentProvider({ children, enabled = true }: { children: React.ReactNode; enabled?: boolean }) {
   const [liveItems, setLiveItems] = useState<LiveItem[]>([])
   const [onlineUsers, setOnlineUsers] = useState(0)
   const [loadingLive, setLoadingLive] = useState(true)
@@ -243,6 +243,13 @@ export function LiveContentProvider({ children }: { children: React.ReactNode })
   }, [fetchLiveContent])
 
   useEffect(() => {
+    if (!enabled) {
+      setLiveItems([])
+      setLoadingLive(false)
+      return
+    }
+
+    setLoadingLive(true)
     fetchLiveContent()
 
     /*
@@ -415,7 +422,7 @@ export function LiveContentProvider({ children }: { children: React.ReactNode })
       window.clearInterval(pollInterval)
       try { supabase.removeChannel(homeChannel) } catch {}
     }
-  }, [fetchLiveContent, mapStreamRow, enrichStreamItem])
+  }, [enabled, fetchLiveContent, mapStreamRow, enrichStreamItem])
 
   useEffect(() => {
     if (presenceOnlineCount > 0) {

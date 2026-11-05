@@ -8,7 +8,7 @@ const WALL_LAST_SEEN_KEY = 'troll_wall_last_seen'
  * Uses localStorage to persist the "last seen" timestamp.
  * Returns the count of new posts and a function to mark as read.
  */
-export function useWallNotifications(isWallActive: boolean) {
+export function useWallNotifications(isWallActive: boolean, enabled = true) {
   const [newPostCount, setNewPostCount] = useState(0)
 
   // Get the last seen timestamp from localStorage
@@ -32,6 +32,8 @@ export function useWallNotifications(isWallActive: boolean) {
 
   // Count new posts since last seen
   const fetchNewPostCount = useCallback(async () => {
+    if (!enabled) return
+
     const lastSeen = getLastSeen()
     if (!lastSeen) {
       // First time user — just mark as seen, don't show count
@@ -55,7 +57,7 @@ export function useWallNotifications(isWallActive: boolean) {
     } catch (err) {
       console.error('[useWallNotifications] Error:', err)
     }
-  }, [getLastSeen, markAsRead])
+  }, [enabled, getLastSeen, markAsRead])
 
   // When wall tab becomes active, mark as read
   useEffect(() => {
@@ -66,17 +68,17 @@ export function useWallNotifications(isWallActive: boolean) {
 
   // Poll for new posts every 30 seconds when wall is NOT active
   useEffect(() => {
-    if (isWallActive) return
+    if (isWallActive || !enabled) return
 
     fetchNewPostCount() // initial check
 
     const interval = setInterval(fetchNewPostCount, 30000)
     return () => clearInterval(interval)
-  }, [isWallActive, fetchNewPostCount])
+  }, [enabled, isWallActive, fetchNewPostCount])
 
   // Subscribe to real-time new posts
   useEffect(() => {
-    if (isWallActive) return
+    if (isWallActive || !enabled) return
 
     const channel = supabase
       .channel('wall-notifications')
@@ -96,7 +98,7 @@ export function useWallNotifications(isWallActive: boolean) {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [isWallActive])
+  }, [enabled, isWallActive])
 
   return { newPostCount, markAsRead }
 }

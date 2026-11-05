@@ -167,6 +167,10 @@ export interface UserProfile {
   verification_expires_at: string | null
   verified_since: any
   trollmonds: number
+  is_temporary_review_account?: boolean
+  temporary_review_activated_at?: string | null
+  temporary_review_expires_at?: string | null
+  temporary_review_status?: 'active' | 'expired' | 'deletion_pending' | null
   display_name: string
   name: string
   is_agency_hr: boolean

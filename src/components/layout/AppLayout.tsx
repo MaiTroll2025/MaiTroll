@@ -50,6 +50,10 @@ export default function AppLayout({
     const isHomePage = location.pathname === '/' || location.pathname === '/home'
     const isAuthPage = location.pathname.startsWith('/auth');
     const isPublicWebOnlyPage = requiresWebRenderer(location.pathname);
+    const isLowActivityPage =
+      isPublicWebOnlyPage ||
+      location.pathname === '/sell' ||
+      location.pathname.startsWith('/legal/');
     const isLivePage = location.pathname.startsWith('/live/') || location.pathname.startsWith('/watch/') || location.pathname.startsWith('/gaming/watch/') || (location.pathname.startsWith('/broadcast/') && !location.pathname.startsWith('/broadcast/setup')) || location.pathname.startsWith('/stream/') || location.pathname === '/live-swipe';
     const isTreelzPage = location.pathname.startsWith('/treelz');
      const _isUtromailPage = location.pathname.startsWith('/utromail') || location.pathname.startsWith('/tromail') || location.pathname.startsWith('/messages');
@@ -80,8 +84,8 @@ export default function AppLayout({
 
    const { liveItems, totalViewers: _totalViewers, onlineUsers: _onlineUsers, loadingLive: _loadingLive } = useLiveContent()
    const battleItems = useMemo(() => liveItems.filter((item) => item.isBattle), [liveItems])
-   const { currentElection, currentPresident } = usePresidentSystem()
-   const { newPostCount: wallNotificationCount } = useWallNotifications(false)
+   const { currentElection, currentPresident } = usePresidentSystem(!isLowActivityPage)
+   const { newPostCount: wallNotificationCount } = useWallNotifications(false, !isLowActivityPage)
 
    const presidentTabLabel = currentElection?.status === 'open'
      ? 'President Candidates'

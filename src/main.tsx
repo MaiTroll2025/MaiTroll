@@ -79,6 +79,8 @@ const shouldIgnoreBugCenterError = (errorLike: unknown) => {
     text.includes('refresh_token_not_found') ||
     text.includes('invalid refresh token') ||
     text.includes('refresh token not found') ||
+    // IP lookup is optional security telemetry and its caller handles failure.
+    text.includes('api.ipify.org') ||
     // Service worker registration rejections — non-critical, handled by PWA context
     stack.includes('serviceworker') ||
     stack.includes('service-worker') ||
@@ -289,6 +291,8 @@ const shouldIgnoreNetworkErrorForBugCenter = (url: string) => {
     // PushAlert (third-party push notification provider) — its optin/subscription
     // calls frequently fail due to ad blockers/CORS and are non-critical.
     url.includes('pushalert.co') ||
+    // IP lookup failures are handled by the security-check caller as "unknown IP".
+    url.includes('api.ipify.org') ||
 // Non-critical catalog fetches with graceful fallback — already caught by callers
      url.includes('/rest/v1/profile_frames') ||
       // native_push_tokens upsert runs on every phone app start; a 403 from a

@@ -103,7 +103,7 @@ const areIdsEqual = (a: string[] | null, b: string[] | null) => {
   return sortedA.every((value, index) => value === sortedB[index]);
 };
 
-export const usePresidentSystem = () => {
+export const usePresidentSystem = (enabled = true) => {
   const { user } = useAuthStore();
   const [currentElection, setCurrentElection] = useState<PresidentElection | null>(null);
   const [currentPresident, setCurrentPresident] = useState<{ user_id: string; username: string; avatar_url: string } | null>(null);
@@ -846,13 +846,15 @@ const voteWithCoins = async (candidateId: string, amount: number) => {
   };
 
   useEffect(() => {
+    if (!enabled) return
+
     fetchCurrentElection();
     fetchCurrentPresident();
     fetchPresidentAppointment();
     fetchVicePresident();
     fetchTreasuryBalance();
     fetchProposals();
-  }, [fetchCurrentElection, fetchCurrentPresident, fetchPresidentAppointment, fetchVicePresident, fetchTreasuryBalance, fetchProposals]);
+  }, [enabled, fetchCurrentElection, fetchCurrentPresident, fetchPresidentAppointment, fetchVicePresident, fetchTreasuryBalance, fetchProposals]);
 
   const isPresident = currentPresident?.user_id === user?.id;
   const isVP = currentVP?.vice_president_user_id === user?.id;

@@ -11,6 +11,15 @@ interface UserManagementPanelProps {
   description?: string
 }
 
+interface ReviewAccountAuditRow {
+  user_id: string
+  status: 'active' | 'deletion_pending' | 'deleted'
+  activated_at: string
+  expires_at: string
+  deleted_at: string | null
+  deletion_attempts: number
+}
+
 export default function UserManagementPanel({
   title = 'User Management',
   description
@@ -20,16 +29,22 @@ export default function UserManagementPanel({
   const [loading, setLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null)
-  const [editingCoins, setEditingCoins] = useState({ paid: 0, free: 0 })
+  const [editingCoins, setEditingCoins] = useState({ trollCoins: 0, trollmonds: 0 })
   const [editingLevel, setEditingLevel] = useState(1)
   const [editingRole, setEditingRole] = useState('user')
   const [editingBypassBroadcast, setEditingBypassBroadcast] = useState(false)
   const [saving, setSaving] = useState(false)
   const [viewingUser, setViewingUser] = useState<{ id: string; username: string } | null>(null)
   const [notifying, setNotifying] = useState(false)
+  const [reviewAudit, setReviewAudit] = useState<ReviewAccountAuditRow[]>([])
+  const [now, setNow] = useState(Date.now())
+  const [showCreateReviewAccount, setShowCreateReviewAccount] = useState(false)
+  const [reviewAccountForm, setReviewAccountForm] = useState({ email: '', username: '', password: '' })
+  const [creatingReviewAccount, setCreatingReviewAccount] = useState(false)
 
   const canViewEmails = adminProfile?.role === 'admin' || adminProfile?.is_admin === true
   const canViewDetails = adminProfile?.role === 'admin' || adminProfile?.is_admin === true || adminProfile?.role === 'secretary'
+  const canCreateReviewAccount = adminProfile?.role === 'admin' || adminProfile?.is_admin === true
 
   const loadUsers = useCallback(async () => {
     setLoading(true)
@@ -43,14 +58,26 @@ export default function UserManagementPanel({
 
       if (error) throw error
       if (data?.error) throw new Error(data.error)
-      
+
+      const { data: auditData, error: auditError } = await supabase.functions.invoke('admin-actions', {
+        body: { action: 'get_temporary_review_account_audit' }
+      })
+      if (auditError) throw auditError
+      if (auditData?.error) throw new Error(auditData.error)
+
       setUsers((data.data as UserProfile[]) || [])
+      setReviewAudit((auditData.data as ReviewAccountAuditRow[]) || [])
     } catch (error: unknown) {
       console.error('Error loading users:', error)
       toast.error('Failed to load users')
     } finally {
       setLoading(false)
     }
+  }, [])
+
+  useEffect(() => {
+    const interval = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => window.clearInterval(interval)
   }, [])
 
   useEffect(() => {
@@ -68,7 +95,7 @@ export default function UserManagementPanel({
 
   const handleEditUser = (user: UserProfile) => {
     setSelectedUser(user)
-    setEditingCoins({ paid: user.troll_coins || 0, free: 0 })
+    setEditingCoins({ trollCoins: user.troll_coins || 0, trollmonds: user.trollmonds || 0 })
     setEditingLevel(user.level || 1)
     setEditingRole(user.role || 'user')
     setEditingBypassBroadcast(user.bypass_broadcast_restriction || false)
@@ -102,12 +129,17 @@ export default function UserManagementPanel({
     setSaving(true)
     try {
       // 1. Prepare data
-      const currentPaidCoins = selectedUser.troll_coins || 0
-      const newPaidCoins = editingCoins.paid
-      const delta = newPaidCoins - currentPaidCoins
+      const currentTrollCoins = selectedUser.troll_coins || 0
+      const delta = editingCoins.trollCoins - currentTrollCoins
+      if (!Number.isSafeInteger(editingCoins.trollCoins)
+        || editingCoins.trollCoins < 0
+        || !Number.isSafeInteger(editingCoins.trollmonds)
+        || editingCoins.trollmonds < 0) {
+        toast.error('Balances must be whole numbers within the supported range')
+        return
+      }
 
       const updates: any = {
-        troll_coins: editingCoins.paid,
         level: editingLevel,
         bypass_broadcast_restriction: editingBypassBroadcast
       }
@@ -119,7 +151,7 @@ export default function UserManagementPanel({
 
       const coinAdjustment = delta !== 0 ? {
         amount: delta,
-        reason: 'Manual Adjustment'
+        reason: 'Manual Troll Coins Adjustment'
       } : undefined
 
       // 2. Call Edge Function
@@ -129,7 +161,10 @@ export default function UserManagementPanel({
           userId: selectedUser.id,
           updates,
           roleUpdate,
-          coinAdjustment
+          coinAdjustment,
+          trollmonds: editingCoins.trollmonds !== (selectedUser.trollmonds || 0)
+            ? editingCoins.trollmonds
+            : undefined
         }
       })
 
@@ -146,6 +181,60 @@ export default function UserManagementPanel({
       setSaving(false)
     }
   }
+
+  const handleCreateReviewAccount = async () => {
+    if (!canCreateReviewAccount) {
+      toast.error('Admin access required')
+      return
+    }
+
+    setCreatingReviewAccount(true)
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-actions', {
+        body: {
+          action: 'create_temporary_review_account',
+          ...reviewAccountForm
+        }
+      })
+
+      if (error) throw error
+      if (data?.error) throw new Error(data.error)
+
+      toast.success(`Temporary review access created; expires at ${new Date(data.expiresAt).toLocaleTimeString()}`)
+      setShowCreateReviewAccount(false)
+      setReviewAccountForm({ email: '', username: '', password: '' })
+      await loadUsers()
+    } catch (error: unknown) {
+      console.error('Error creating temporary review account:', error)
+      toast.error((error as Error)?.message || 'Failed to create temporary review account')
+    } finally {
+      setCreatingReviewAccount(false)
+    }
+  }
+
+  const getReviewStatus = (user: UserProfile) => {
+    if (!user.is_temporary_review_account) return null
+    if (user.temporary_review_status === 'deletion_pending') return 'deletion_pending'
+    if (!user.temporary_review_expires_at || new Date(user.temporary_review_expires_at).getTime() <= now) {
+      return 'expired'
+    }
+    return 'active'
+  }
+
+  const formatCountdown = (expiresAt: string) => {
+    const seconds = Math.max(0, Math.ceil((new Date(expiresAt).getTime() - now) / 1000))
+    const hours = Math.floor(seconds / 3600)
+    const minutes = Math.floor((seconds % 3600) / 60)
+    const remainingSeconds = seconds % 60
+    return [hours, minutes, remainingSeconds].map((part) => String(part).padStart(2, '0')).join(':')
+  }
+
+  const reviewStatusLabel = (status: ReviewAccountAuditRow['status'] | 'expired') => ({
+    active: 'Active',
+    expired: 'Expired',
+    deletion_pending: 'Deletion Pending',
+    deleted: 'Deleted'
+  })[status]
 
   const filteredUsers = users.filter(user => {
     if (searchTerm) {
@@ -238,6 +327,15 @@ export default function UserManagementPanel({
         </div>
       )}
 
+      {canCreateReviewAccount && (
+        <button
+          onClick={() => setShowCreateReviewAccount(true)}
+          className="px-4 py-2 bg-amber-700 hover:bg-amber-600 rounded-lg text-sm font-semibold"
+        >
+          Create 60-minute review account
+        </button>
+      )}
+
       {/* Search */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -266,8 +364,9 @@ export default function UserManagementPanel({
                 )}
                 <th className="pb-3 text-gray-400 font-semibold">Role</th>
                 <th className="pb-3 text-gray-400 font-semibold">Level</th>
-                <th className="pb-3 text-gray-400 font-semibold">Paid Coins</th>
-                <th className="pb-3 text-gray-400 font-semibold">Free Coins</th>
+                <th className="pb-3 text-gray-400 font-semibold">Troll Coins</th>
+                <th className="pb-3 text-gray-400 font-semibold">Trollmonds</th>
+                <th className="pb-3 text-gray-400 font-semibold">Review Access</th>
                 <th className="pb-3 text-gray-400 font-semibold">Actions</th>
               </tr>
             </thead>
@@ -313,18 +412,127 @@ export default function UserManagementPanel({
                   </td>
                   <td className="py-3 text-white">{user.level || 1}</td>
                   <td className="py-3 text-purple-300">{user.troll_coins?.toLocaleString() || 0}</td>
+                  <td className="py-3 text-amber-200">{user.trollmonds?.toLocaleString() || 0}</td>
                   <td className="py-3">
-                    <button
-                      onClick={() => handleEditUser(user)}
-                      className="px-3 py-1 bg-purple-600 hover:bg-purple-700 rounded text-sm"
-                    >
-                      Edit
-                    </button>
+                    {(() => {
+                      const status = getReviewStatus(user)
+                      if (!status) return <span className="text-gray-500">—</span>
+                      return (
+                        <span className={`text-xs ${status === 'active' ? 'text-emerald-300' : status === 'deletion_pending' ? 'text-amber-300' : 'text-red-300'}`}>
+                          {reviewStatusLabel(status)}
+                          {status === 'active' && user.temporary_review_expires_at
+                            ? ` · ${formatCountdown(user.temporary_review_expires_at)}`
+                            : ''}
+                        </span>
+                      )
+                    })()}
+                  </td>
+                  <td className="py-3">
+                    {!user.is_temporary_review_account && (
+                      <button
+                        onClick={() => handleEditUser(user)}
+                        className="px-3 py-1 bg-purple-600 hover:bg-purple-700 rounded text-sm"
+                      >
+                        Edit
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {reviewAudit.length > 0 && (
+        <section className="space-y-3 rounded-xl border border-gray-800 bg-zinc-900/60 p-4">
+          <h3 className="text-lg font-semibold text-white">Temporary Review Account Audit</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="border-b border-gray-700 text-gray-400">
+                  <th className="py-2 pr-4">Account</th>
+                  <th className="py-2 pr-4">Status</th>
+                  <th className="py-2 pr-4">Expires</th>
+                  <th className="py-2">Deletion Attempts</th>
+                </tr>
+              </thead>
+              <tbody>
+                {reviewAudit.map((audit) => {
+                  const status = audit.status === 'active' && new Date(audit.expires_at).getTime() <= now
+                    ? 'expired'
+                    : audit.status
+                  return (
+                    <tr key={audit.user_id} className="border-b border-gray-800 last:border-0">
+                      <td className="py-2 pr-4 font-mono text-gray-300">{audit.user_id.slice(0, 8)}…</td>
+                      <td className="py-2 pr-4 text-gray-200">{reviewStatusLabel(status)}</td>
+                      <td className="py-2 pr-4 text-gray-400">{new Date(audit.expires_at).toLocaleString()}</td>
+                      <td className="py-2 text-gray-400">{audit.deletion_attempts}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
+      {showCreateReviewAccount && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4">
+          <section className="w-full max-w-lg space-y-4 rounded-xl border border-amber-500/40 bg-zinc-950 p-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-bold text-white">Create Temporary Review Account</h3>
+              <button
+                onClick={() => setShowCreateReviewAccount(false)}
+                className="text-gray-400 hover:text-white"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <p className="text-sm text-gray-400">
+              This creates a new, read-only account with exactly 60 minutes of access. Existing accounts cannot be converted.
+            </p>
+            <input
+              type="email"
+              autoComplete="off"
+              placeholder="Email"
+              value={reviewAccountForm.email}
+              onChange={(event) => setReviewAccountForm({ ...reviewAccountForm, email: event.target.value })}
+              className="w-full rounded-lg border border-gray-700 bg-zinc-900 px-4 py-2 text-white"
+            />
+            <input
+              type="text"
+              autoComplete="off"
+              placeholder="Username"
+              value={reviewAccountForm.username}
+              onChange={(event) => setReviewAccountForm({ ...reviewAccountForm, username: event.target.value })}
+              className="w-full rounded-lg border border-gray-700 bg-zinc-900 px-4 py-2 text-white"
+            />
+            <input
+              type="password"
+              autoComplete="new-password"
+              placeholder="Temporary password (12 characters minimum)"
+              value={reviewAccountForm.password}
+              onChange={(event) => setReviewAccountForm({ ...reviewAccountForm, password: event.target.value })}
+              className="w-full rounded-lg border border-gray-700 bg-zinc-900 px-4 py-2 text-white"
+            />
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={handleCreateReviewAccount}
+                disabled={creatingReviewAccount || !reviewAccountForm.email || !reviewAccountForm.username || reviewAccountForm.password.length < 12}
+                className="flex-1 rounded-lg bg-amber-700 px-4 py-2 font-semibold text-white disabled:opacity-50"
+              >
+                {creatingReviewAccount ? 'Creating…' : 'Create and activate'}
+              </button>
+              <button
+                onClick={() => setShowCreateReviewAccount(false)}
+                className="rounded-lg bg-gray-700 px-4 py-2 font-semibold text-white"
+              >
+                Cancel
+              </button>
+            </div>
+          </section>
         </div>
       )}
 
@@ -347,13 +555,13 @@ export default function UserManagementPanel({
               <div>
                 <label className="block text-sm font-semibold text-gray-300 mb-2">
                   <Coins className="w-4 h-4 inline mr-1" />
-                  Paid Coins
+                  Troll Coins
                 </label>
                 <input
                   type="number"
                   min="0"
-                  value={editingCoins.paid}
-                  onChange={(e) => setEditingCoins({ ...editingCoins, paid: parseInt(e.target.value) || 0 })}
+                  value={editingCoins.trollCoins}
+                  onChange={(e) => setEditingCoins({ ...editingCoins, trollCoins: parseInt(e.target.value) || 0 })}
                   className="w-full px-4 py-2 bg-zinc-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
               </div>
@@ -361,13 +569,13 @@ export default function UserManagementPanel({
               <div>
                 <label className="block text-sm font-semibold text-gray-300 mb-2">
                   <Coins className="w-4 h-4 inline mr-1" />
-                  Free Coins
+                  Trollmonds
                 </label>
                 <input
                   type="number"
                   min="0"
-                  value={editingCoins.free}
-                  onChange={(e) => setEditingCoins({ ...editingCoins, free: parseInt(e.target.value) || 0 })}
+                  value={editingCoins.trollmonds}
+                  onChange={(e) => setEditingCoins({ ...editingCoins, trollmonds: parseInt(e.target.value) || 0 })}
                   className="w-full px-4 py-2 bg-zinc-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
               </div>

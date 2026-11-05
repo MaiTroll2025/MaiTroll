@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/lib/store'
 import { toast } from 'sonner'
+import { playTextMessageRingtone } from '@/phone/maielitePhoneRingtones'
 
 export interface UtromailIncomingMessage {
   id: string
@@ -45,6 +46,7 @@ export function useUtromailMessagePopup() {
     console.log('[UtromailPopup] showPopup called:', message)
     if (message.sender_id === user?.id) return
     if (dismissedRef.current.has(message.id)) return
+    if (user?.id) void playTextMessageRingtone(user.id, message.id)
     clearTimers()
     setState({ visible: true, message })
     popupTimerRef.current = window.setTimeout(() => {
