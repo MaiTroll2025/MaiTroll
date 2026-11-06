@@ -59,6 +59,13 @@ export async function sendTip(req: TipRequest): Promise<TipResult> {
     return { success: false, error: 'Invalid tip amount' }
   }
 
+  if (normalizedAmount > 0) {
+    return {
+      success: false,
+      error: 'Coin tips are temporarily unavailable while secure server-side settlement is being deployed.',
+    }
+  }
+
   // 1. Deduct from sender using the secure RPC (server-side balance validation).
   const deductResult = await deductCoins({
     userId: senderId,

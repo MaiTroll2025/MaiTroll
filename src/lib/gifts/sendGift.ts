@@ -29,9 +29,8 @@ export async function sendGift(
     // Generate unique transaction key for deduplication
     const txnKey = `${profile.id}_${streamId || 'nostream'}_${giftId}_${Date.now()}_${Math.random().toString(36).substring(7)}`;
     
-    // Call the correct database function: send_gift_in_stream
-    const { data, error } = await supabase.rpc('send_gift_in_stream', {
-      p_sender_id: profile.id,
+    const { data, error } = await supabase.functions.invoke('send-gift', {
+      body: {
       p_receiver_id: receiverId,
       p_stream_id: streamId || null,
       p_gift_id: giftId,
@@ -39,6 +38,7 @@ export async function sendGift(
       p_metadata: { 
         txn_key: txnKey,
         trollmond_coins_back_enabled: true 
+      }
       }
     });
     

@@ -70,6 +70,21 @@ export async function chargeProfileView(
   profileOwnerId: string,
   profileViewPrice: number
 ): Promise<{ success: boolean; transactionId?: string; error?: string }> {
+  if (!Number.isFinite(profileViewPrice) || profileViewPrice < 0) {
+    return { success: false, error: 'Invalid profile view price.' }
+  }
+
+  if (profileViewPrice === 0) {
+    return { success: true }
+  }
+
+  if (profileViewPrice > 0) {
+    return {
+      success: false,
+      error: 'Paid profile views are temporarily unavailable while secure server-side settlement is being deployed.',
+    }
+  }
+
   try {
     // Deduct from viewer securely
     const { data: spendResult, error: spendError } = await supabase.rpc('troll_bank_spend_coins', {
@@ -121,6 +136,21 @@ export async function chargeMessageCost(
   recipientId: string,
   cost: number
 ): Promise<{ success: boolean; transactionId?: string; error?: string }> {
+  if (!Number.isFinite(cost) || cost < 0) {
+    return { success: false, error: 'Invalid message cost.' }
+  }
+
+  if (cost === 0) {
+    return { success: true }
+  }
+
+  if (cost > 0) {
+    return {
+      success: false,
+      error: 'Paid messages are temporarily unavailable while secure server-side settlement is being deployed.',
+    }
+  }
+
   try {
     // Deduct from sender securely using troll_bank_spend_coins
     const { data: spendResult, error: spendError } = await supabase.rpc('troll_bank_spend_coins', {
@@ -189,4 +219,3 @@ export function redirectToStore(
   toast.error(message || defaultMessage)
   navigate('/store', { state: { requiredCoins, message: message || defaultMessage } })
 }
-

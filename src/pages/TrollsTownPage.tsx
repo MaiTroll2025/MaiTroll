@@ -1131,6 +1131,11 @@ const TrollsTownPage: React.FC = () => {
       return
     }
 
+    if (property.ask_price > 0) {
+      toast.error('Property purchases are temporarily unavailable while secure seller settlement is being deployed.')
+      return
+    }
+
     const currentBalance = effectiveBalance
     const ask = property.ask_price
     if (currentBalance < ask) {

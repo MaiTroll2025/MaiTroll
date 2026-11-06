@@ -29,24 +29,40 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
+    const authHeader = req.headers.get('Authorization') || '';
+    const token = authHeader.replace(/^Bearer\s+/i, '');
+    if (!token || token === authHeader) {
+      return new Response(JSON.stringify({ error: 'Authentication required' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (!(await isCEO(user.id))) {
+      return new Response(JSON.stringify({ error: 'Only CEOs can use ghost mode' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const url = new URL(req.url);
     const path = url.pathname.split('/').pop();
 
     if (path === 'ghost-mode' && req.method === 'POST') {
       const body = await req.json();
-      const { action, streamId, userId } = body;
+      const { action, streamId } = body;
 
-      if (!streamId || !userId) {
-        return new Response(JSON.stringify({ error: 'streamId and userId required' }), {
+      if (!streamId) {
+        return new Response(JSON.stringify({ error: 'streamId required' }), {
           status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-
-      const ceoCheck = await isCEO(userId);
-      if (!ceoCheck) {
-        return new Response(JSON.stringify({ error: 'Only CEOs can join ghost mode' }), {
-          status: 403,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
@@ -76,7 +92,7 @@ Deno.serve(async (req: Request) => {
           .from('ghost_stream_sessions')
           .delete()
           .eq('stream_id', streamId)
-          .eq('user_id', userId);
+          .eq('user_id', user.id);
 
         if (error) {
           return new Response(JSON.stringify({ error: error.message }), {
@@ -94,7 +110,7 @@ Deno.serve(async (req: Request) => {
         .from('ghost_stream_sessions')
         .select('id')
         .eq('stream_id', streamId)
-        .eq('user_id', userId)
+        .eq('user_id', user.id)
         .maybeSingle();
 
       if (existingSession) {
@@ -112,7 +128,7 @@ Deno.serve(async (req: Request) => {
         .from('ghost_stream_sessions')
         .insert({
           stream_id: streamId,
-          user_id: userId,
+          user_id: user.id,
           microphone_enabled: true,
           camera_enabled: false,
         })
@@ -139,19 +155,10 @@ Deno.serve(async (req: Request) => {
     if (path === 'ghost-mode' && req.method === 'GET') {
       const url = new URL(req.url);
       const streamId = url.searchParams.get('streamId');
-      const userId = url.searchParams.get('userId');
 
       if (!streamId) {
         return new Response(JSON.stringify({ error: 'streamId required' }), {
           status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-
-      const ceoCheck = await isCEO(userId || '');
-      if (!ceoCheck) {
-        return new Response(JSON.stringify({ error: 'Only CEOs can view ghost sessions' }), {
-          status: 403,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }

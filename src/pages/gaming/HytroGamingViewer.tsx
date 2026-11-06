@@ -539,8 +539,8 @@ export default function HytroGamingViewer() {
 
     setSendingTip(true)
     try {
-      const { error } = await supabase.rpc('send_gift_in_stream', {
-        p_sender_id: user.id,
+      const { error } = await supabase.functions.invoke('send-gift', {
+        body: {
         p_receiver_id: currentStream.broadcaster_id,
         p_stream_id: currentStream.id,
         p_gift_id: item.id,
@@ -552,6 +552,7 @@ export default function HytroGamingViewer() {
           is_tip: true,
           source: 'hytrogaming_tip',
         },
+        }
       })
       if (error) throw error
       toast.success(`Sent ${item.icon} ${item.name} (${item.cost} coins)`)

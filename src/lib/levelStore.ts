@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { supabase } from './supabase'
-import { XP_RATES, calculateNextLevelXp, getLevelUpReward } from '../config/levelSystem'
+import { XP_RATES, calculateNextLevelXp } from '../config/levelSystem'
 import { toast } from 'sonner'
 
 interface DailyLog {
@@ -128,30 +128,23 @@ export const useLevelStore = create<LevelState>((set, get) => ({
     const newTotalXp = state.totalXp + amount
     let newLevel = state.currentLevel
     let newNextLevelXp = state.nextLevelXp
+    let hasLevelUp = false
 
     // Level Up Logic
     while (newCurrentXp >= newNextLevelXp) {
       newCurrentXp -= newNextLevelXp
       newLevel++
       newNextLevelXp = calculateNextLevelXp(newLevel)
-      
-      // Toast Reward
-      const reward = getLevelUpReward(newLevel)
-      toast.success(`Leveled Up to ${newLevel}! +${reward.coins} Coins`, {
+
+      hasLevelUp = true
+      toast.success(`Leveled Up to ${newLevel}!`, {
         duration: 5000,
         icon: '🎉'
       })
-      
-      // Note: We should actually add the coins to user_profiles here or via RPC
-      // Use Troll Bank for centralized coin management
-      await supabase.rpc('troll_bank_credit_coins', { 
-        p_user_id: userId, 
-        p_coins: reward.coins,
-        p_bucket: 'promo', // Level up rewards are earned/promo
-        p_source: 'reward',
-        p_ref_id: null,
-        p_metadata: { type: 'level_up', level: newLevel }
-      })
+    }
+
+    if (hasLevelUp) {
+      toast.warning('Level-up coin rewards are temporarily unavailable while secure server-side rewards are deployed.')
     }
 
     // Optimistic Update

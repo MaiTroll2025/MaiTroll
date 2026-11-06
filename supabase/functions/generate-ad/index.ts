@@ -309,12 +309,48 @@ serve(async (req) => {
   }
 
   try {
-    const { source_id, generation_type, asset_type: _asset_type } = await req.json();
-    if (!source_id) throw new Error("source_id is required");
+    const authHeader = req.headers.get("Authorization") || "";
+    const token = authHeader.replace(/^Bearer\s+/i, "");
+    if (!token || token === authHeader) {
+      return new Response(JSON.stringify({ error: "Authentication required" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from("user_profiles")
+      .select("role, is_admin, is_lead_officer")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (profileError) throw profileError;
+
+    const isPublisher = Boolean(
+      profile?.is_admin === true
+      || profile?.is_lead_officer === true
+      || profile?.role === "admin"
+      || profile?.role === "lead_troll_officer",
+    );
+    if (!isPublisher) {
+      return new Response(JSON.stringify({ error: "Forbidden: authorized publisher required" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { source_id, generation_type, asset_type: _asset_type } = await req.json();
+    if (!source_id) throw new Error("source_id is required");
 
     const { data: source } = await supabase.from('source_content_refs').select('*').eq('id', source_id).single();
     if (!source) throw new Error("Source not found");

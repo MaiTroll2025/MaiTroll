@@ -374,13 +374,14 @@ const sendGift = useCallback(async (gift: GiftItem, options?: SendGiftOptions): 
           p_battle_id: effectiveBattleId || undefined,
         });
        // conditional trollmond deduction (>= 100 coin gifts deduct 100 trollmonds per gift)
-        const result = await supabase.rpc('send_gift_in_stream', {
-          p_sender_id: user.id,
+        const result = await supabase.functions.invoke('send-gift', {
+          body: {
           p_receiver_id: finalRecipientId,
           p_stream_id: streamId || null,
           p_gift_id: gift.id,
           p_quantity: quantity,
           p_metadata: { txn_key: txnKey, trollmond_coins_back_enabled: TROLLMOND_CASHBACK_ENABLED, battle_id: effectiveBattleId || undefined }
+          }
         });
         const { data, error } = result;
 

@@ -338,6 +338,10 @@ export const enrollInCourse = async (
     return { enrollment, waitlisted: true };
   }
 
+  if (course.enrollment_fee > 0) {
+    throw new Error('Paid course enrollment is temporarily unavailable while secure settlement is being deployed.');
+  }
+
   const loanEnrollment = requiresCoinPayment && !enoughCoins && hasLoanApproval;
   const insertPayload: Record<string, any> = {
     student_id: studentId,

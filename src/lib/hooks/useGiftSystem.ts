@@ -229,14 +229,15 @@ function GiftSystemProviderInner({
         ...options.metadata,
       }
 
-      const { data: result, error: rpcError } = await supabase.rpc('send_gift_in_stream', {
-          p_sender_id: user.id,
+      const { data: result, error: rpcError } = await supabase.functions.invoke('send-gift', {
+        body: {
           p_receiver_id: targetReceiverId,
           p_stream_id: effectiveStreamId,
           p_gift_id: gift.id,
           p_quantity: quantity,
           p_metadata: giftMetadata,
-        })
+        }
+      })
 
         if (rpcError) {
           throw rpcError

@@ -83,6 +83,11 @@ function FamilyMinutesStoreModal({
   const handlePurchase = async () => {
     if (!user || !selectedPackage) return;
 
+    if (selectedPackage.cost > 0) {
+      toast.error('Family call minute purchases are temporarily unavailable while secure settlement is being deployed.');
+      return;
+    }
+
     // Refresh balance first to ensure accuracy
     await refreshCoins();
 
@@ -677,6 +682,11 @@ export default function TrollFamilyChat() {
   // Purchase family call minutes
   const purchaseFamilyMinutes = async (audioMinutes: number, videoMinutes: number, totalCost: number) => {
     if (!familyId || !user || !isLeader) return;
+
+    if (totalCost > 0) {
+      toast.error('Family call minute purchases are temporarily unavailable while secure settlement is being deployed.');
+      return;
+    }
 
     // Refresh balance first to ensure accuracy
     await refreshCoins();

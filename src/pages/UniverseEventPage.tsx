@@ -243,6 +243,11 @@ export default function UniverseEventPage() {
              return
           }
 
+          if ((currentTournament.entry_fee || 0) > 0) {
+              toast.error('The server could not verify this paid withdrawal. No client-side withdrawal or refund was attempted.')
+              return
+          }
+
           // 2. Fallback: Client-side logic
           console.log('Using client-side fallback for withdraw...')
           
