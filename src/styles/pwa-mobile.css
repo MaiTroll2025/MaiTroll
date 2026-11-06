@@ -360,6 +360,13 @@ select {
 }
 
 /* ===== UTILITY CLASSES ===== */
+input,
+textarea,
+[contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
 .select-none {
   -webkit-user-select: none;
   user-select: none;

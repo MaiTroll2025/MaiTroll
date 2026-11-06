@@ -25,11 +25,72 @@ export default function TemporaryReviewSessionGuard({
   const profile = useAuthStore((state) => state.profile);
   const [now, setNow] = useState(Date.now());
   const [ended, setEnded] = useState(false);
+  const [verifiedExpiresAt, setVerifiedExpiresAt] = useState<number | null>(null);
+  const [verificationFailed, setVerificationFailed] = useState(false);
   const endingRef = useRef(false);
-  const isReviewAccount = profile?.is_temporary_review_account === true;
+  const verificationRef = useRef<string | null>(null);
+  const isReviewCandidate = user?.app_metadata?.temporary_review_created === true;
+  const isReviewAccount = profile?.is_temporary_review_account === true || verifiedExpiresAt !== null;
   const expiresAt = profile?.temporary_review_expires_at
     ? new Date(profile.temporary_review_expires_at).getTime()
-    : null;
+    : verifiedExpiresAt;
+
+  useEffect(() => {
+    if (!enabled || !user?.id || !isReviewCandidate) {
+      verificationRef.current = null;
+      setVerifiedExpiresAt(null);
+      setVerificationFailed(false);
+      return;
+    }
+    if (profile?.is_temporary_review_account === true && profile.temporary_review_expires_at) {
+      verificationRef.current = user.id;
+      return;
+    }
+    if (verificationRef.current === user.id) return;
+    setVerifiedExpiresAt(null);
+    setVerificationFailed(false);
+    verificationRef.current = user.id;
+
+    let active = true;
+    void (async () => {
+      try {
+        const { data, error } = await supabase
+          .from("user_profiles")
+          .select("is_temporary_review_account, temporary_review_expires_at")
+          .eq("id", user.id)
+          .maybeSingle();
+        if (!active) return;
+        const expiration = data?.temporary_review_expires_at
+          ? new Date(data.temporary_review_expires_at).getTime()
+          : null;
+        if (
+          error ||
+          data?.is_temporary_review_account !== true ||
+          expiration === null ||
+          !Number.isFinite(expiration)
+        ) {
+          if (error) console.error("[temporary-review-session] Could not verify review access", error);
+          setVerificationFailed(true);
+          return;
+        }
+        setVerifiedExpiresAt(expiration);
+      } catch (error) {
+        if (!active) return;
+        console.error("[temporary-review-session] Could not verify review access", error);
+        setVerificationFailed(true);
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [
+    enabled,
+    isReviewCandidate,
+    profile?.is_temporary_review_account,
+    profile?.temporary_review_expires_at,
+    user?.id,
+  ]);
 
   useEffect(() => {
     if (!enabled || !user || !isReviewAccount) return;
@@ -38,7 +99,9 @@ export default function TemporaryReviewSessionGuard({
   }, [enabled, isReviewAccount, user]);
 
   const remaining = expiresAt === null ? 0 : Math.max(0, expiresAt - now);
-  const sessionEnded = enabled && !!user && isReviewAccount && remaining <= 0;
+  const sessionEnded = enabled && !!user && (
+    verificationFailed || (isReviewAccount && remaining <= 0)
+  );
 
   useEffect(() => {
     if (!sessionEnded || endingRef.current) return;

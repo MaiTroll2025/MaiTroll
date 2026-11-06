@@ -79,6 +79,7 @@ const typeToTab: Record<string, AdminNotificationTab> = {
   announcement_review: 'announcements',
   referral_activity: 'referral-bonuses',
   officer_alert: 'officer-operations',
+  user_name_changed: 'officer-operations',
 }
 
 export function getAdminNotificationTab(

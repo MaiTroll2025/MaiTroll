@@ -1691,7 +1691,7 @@ const appShell = (
 
       <SwipeNavigationProvider>
       <LiveContentProvider enabled={!isLowActivityRoute}>
-            <TemporaryReviewSessionGuard enabled={!isMobileUI}>
+            <TemporaryReviewSessionGuard enabled>
             <AppLayout showSidebar={!isMobileUI || isStandalone} showHeader={true} showBottomNav={true} isJailed={isJailed}>
              <PetFloatingButton />
            <GlobalPresenceTracker enabled={!isLowActivityRoute} />

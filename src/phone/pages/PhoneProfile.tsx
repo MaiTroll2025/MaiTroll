@@ -568,6 +568,7 @@ export default function PhoneProfile() {
         .update({
           username: cleanUsername,
           full_name: cleanFullName || null,
+          display_name: cleanFullName || cleanUsername,
           bio: cleanBio,
           platform: platform || null,
           banner_notifications_enabled:
@@ -601,7 +602,10 @@ export default function PhoneProfile() {
       )
 
       toast.error(
-        'Failed to save profile settings.',
+        error && typeof error === 'object' && 'message' in error
+          && typeof error.message === 'string'
+          ? error.message
+          : 'Failed to save profile settings.',
       )
     } finally {
       setSavingProfile(false)

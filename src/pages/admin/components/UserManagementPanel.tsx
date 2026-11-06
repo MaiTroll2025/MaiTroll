@@ -20,6 +20,20 @@ interface ReviewAccountAuditRow {
   deletion_attempts: number
 }
 
+async function getFunctionErrorMessage(error: unknown): Promise<string> {
+  if (error instanceof Error && 'context' in error && error.context instanceof Response) {
+    try {
+      const body: unknown = await error.context.clone().json()
+      if (body && typeof body === 'object' && 'error' in body && typeof body.error === 'string') {
+        return body.error
+      }
+    } catch (parseError) {
+      console.error('[UserManagementPanel] Could not read the admin function error response:', parseError)
+    }
+  }
+  return error instanceof Error ? error.message : 'Failed to create temporary review account'
+}
+
 export default function UserManagementPanel({
   title = 'User Management',
   description
@@ -206,7 +220,7 @@ export default function UserManagementPanel({
       await loadUsers()
     } catch (error: unknown) {
       console.error('Error creating temporary review account:', error)
-      toast.error((error as Error)?.message || 'Failed to create temporary review account')
+      toast.error(await getFunctionErrorMessage(error))
     } finally {
       setCreatingReviewAccount(false)
     }

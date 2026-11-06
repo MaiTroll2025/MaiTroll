@@ -170,6 +170,9 @@ const USER_PROFILE_SELECT = `
   is_broadcaster,
   is_ghost_mode,
   ghost_mode_until,
+  is_temporary_review_account,
+  temporary_review_activated_at,
+  temporary_review_expires_at,
   drivers_license_status,
   organization_id,
   is_org_student,
@@ -1253,6 +1256,5 @@ export async function initAuthAndData() {
 
   return initPromise
 }
-
 
 

@@ -188,7 +188,11 @@ export default function ProfileSettings() {
       toast.success("Profile settings saved.");
     } catch (error) {
       console.error("[ProfileSettings] Failed to save profile:", error);
-      toast.error("Failed to save profile settings.");
+      const message = error && typeof error === "object" && "message" in error
+        && typeof error.message === "string"
+        ? error.message
+        : "Failed to save profile settings.";
+      toast.error(message);
     } finally {
       setSavingProfile(false);
     }

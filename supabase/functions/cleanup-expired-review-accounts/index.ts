@@ -67,6 +67,17 @@ Deno.serve(async (request: Request): Promise<Response> => {
       | "profile_cleanup_failed" = "storage_cleanup_failed";
 
     try {
+      failureCode = "auth_delete_failed";
+      const { data: authResult, error: lookupError } = await admin.auth.admin.getUserById(userId);
+      if (lookupError && !isMissingAuthUser(lookupError)) throw lookupError;
+      if (authResult?.user) {
+        const { error: banError } = await admin.auth.admin.updateUserById(userId, {
+          ban_duration: "876000h",
+        });
+        if (banError) throw banError;
+      }
+
+      failureCode = "storage_cleanup_failed";
       for (;;) {
         const { data: objects, error: listError } = await admin.rpc(
           "list_temporary_review_storage_objects",
@@ -98,9 +109,6 @@ Deno.serve(async (request: Request): Promise<Response> => {
       if (recordsError) throw recordsError;
 
       failureCode = "auth_delete_failed";
-      const { data: authResult, error: lookupError } = await admin.auth.admin.getUserById(userId);
-      if (lookupError && !isMissingAuthUser(lookupError)) throw lookupError;
-
       if (authResult?.user) {
         const { error: deleteError } = await admin.auth.admin.deleteUser(userId, false);
         if (deleteError) {
