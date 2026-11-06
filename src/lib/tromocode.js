@@ -7,6 +7,10 @@ export const TROMOCODE_PRODUCT_TYPES = [
   'coin_pack',
 ]
 
+const ELIGIBLE_TROMOCODE_PRODUCT_TYPES = TROMOCODE_PRODUCT_TYPES.filter(
+  (productType) => productType !== 'coin_pack'
+)
+
 export function normalizeTromocode(rawCode) {
   if (rawCode === null || rawCode === undefined) return ''
   return String(rawCode).trim().replace(/\s+/g, '').toUpperCase()
@@ -16,13 +20,7 @@ export function isTromocodeProductEligible(productType) {
   if (!productType) return false
 
   const normalized = String(productType).trim().toLowerCase()
-  return [
-    'verified_badge',
-    'profile_frame',
-    'insurance_plan',
-    'perk',
-    'all_eligible',
-  ].includes(normalized)
+  return ELIGIBLE_TROMOCODE_PRODUCT_TYPES.includes(normalized)
 }
 
 export function calculateTromocodeDiscount({
@@ -40,11 +38,13 @@ export function calculateTromocodeDiscount({
     }
   }
 
-  const value = Number(promotionValue || 0)
+  const normalizedType = String(promotionType ?? '').trim().toLowerCase()
+  const value = Number(promotionValue)
+  const safeValue = Number.isFinite(value) ? value : 0
 
-  switch (promotionType) {
+  switch (normalizedType) {
     case 'percentage_discount': {
-      const discount = Math.min(original, original * (Math.max(0, value) / 100))
+      const discount = Math.min(original, original * (Math.max(0, safeValue) / 100))
       return {
         originalAmount: original,
         discountAmount: Number(discount.toFixed(0)),
@@ -52,7 +52,7 @@ export function calculateTromocodeDiscount({
       }
     }
     case 'fixed_coin_discount': {
-      const discount = Math.min(original, Math.max(0, value))
+      const discount = Math.min(original, Math.max(0, safeValue))
       return {
         originalAmount: original,
         discountAmount: Number(discount.toFixed(0)),
@@ -107,8 +107,9 @@ export function getTromocodeProductLabel(productType) {
 export function getTabTromocodeProduct(tabId) {
   switch (String(tabId || '').toLowerCase()) {
     case 'verified_badge':
-    case 'coins':
       return 'verified_badge'
+    case 'coins':
+      return 'all_eligible'
     case 'frames':
       return 'profile_frame'
     case 'insurance':

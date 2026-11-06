@@ -5,6 +5,7 @@ import {
   normalizeTromocode,
   calculateTromocodeDiscount,
   isTromocodeProductEligible,
+  getTabTromocodeProduct,
 } from './tromocode.js'
 
 test('normalizeTromocode collapses case and whitespace', () => {
@@ -38,4 +39,19 @@ test('fixed coin discount subtracts from the total without dropping below zero',
 test('coin pack is explicitly blocked from TromoCode eligibility', () => {
   assert.equal(isTromocodeProductEligible('coin_pack'), false)
   assert.equal(isTromocodeProductEligible('perk'), true)
+})
+
+test('case-insensitive promotion types and coin store mappings stay valid', () => {
+  assert.deepEqual(calculateTromocodeDiscount({
+    promotionType: 'PERCENTAGE_DISCOUNT',
+    promotionValue: 25,
+    originalAmount: 200,
+  }), {
+    originalAmount: 200,
+    discountAmount: 50,
+    finalAmount: 150,
+  })
+
+  assert.equal(isTromocodeProductEligible('ALL_ELIGIBLE'), true)
+  assert.equal(getTabTromocodeProduct('coins'), 'all_eligible')
 })

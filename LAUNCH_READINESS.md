@@ -2,6 +2,8 @@
 
 Advisor snapshot captured November 6, 2026 (security: 09:14 UTC; performance: 09:20 UTC). This report records findings and validation status; an Advisor warning is not, by itself, proof that a function is exploitable.
 
+The initial, unreviewed function findings are also listed in [RPC_ACCESS_MATRIX.csv](./RPC_ACCESS_MATRIX.csv). Its name-based priority is only a triage hint, not a vulnerability verdict or a remediation instruction.
+
 ## Current status
 
 - **Status:** Pre-launch hardening; not yet a release candidate.
@@ -1673,4 +1675,3 @@ These are Advisor finding counts, not unique-table counts. Policy findings may r
 - Build, SEO, and phone-route checks were run in the current workspace; they do not replace production smoke tests, payment testing, backup/restore drills, or capacity tests.
 
 For review, choose one concrete next step from the sequence above; no broad grants or live database changes were made as part of this report.
-
