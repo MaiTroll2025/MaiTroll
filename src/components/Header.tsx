@@ -276,6 +276,17 @@ const Header = () => {
         return
       }
 
+      const { error: preferenceError } = await supabase
+        .from('user_profiles')
+        .update({ push_notifications_enabled: true })
+        .eq('id', user.id)
+
+      if (preferenceError) {
+        console.error('[PushDebug] Failed to enable push notifications for account:', preferenceError)
+        toast.error(preferenceError.message || 'Could not enable push notifications for your account')
+        return
+      }
+
       console.log('[PushDebug] Supabase save success')
       toast.success('Push notifications enabled')
     } catch (error: any) {

@@ -1,0 +1,1676 @@
+﻿# Public Launch Readiness Snapshot
+
+Advisor snapshot captured November 6, 2026 (security: 09:14 UTC; performance: 09:20 UTC). This report records findings and validation status; an Advisor warning is not, by itself, proof that a function is exploitable.
+
+## Current status
+
+- **Status:** Pre-launch hardening; not yet a release candidate.
+- **Production build:** Passed in the current workspace.
+- **SEO checks:** Passed in the current workspace.
+- **Phone admin routes:** Passed; 50 links resolve.
+- **Supabase Edge Functions:** 102 listed, all ACTIVE. Push gateway, push dispatcher, admin-event, stream-live, and signup functions are active.
+- **Supabase health advisor:** No findings in the checked snapshot.
+- **Three previously flagged views:** Live catalog reports `security_invoker=true` for `user_profiles_public_identity`, `troll_wall_posts_public`, and `stream_audience_presence_public`. The corresponding local migration is not present in the live migration history; reconcile the schema/history before relying on migration replay.
+- **Local changes not yet represented in live migration history:** Bug Catcher push migration `20291105000000`, view migration `20291105000007`, and the Header push-preference change. Verify and deploy deliberately; do not assume local means live.
+
+## Security Advisor
+
+There are 1,503 warning findings across the categories below, plus 49 informational RLS-without-policy findings. Review function behavior and grants before revoking access; some public RPCs may be intentional.
+
+### SECURITY DEFINER functions executable by anon (644)
+
+Complete Advisor row inventory:
+
+- `public._tc_is_staff(p_user_id uuid)`
+- `public.accept_admin_bond_quote(p_request_id uuid, p_user_id uuid)`
+- `public.accept_attorney_quote(p_request_id uuid, p_payer_id uuid)`
+- `public.accept_attorney_request(p_request_id uuid, p_attorney_id uuid)`
+- `public.activate_basic_ghost_mode`
+- `public.activate_due_random_battles`
+- `public.activate_mayor(p_user_id uuid)`
+- `public.activate_random_battle(p_battle_id uuid)`
+- `public.add_free_coins(p_user_id uuid, p_amount bigint)`
+- `public.add_rtc_minutes(p_minutes integer)`
+- `public.add_student_to_team(p_team_id uuid, p_student_id uuid)`
+- `public.add_troll_coins(p_amount bigint, p_user_id uuid)`
+- `public.add_wishlist_item(p_wishlist_id uuid, p_title text, p_description text, p_target_amount bigint)`
+- `public.adjust_balance(p_user_id uuid, p_currency text, p_amount bigint, p_event text)`
+- `public.admin_get_fee_pool_entries(p_fee_type text, p_limit integer, p_offset integer)`
+- `public.admin_get_fee_pool_summary(p_from timestamp with time zone, p_to timestamp with time zone)`
+- `public.admin_list_first_cashout_match_claims(p_status text, p_review_status text, p_limit integer)`
+- `public.admin_review_first_cashout_match_claim(p_claim_id uuid, p_action text, p_reason text)`
+- `public.admin_set_subscription_maipiks_discount(p_tier_id uuid, p_discount_percent integer)`
+- `public.admin_update_any_profile_field(p_user_id uuid, p_updates jsonb, p_admin_id uuid, p_reason text)`
+- `public.admin_upsert_first_cashout_match_promotion(p_enabled boolean, p_max_winners integer, p_max_match_amount numeric, p_minimum_cashout numeric, p_starts_at timestamp with time zone, p_ends_at timestamp with time zone, p_description text, p_terms text, p_match_type text, p_match_percentage integer, p_eligible_coin_sources text[])`
+- `public.adopt_troll_pet(p_pet_type text, p_name text, p_agreement_version text)`
+- `public.aggregate_stream_analytics`
+- `public.allocate_funding(p_application_id uuid, p_amount numeric, p_reason text)`
+- `public.apply_moderation_offense(p_user_id uuid, p_offense_type text, p_category text, p_severity text, p_rule_id text, p_source text, p_message_hash text, p_metadata jsonb)`
+- `public.apply_pet_health_promo(p_user_id uuid, p_promo_code text, p_duration_hours integer)`
+- `public.apply_troll_coin_penalty(p_broadcast_id uuid, p_coin_amount integer, p_moderator_id uuid, p_target_user_id uuid, p_violation_category text, p_violation_reason text)`
+- `public.approve_instructor_application(p_application_id uuid, p_decision text, p_notes text)`
+- `public.auto_arrest_new_account_on_ip(p_user_id uuid, p_ip_address text)`
+- `public.auto_follow_admin_on_signup`
+- `public.auto_release_expired_jails`
+- `public.automated_audience_set_settings(p_admin_user_id uuid, p_enabled boolean, p_chat_min_interval_seconds integer, p_chat_max_interval_seconds integer, p_gift_cooldown_seconds integer)`
+- `public.automated_audience_stop_on_broadcast_end`
+- `public.award_battle_crown(p_winner_stream_id uuid, p_loser_stream_id uuid)`
+- `public.award_battle_crowns(p_user_id uuid, p_amount integer)`
+- `public.award_challenge_crowns(p_battle_id uuid, p_winner_team text)`
+- `public.award_friday_battle_gifter_bonus(p_gifter_id uuid, p_battle_id uuid, p_gift_total_coins bigint)`
+- `public.back_wishlist_item(p_user_id uuid, p_item_id uuid, p_amount bigint, p_gift_txn_id text, p_stream_gift_id bigint)`
+- `public.block_temporary_review_storage_mutations`
+- `public.buy_ghost_mode_supreme`
+- `public.buy_mai_supreme`
+- `public.calculate_friday_battle_gifter_bonus(p_gifter_id uuid, p_battle_id uuid, p_gift_total_coins bigint)`
+- `public.can_access_founder_hub(p_user_id uuid)`
+- `public.can_cashout(p_user_id uuid)`
+- `public.can_founder_arrest(p_user_id uuid)`
+- `public.can_founder_release(p_user_id uuid)`
+- `public.can_founder_schedule_broadcast(p_user_id uuid)`
+- `public.can_founder_summon(p_user_id uuid)`
+- `public.can_founder_use_chat(p_user_id uuid)`
+- `public.can_founder_view_reports(p_user_id uuid)`
+- `public.can_manage_founders(p_user_id uuid)`
+- `public.can_manage_stream(p_stream_id uuid)`
+- `public.can_moderate_stream(p_stream_id uuid, p_user_id uuid)`
+- `public.can_review_maipiks_reports(p_user_id uuid)`
+- `public.can_send_utromail(sender_id uuid, recipient_id uuid)`
+- `public.can_set_to_user(p_target_id uuid)`
+- `public.can_start_broadcast(p_user_id uuid)`
+- `public.can_start_broadcast_school_check(p_user_id uuid)`
+- `public.can_user_broadcast(p_user_id uuid)`
+- `public.can_user_record(p_user_id uuid)`
+- `public.can_view_coin_liability`
+- `public.cancel_auction_me(p_session_id uuid)`
+- `public.cancel_troll_up_subscription(p_subscription_id uuid, p_user_id uuid)`
+- `public.capture_protection_order_username_change`
+- `public.change_maielite_phone_number(p_phone_number text)`
+- `public.check_concurrent_login(p_user_id uuid, p_current_session_id uuid)`
+- `public.check_creator_weekly_eligibility(p_batch_id uuid)`
+- `public.check_creator_weekly_eligibility(p_batch_id uuid, p_user_id uuid)`
+- `public.check_daily_login`
+- `public.check_duplicate_account_on_ip(p_ip_address text, p_email text)`
+- `public.check_duplicate_account_on_ip(p_ip_address text, p_email text, p_role text)`
+- `public.check_influencer_eligibility(p_user_id uuid)`
+- `public.check_reward_budget(p_coins_to_grant bigint)`
+- `public.check_username_safe(p_username text)`
+- `public.check_username_safe(p_username text, p_user_id uuid)`
+- `public.choose_trocean_location(p_match_id uuid, p_selected_tile text)`
+- `public.claim_sla_compensation(p_violation_id uuid)`
+- `public.cleanup_expired_user_purchases`
+- `public.clear_court_warrant(p_warrant_id uuid, p_reason text)`
+- `public.clear_expired_court_warrants`
+- `public.complete_mai_bag(p_broadcast_id uuid, p_mai_bag_id uuid)`
+- `public.configure_access_product(p_access_type text, p_enabled boolean, p_price_coins bigint)`
+- `public.configure_mai_bag_gifts(p_broadcast_id uuid, p_gift_ids uuid[])`
+- `public.consume_reward_budget(p_coins_granted bigint, p_source text)`
+- `public.contribute_to_mai_bag(p_broadcast_id uuid, p_stream_gift_id bigint, p_gift_value bigint)`
+- `public.court_restore_license(p_case_id uuid, p_judge_id uuid, p_target_user_id uuid)`
+- `public.create_artist_staff_offer(p_artist_id uuid, p_employee_user_id uuid, p_position text, p_pay_type text, p_pay_amount bigint, p_pay_frequency text, p_permissions jsonb, p_start_date timestamp with time zone, p_notes text)`
+- `public.create_broadcaster_wishlist(p_broadcaster_id uuid, p_title text, p_description text, p_target_amount bigint)`
+- `public.create_contract_notary_document(p_contract_id uuid, p_contract_number text, p_artist_id text, p_artist_stage_name text, p_tier text, p_artist_split_bps integer, p_label_split_bps integer, p_effective_at timestamp with time zone, p_probation_ends_at timestamp with time zone, p_expires_at timestamp with time zone, p_terms_version text, p_content text, p_created_by uuid)`
+- `public.create_contract_notary_document(p_contract_id uuid, p_contract_number text, p_artist_id uuid, p_artist_stage_name text, p_tier text, p_artist_split_bps integer, p_label_split_bps integer, p_effective_at timestamp with time zone, p_probation_ends_at timestamp with time zone, p_expires_at timestamp with time zone, p_terms_version text, p_content text, p_created_by uuid)`
+- `public.create_court_case(p_case_type text, p_court_session_id uuid, p_defendant_id uuid, p_plaintiff_id uuid)`
+- `public.create_court_case(p_defendant_id uuid, p_plaintiff_id uuid, p_reason text)`
+- `public.create_global_event(p_title text, p_type text, p_icon text, p_priority integer, p_metadata jsonb, p_dedupe_key text, p_source_event_id text, p_status text, p_route text, p_source text, p_expires_at timestamp with time zone)`
+- `public.create_merch_order(p_product_ids uuid[], p_shipping_address jsonb)`
+- `public.create_next_battle_round(p_broadcaster_id uuid, p_stream_id uuid)`
+- `public.create_notification(p_message text, p_metadata jsonb, p_title text, p_type text, p_user_id uuid)`
+- `public.create_notification(p_user_id uuid, p_type text, p_title text, p_message text, p_metadata jsonb)`
+- `public.create_or_verify_instructor_profile(p_user_id uuid, p_institution_id uuid, p_department text)`
+- `public.create_or_verify_student_profile(p_user_id uuid, p_institution_id uuid, p_program_field text)`
+- `public.create_president_election`
+- `public.create_record_label_artist_after_approval`
+- `public.create_role_invite(p_inviter_id uuid, p_invitee_id uuid, p_role text)`
+- `public.create_student_team(p_team_name text, p_description text)`
+- `public.create_subscription(p_broadcaster_id uuid, p_tier_id uuid, p_auto_renew boolean)`
+- `public.create_system_league_event`
+- `public.create_trocean_lobby(p_name text, p_visibility text)`
+- `public.create_troll_up_subscription(p_package_id uuid, p_user_id uuid)`
+- `public.create_tromocode(p_code text, p_description text, p_promotion_type text, p_promotion_value numeric, p_applies_to text, p_max_uses integer, p_starts_at timestamp with time zone, p_expires_at timestamp with time zone, p_is_active boolean, p_created_by uuid)`
+- `public.create_user_credit_on_signup`
+- `public.create_weekly_treasury_payout_run`
+- `public.credit_events_cap_monthly_positive`
+- `public.credit_events_set_score_award_context`
+- `public.credit_score_disable_loan_repayment_rewards`
+- `public.credit_score_disable_repayment_rewards`
+- `public.credit_score_guard_profile_update`
+- `public.credit_score_on_loan_created`
+- `public.credit_score_on_stream_gift`
+- `public.credit_score_sync_profile`
+- `public.current_user_is_platform_staff`
+- `public.deactivate_ghost_mode`
+- `public.decide_protection_order(p_order_id uuid, p_grant boolean)`
+- `public.decline_attorney_request(p_request_id uuid, p_attorney_id uuid)`
+- `public.deduct_call_minutes(p_user_id uuid, p_minutes integer, p_type text)`
+- `public.deduct_user_paid_coins(p_user_id uuid, p_amount bigint, p_coin_type text)`
+- `public.delete_school_rule(p_rule_id uuid)`
+- `public.deny_admin_bond_quote(p_request_id uuid, p_user_id uuid)`
+- `public.deny_attorney_quote(p_request_id uuid, p_payer_id uuid)`
+- `public.dispatch_notification_push`
+- `public.distribute_battle_winnings(p_battle_id uuid)`
+- `public.end_auction_me(p_session_id uuid)`
+- `public.end_battle_with_rewards(p_battle_id uuid, p_winner_stream_id uuid)`
+- `public.end_court_session(p_session_id uuid)`
+- `public.end_expired_podcasts`
+- `public.end_stream(p_stream_id uuid)`
+- `public.end_town_meeting(p_meeting_id uuid)`
+- `public.enforce_temporary_review_request`
+- `public.ensure_league_system_ready`
+- `public.ensure_user_credit_account`
+- `public.epaper_get_universe_events`
+- `public.epaper_get_universe_events(p_limit integer)`
+- `public.evaluate_ban_evasion(p_user_id uuid)`
+- `public.evaluate_user_discipline(p_user_id uuid)`
+- `public.expire_mayor_terms`
+- `public.extend_court_date(p_case_id uuid, p_new_date date)`
+- `public.file_protection_order(p_respondent_ids uuid[], p_idempotency_key uuid, p_expedited boolean)`
+- `public.file_school_incident(p_institution_id uuid, p_target_student_id uuid, p_stream_id uuid, p_incident_type text, p_severity text, p_description text, p_rule_violated text)`
+- `public.finalize_stream_sla_on_end`
+- `public.find_utromail_thread(user_a uuid, user_b uuid)`
+- `public.finish_random_battle(p_battle_id uuid, p_end_reason text)`
+- `public.follow_instructor(p_instructor_user_id uuid)`
+- `public.follow_student(p_following_student_id uuid)`
+- `public.founder_admin_add(p_user_id uuid, p_duration_months integer, p_gift_multiplier numeric, p_cashout_multiplier numeric, p_start_at timestamp with time zone, p_end_at timestamp with time zone, p_notes text, p_reason text)`
+- `public.founder_admin_get_settings`
+- `public.founder_admin_list(p_status text)`
+- `public.founder_admin_list_actions(p_founder_user_id uuid, p_action_type text, p_target_user_id uuid, p_from timestamp with time zone, p_to timestamp with time zone, p_limit integer)`
+- `public.founder_admin_remove(p_founder_id uuid, p_reason text)`
+- `public.founder_admin_search_users(p_query text, p_limit integer, p_exclude_founders boolean)`
+- `public.founder_admin_update(p_founder_id uuid, p_gift_multiplier numeric, p_cashout_multiplier numeric, p_end_at timestamp with time zone, p_status text, p_notes text, p_reason text)`
+- `public.founder_admin_update_settings(p_program_enabled boolean, p_capacity integer, p_default_duration_months integer, p_default_gift_multiplier numeric, p_default_cashout_multiplier numeric, p_allowed_multipliers numeric[], p_max_multiplier numeric, p_allow_manual_expiration boolean, p_notes text, p_reason text)`
+- `public.founder_apply_cashout_bonus(p_payout_request_id uuid)`
+- `public.founder_apply_gift_bonus(p_stream_gift_id bigint)`
+- `public.founder_arrest_user(p_target_user_id uuid, p_reason text, p_report_id uuid, p_severity text, p_notes text)`
+- `public.founder_cancel_scheduled_broadcast(p_id uuid, p_reason text)`
+- `public.founder_effective_status(p_user_id uuid)`
+- `public.founder_get_my_invite_code`
+- `public.founder_hub_access`
+- `public.founder_is_active(p_user_id uuid)`
+- `public.founder_list_gift_rewards(p_founder_user_id uuid, p_limit integer)`
+- `public.founder_list_messages(p_limit integer, p_before timestamp with time zone)`
+- `public.founder_list_my_referrals(p_limit integer)`
+- `public.founder_list_my_scheduled_broadcasts`
+- `public.founder_list_program_schedule`
+- `public.founder_list_reports(p_status text, p_limit integer)`
+- `public.founder_log_action(p_founder_id uuid, p_action_type text, p_target_user_id uuid, p_reason text, p_report_id uuid, p_case_id uuid, p_scheduled_broadcast_id uuid, p_notes text, p_details jsonb)`
+- `public.founder_log_report_view(p_report_id uuid)`
+- `public.founder_mark_messages_read`
+- `public.founder_mark_referral_paid(p_referral_id uuid)`
+- `public.founder_my_actions(p_limit integer)`
+- `public.founder_my_status`
+- `public.founder_notify(p_user_id uuid, p_type text, p_title text, p_message text, p_metadata jsonb)`
+- `public.founder_public_directory`
+- `public.founder_redeem_invite_code(p_code text, p_invited_user_id uuid)`
+- `public.founder_referral_stats`
+- `public.founder_release_user(p_jail_id uuid, p_reason text, p_notes text)`
+- `public.founder_request_cashout(p_coins_to_redeem bigint, p_provider_type text, p_provider_username text, p_user_tag text, p_id_verification_url text)`
+- `public.founder_schedule_broadcast(p_title text, p_description text, p_scheduled_for timestamp with time zone, p_duration_minutes integer, p_category text)`
+- `public.founder_send_message(p_body text)`
+- `public.founder_summon_to_court(p_target_user_id uuid, p_reason text, p_court_date date, p_court_time time without time zone, p_report_id uuid, p_case_type text, p_notes text)`
+- `public.founder_sync_expirations`
+- `public.founder_sync_public_status`
+- `public.founder_trg_stream_gift_bonus`
+- `public.founder_trg_stream_gift_reversal`
+- `public.founder_unread_count`
+- `public.founder_upcoming_broadcast(p_user_id uuid)`
+- `public.founder_update_scheduled_broadcast(p_id uuid, p_title text, p_description text, p_scheduled_for timestamp with time zone, p_duration_minutes integer, p_category text, p_reason text)`
+- `public.founder_user_is_admin(p_user_id uuid)`
+- `public.founder_verify_referral(p_referral_id uuid)`
+- `public.get_active_city_laws`
+- `public.get_active_court_case(p_session_id uuid)`
+- `public.get_active_event`
+- `public.get_active_event_signup_count`
+- `public.get_active_giveaways`
+- `public.get_active_streams_paged(p_limit integer, p_offset integer)`
+- `public.get_active_trollmers_tournament`
+- `public.get_admin_dashboard_metrics_v1`
+- `public.get_admin_finance_summary_live`
+- `public.get_admin_requests`
+- `public.get_admin_tromocode_redemptions(p_tromocode_id uuid)`
+- `public.get_admin_tromocode_stats`
+- `public.get_all_creator_applications`
+- `public.get_all_docket_entries`
+- `public.get_artist_staff(p_artist_id uuid)`
+- `public.get_artist_staff_dashboard(p_artist_id uuid)`
+- `public.get_artist_staff_payments(p_artist_id uuid)`
+- `public.get_auction_me_state(p_stream_id uuid)`
+- `public.get_available_attorney_requests(p_attorney_id uuid)`
+- `public.get_bank_reserves`
+- `public.get_battle_and_event_earnings`
+- `public.get_battle_pot_state(p_broadcaster_id uuid)`
+- `public.get_beta_feedback_stats`
+- `public.get_broadcast_school_status(p_user_id uuid)`
+- `public.get_broadcaster_mai_bag_summary(p_broadcaster_id uuid)`
+- `public.get_broadcaster_sla_summary(p_broadcaster_id uuid)`
+- `public.get_broadcaster_sla_violations(p_broadcaster_id uuid)`
+- `public.get_broadcaster_wishlist_data(p_broadcaster_id uuid)`
+- `public.get_buckets_summary_for_user`
+- `public.get_call_balances(p_user_id uuid)`
+- `public.get_coin_liability_alerts(p_page integer, p_page_size integer, p_status text, p_alert_type text)`
+- `public.get_coin_liability_summary(p_period_start timestamp with time zone, p_period_end timestamp with time zone)`
+- `public.get_court_calendar(p_from_date date)`
+- `public.get_current_court_session`
+- `public.get_current_payout_batch`
+- `public.get_current_trollmin`
+- `public.get_daily_free_spins(p_user_id uuid)`
+- `public.get_data_access_audit_log(p_institution_id uuid, p_limit integer, p_offset integer)`
+- `public.get_delinquent_loan_users`
+- `public.get_earnings_overview`
+- `public.get_effective_privileges`
+- `public.get_epaper_stories(p_limit integer, p_offset integer, p_status text)`
+- `public.get_epaper_story(p_slug text)`
+- `public.get_family_home_data(p_user_id uuid)`
+- `public.get_fan_crown_status(p_user_id uuid)`
+- `public.get_first_cashout_match_promotion`
+- `public.get_founder(p_user_id uuid)`
+- `public.get_gift_leaderboard(p_direction text, p_limit integer, p_window text)`
+- `public.get_gifter_leaderboard(p_type text, p_limit integer)`
+- `public.get_hourly_activity`
+- `public.get_institution_privacy_settings(p_institution_id uuid)`
+- `public.get_instructor_followers_count(p_instructor_user_id uuid)`
+- `public.get_instructor_messages(p_instructor_user_id uuid)`
+- `public.get_instructor_privacy_agreement_status(p_institution_id uuid)`
+- `public.get_mai_bag_gift_configuration(p_broadcast_id uuid)`
+- `public.get_mai_bag_state(p_broadcast_id uuid)`
+- `public.get_maielite_phone_directory`
+- `public.get_market_stats`
+- `public.get_my_artist_staff_jobs`
+- `public.get_my_troll_up_campaigns(p_user_id uuid)`
+- `public.get_my_troll_up_purchases(p_user_id uuid)`
+- `public.get_my_troll_up_subscriptions(p_user_id uuid)`
+- `public.get_officer_payroll_stats`
+- `public.get_or_create_mai_bag(p_broadcast_id uuid, p_broadcaster_id uuid)`
+- `public.get_or_create_next_docket(p_from_date date)`
+- `public.get_or_create_wheel_session`
+- `public.get_pending_payouts_for_review`
+- `public.get_pending_payouts_summary`
+- `public.get_pending_role_invites(p_user_id uuid)`
+- `public.get_pending_tickets`
+- `public.get_platform_admin_user_id`
+- `public.get_platform_subscription_stats`
+- `public.get_portfolio_summary(p_user_id uuid)`
+- `public.get_portfolio_value(p_user_id uuid)`
+- `public.get_profile_statistics(p_user_id uuid)`
+- `public.get_public_docket_board`
+- `public.get_recent_platform_donations`
+- `public.get_royal_family_status`
+- `public.get_rtc_minute_total`
+- `public.get_school_pool_total(p_institution_id uuid)`
+- `public.get_site_usage_analytics(p_since timestamp with time zone)`
+- `public.get_staff_ghost_profile(p_target_user_id uuid)`
+- `public.get_staff_ghost_profiles(p_target_user_ids uuid[])`
+- `public.get_staff_user_ids`
+- `public.get_stream_seats(p_stream_id uuid)`
+- `public.get_stream_sla_status(p_stream_id uuid)`
+- `public.get_student_followers_count(p_student_id uuid)`
+- `public.get_student_following_count(p_student_id uuid)`
+- `public.get_student_pool_contribution(p_student_id uuid, p_institution_id uuid)`
+- `public.get_subscription_sla_status(p_subscription_id uuid)`
+- `public.get_system_settings`
+- `public.get_t_league_state`
+- `public.get_tm_matches(p_user_id uuid, p_dating boolean, p_limit integer)`
+- `public.get_trocean_games_dashboard`
+- `public.get_trocean_private_player_state(p_match_id uuid)`
+- `public.get_trocean_public_state(p_match_id uuid)`
+- `public.get_troll_up_packages`
+- `public.get_trollmers_week_start(p_user_id uuid)`
+- `public.get_trollmin_queue`
+- `public.get_trollmin_stats(p_user_id uuid)`
+- `public.get_user_active_roles(p_user_id uuid)`
+- `public.get_user_active_subscription(p_creator_id uuid, p_subscriber_id uuid)`
+- `public.get_user_active_warrant(p_user_id uuid)`
+- `public.get_user_cashout_eligibility(p_user_id uuid)`
+- `public.get_user_coin_liabilities(p_page integer, p_page_size integer, p_search text, p_sort_by text, p_sort_dir text)`
+- `public.get_user_coin_liability_page(p_page integer, p_page_size integer, p_search text, p_filter text, p_sort_by text, p_sort_dir text)`
+- `public.get_user_discipline_level(p_user_id uuid)`
+- `public.get_user_docket`
+- `public.get_user_monthly_coins_earned(p_user_id uuid, p_month date)`
+- `public.get_user_promo_cards`
+- `public.get_user_restrictions(p_user_id uuid)`
+- `public.get_user_rewards`
+- `public.get_user_state(p_user_id uuid)`
+- `public.get_user_storage_breakdown(p_user_id uuid)`
+- `public.get_user_storage_replay_status(p_user_id uuid)`
+- `public.get_user_subscription_sla_summary(p_user_id uuid)`
+- `public.get_user_tickets(p_user_id uuid)`
+- `public.get_user_vehicle_assets`
+- `public.get_vehicle_catalog`
+- `public.get_viewed_me_users(p_user_id uuid, p_limit integer)`
+- `public.get_viewer_mod_context(p_stream_id uuid)`
+- `public.get_weekly_cashback_status(p_user_id uuid)`
+- `public.get_weekly_family_task_counts`
+- `public.get_weekly_family_task_counts(p_family_id uuid, p_week_start date)`
+- `public.gift_post(p_amount integer, p_message text, p_post_id uuid)`
+- `public.grant_battle_starter_coins`
+- `public.grant_daily_blockers(p_user_id uuid)`
+- `public.grant_xp(p_user_id uuid, p_amount bigint, p_source text, p_source_id text, p_metadata jsonb)`
+- `public.grant_xp(p_user_id uuid, p_amount integer, p_source_type text, p_source_id uuid, p_metadata jsonb)`
+- `public.grant_xp_legacy(p_amount integer, p_source text, p_source_id text, p_user_id uuid)`
+- `public.guard_shared_user_restriction`
+- `public.handle_application_approval`
+- `public.handle_new_user`
+- `public.handle_new_user_profile`
+- `public.handle_new_user_troll_coins`
+- `public.handle_user_signup`
+- `public.handle_zip_city_identity_officer_assignment`
+- `public.handle_zip_stream_officer_assignment`
+- `public.has_active_mai_supreme_entitlement`
+- `public.has_open_verification_ticket(user_id uuid)`
+- `public.increment_ad_clicks(ad_id uuid, count bigint)`
+- `public.increment_ad_impressions(ad_id uuid, count bigint)`
+- `public.increment_epaper_views(p_story_id uuid)`
+- `public.increment_stream_likes(p_stream_id uuid, p_like_count integer)`
+- `public.increment_treelz_comments(p_post_id uuid)`
+- `public.increment_treelz_saves(p_post_id uuid)`
+- `public.increment_treelz_shares(p_post_id uuid)`
+- `public.instructor_has_signed_privacy_agreement(p_institution_id uuid)`
+- `public.interact_with_troll_pet(p_pet_id uuid, p_interaction_type text)`
+- `public.invite_followers_to_broadcast(p_inviter_id uuid, p_stream_id uuid)`
+- `public.is_active_founder(p_user_id uuid)`
+- `public.is_admin(p_user_id uuid)`
+- `public.is_admin_user(p_user_id uuid)`
+- `public.is_anon_arrested(p_ip_address text)`
+- `public.is_beta_feedback_moderator`
+- `public.is_beta_feedback_moderator(p_user_id uuid)`
+- `public.is_bug_center_admin(p_user_id uuid)`
+- `public.is_bug_center_staff(p_user_id uuid)`
+- `public.is_family_leader_secure(p_family_id uuid, p_user_id uuid)`
+- `public.is_family_member_secure(p_family_id uuid, p_user_id uuid)`
+- `public.is_following_instructor(p_instructor_user_id uuid)`
+- `public.is_ghost_mode_staff`
+- `public.is_id_verification_admin`
+- `public.is_ip_banned(p_ip_address text)`
+- `public.is_ip_blocked(p_ip_address text)`
+- `public.is_maitroll_moderation_staff`
+- `public.is_modo_role(p_user_id uuid)`
+- `public.is_modo_role_in(p_user_id uuid, p_roles text[])`
+- `public.is_platform_admin`
+- `public.is_platform_admin(p_user_id uuid)`
+- `public.is_podcast_expired(p_podcast_id uuid)`
+- `public.is_protection_order_active(p_requesting_user uuid, p_target_user uuid)`
+- `public.is_record_label_admin`
+- `public.is_stream_owner_or_admin(p_stream_id uuid, p_user_id uuid)`
+- `public.is_tromocode_admin_user`
+- `public.is_user_chat_disabled`
+- `public.is_user_chat_disabled(p_user_id uuid)`
+- `public.is_user_jailed(p_user_id uuid)`
+- `public.issue_court_sentence(p_case_id uuid, p_sentences jsonb, p_fine_amount integer)`
+- `public.issue_court_warrant(p_case_id uuid, p_reason text, p_bond_amount integer)`
+- `public.issue_first_cashout_match(p_claim_id uuid, p_admin_id uuid)`
+- `public.issue_free_car_insurance(p_user_id uuid, p_vehicle_id uuid)`
+- `public.issue_ticket(p_target_user_id uuid, p_amount numeric, p_notes text)`
+- `public.issue_warrant(p_target_id uuid, p_reason text, p_notes text)`
+- `public.join_court_session(p_court_session_id uuid, p_role text)`
+- `public.join_guest_seat_atomic(p_stream_id uuid, p_seat_index integer, p_guest_token uuid, p_price integer)`
+- `public.join_stream_as_viewer(p_stream_id uuid, p_user_id uuid, p_guest_id text)`
+- `public.join_trocean_team(p_match_id uuid, p_team public.trocean_team, p_team_slot integer)`
+- `public.judge_pardon_user(p_user_id uuid)`
+- `public.leave_seat_atomic(p_session_id uuid)`
+- `public.leave_stream_as_viewer(p_stream_id uuid, p_user_id uuid, p_guest_id text)`
+- `public.list_reports(p_status_filter text)`
+- `public.list_school_incidents(p_institution_id uuid, p_status_filter text, p_limit integer, p_offset integer)`
+- `public.list_school_rules(p_institution_id uuid, p_active_only boolean)`
+- `public.log_app_bug_report(payload jsonb)`
+- `public.log_data_access(p_viewed_user_id uuid, p_institution_id uuid, p_action text, p_description text, p_source text, p_ip_address text, p_user_agent text)`
+- `public.mai_business_log_activity`
+- `public.mai_city_claim_starter_map`
+- `public.mai_city_convert_coins_to_bricks(p_coins integer, p_idempotency_key text)`
+- `public.mai_city_get_state`
+- `public.mai_city_purchase_map(p_idempotency_key text)`
+- `public.mai_city_purchase_property(p_map_id uuid, p_plot_number integer, p_idempotency_key text)`
+- `public.mai_run_begin_match(p_lobby uuid)`
+- `public.mai_run_cancel_lobby(p_lobby uuid)`
+- `public.mai_run_create_lobby(p_difficulty text)`
+- `public.mai_run_finish(p_run uuid, p_score integer, p_levels integer, p_letters integer, p_collected integer)`
+- `public.mai_run_join_lobby(p_lobby uuid)`
+- `public.mai_run_leaderboard(p_limit integer)`
+- `public.mai_run_match_results(p_lobby uuid)`
+- `public.mai_run_start_solo(p_gender text, p_difficulty text)`
+- `public.mai_voice_can_moderate_room(p_room_kind text, p_room_id uuid, p_user_id uuid)`
+- `public.mai_voice_claim_next_item(p_room_kind text, p_room_id uuid, p_worker_id text, p_claim_status text)`
+- `public.mai_voice_expire_due`
+- `public.mai_voice_get_room_settings(p_room_kind text, p_room_id uuid)`
+- `public.mai_voice_prune_publishers`
+- `public.mai_voice_room_owner(p_room_kind text, p_room_id uuid)`
+- `public.maintain_pet_health_promos`
+- `public.maipiks_add_story_item(p_media_url text, p_media_type text, p_visibility text, p_storage_path text, p_thumbnail_url text, p_caption text, p_duration_ms integer)`
+- `public.maipiks_add_story_item(p_media_url text, p_media_type text, p_visibility text, p_storage_path text, p_thumbnail_url text, p_caption text, p_duration_ms integer, p_lifetime_hours integer)`
+- `public.maipiks_add_story_item(p_media_url text, p_media_type text, p_visibility text, p_storage_path text, p_thumbnail_url text, p_caption text, p_duration_ms integer, p_lifetime_hours integer, p_monetization_mode text, p_base_price_coins bigint, p_subscriber_discount_mode text, p_paid_access_duration text)`
+- `public.maipiks_delete_story(p_story_id uuid)`
+- `public.maipiks_delete_story_item(p_item_id uuid)`
+- `public.maipiks_enforce_user_restriction`
+- `public.maipiks_ensure_tip_ledger`
+- `public.maipiks_get_story_tip_total(p_story_id uuid)`
+- `public.maipiks_guard_restricted_interaction`
+- `public.maipiks_list_reports(p_status text)`
+- `public.maipiks_preserve_report_evidence`
+- `public.maipiks_purchase_story(p_story_id uuid)`
+- `public.maipiks_purge_expired_stories`
+- `public.maipiks_purge_own_expired_stories`
+- `public.maipiks_record_story_view(p_item_id uuid)`
+- `public.maipiks_require_story_access`
+- `public.maipiks_resolve_report(p_report_id uuid, p_decision text, p_reason text)`
+- `public.maipiks_server_now`
+- `public.maipiks_story_pricing(p_story_id uuid)`
+- `public.maipiks_validate_story_tip`
+- `public.maipiks_validate_story_view`
+- `public.manage_court_case_safe(p_defendant_id uuid, p_reason text, p_court_date date, p_case_type text)`
+- `public.manual_clock_in(p_officer_id uuid)`
+- `public.manual_clock_out(p_session_id uuid)`
+- `public.mark_all_notifications_read(p_user_id uuid)`
+- `public.mark_failure_to_appear(p_case_id uuid)`
+- `public.mark_stream_seat_live(p_livekit_participant_identity text, p_seat_index integer, p_stream_id uuid)`
+- `public.mkey_admin_adjust(p_user_id uuid, p_amount integer, p_transaction_type text, p_reason text)`
+- `public.mkey_boost_summary(p_boost_id uuid)`
+- `public.mkey_broadcast_stats(p_broadcast_id text)`
+- `public.mkey_claim_on_join(p_broadcast_id text)`
+- `public.mkey_eligible_recipient_count(p_broadcast_id text)`
+- `public.mkey_expire_invites(p_limit integer)`
+- `public.mkey_is_broadcast_live(p_broadcast_id text)`
+- `public.mkey_my_open_invite(p_broadcast_id text)`
+- `public.mkey_my_recent_sends(p_limit integer)`
+- `public.mkey_purchase_with_coins(p_amount integer)`
+- `public.mkey_send(p_broadcast_id text, p_amount integer)`
+- `public.mkey_wallet`
+- `public.mod_jail_user(p_target_user_id uuid, p_discipline_level integer, p_reason text, p_duration_seconds integer, p_bond_amount integer, p_actor_id uuid)`
+- `public.mod_release_jail(p_jail_id uuid, p_reason text, p_actor_id uuid)`
+- `public.moderate_user_content(p_user_id uuid, p_content text, p_source text, p_context jsonb)`
+- `public.moderator_disable_chat(p_stream_id uuid, p_target_user_id uuid, p_duration_minutes integer, p_reason text)`
+- `public.moderator_kick_user(p_stream_id uuid, p_target_user_id uuid, p_reason text)`
+- `public.moderator_mute_user(p_stream_id uuid, p_target_user_id uuid, p_duration_minutes integer, p_reason text)`
+- `public.moderator_unmute_user(p_stream_id uuid, p_target_user_id uuid)`
+- `public.modo_arrest(p_stream_id uuid, p_target_user_id uuid, p_reason text, p_severity text)`
+- `public.modo_audit(p_action_type text, p_action_name text, p_actor_id uuid, p_target_user_id uuid, p_target_display_name text, p_target_role_before text, p_target_role_after text, p_broadcast_id uuid, p_livekit_room_name text, p_reason text, p_duration_minutes integer, p_previous_status text, p_new_status text, p_expires_at timestamp with time zone, p_success boolean, p_error_message text, p_metadata jsonb)`
+- `public.modo_end_stream(p_stream_id uuid, p_target_broadcaster_id uuid, p_reason text, p_restrict_duration_minutes integer)`
+- `public.modo_grant_license(p_target_user_id uuid)`
+- `public.modo_suspend_license(p_target_user_id uuid, p_reason text, p_duration_hours integer)`
+- `public.normalize_tromocode_input(raw_code text)`
+- `public.notify_admin_bug_alert`
+- `public.notify_artist_contract_notarized(p_contract_id uuid, p_contract_number text)`
+- `public.notify_artist_new_contract(p_contract_id uuid, p_artist_id uuid, p_contract_number text)`
+- `public.notify_protection_order_staff`
+- `public.notify_secretary_contract_signed(p_contract_id uuid, p_contract_number text, p_artist_stage_name text)`
+- `public.notify_staff(p_type text, p_title text, p_message text, p_metadata jsonb)`
+- `public.notify_staff_of_broadcast_start`
+- `public.notify_staff_of_job_application`
+- `public.notify_staff_review_event`
+- `public.notify_staff_storage_upload`
+- `public.pay_court_warrant(p_warrant_id uuid)`
+- `public.pay_ticket(p_ticket_id uuid)`
+- `public.pay_ticket_coins(p_user_id uuid, p_amount numeric)`
+- `public.persist_stream_minutes`
+- `public.pin_product_to_broadcast(p_stream_id uuid, p_product_id uuid, p_pinned_by uuid)`
+- `public.place_auction_me_bid(p_session_id uuid, p_bid_amount bigint)`
+- `public.play_mai_track(p_track_id uuid, p_user_id uuid)`
+- `public.post_jail_bond(p_jail_id uuid, p_user_id uuid)`
+- `public.prevent_profile_privilege_escalation`
+- `public.process_gift_supporter_economy`
+- `public.protect_owner_admin_changes`
+- `public.protect_sensitive_columns`
+- `public.purchase_access(p_recipient_id uuid, p_access_type text, p_idempotency_key text)`
+- `public.purchase_mai_pay_plus_with_coins(p_user_id uuid)`
+- `public.purchase_troll_up(p_package_id uuid, p_user_id uuid, p_is_subscription boolean, p_subscription_interval text)`
+- `public.raid_property(p_attacker_id uuid, p_target_user_id uuid, p_target_house_id uuid)`
+- `public.reactivate_artist_staff_member(p_membership_id uuid)`
+- `public.reconcile_active_zip_officer_assignments`
+- `public.reconcile_zip_broadcast_officers(p_zip_code text)`
+- `public.record_anonymous_arrest(p_ip_address text, p_anon_display_name text, p_reason text, p_severity text, p_arrested_by uuid, p_duration_minutes integer)`
+- `public.record_city_progression_event`
+- `public.record_defendant_attendance(p_case_id uuid)`
+- `public.record_maielite_call(p_caller_id uuid, p_call_type text, p_status text)`
+- `public.record_maitroll_signal_event(p_event_type text, p_content_type text, p_content_id uuid, p_creator_id uuid, p_surface text, p_value numeric, p_metadata jsonb)`
+- `public.record_platform_fee(p_fee_type text, p_coins bigint, p_gross_coins bigint, p_fee_percent numeric, p_payer_user_id uuid, p_earner_user_id uuid, p_reference_table text, p_reference_id uuid, p_fee_label text, p_metadata jsonb, p_credit_admin boolean, p_idempotency_key text)`
+- `public.record_protection_order_violation(p_order_id uuid, p_violating_account uuid, p_violation_type text, p_metadata jsonb)`
+- `public.record_replay_view(p_creator_user_id uuid, p_stream_id uuid, p_viewer_user_id uuid, p_minutes_watched numeric)`
+- `public.record_school_pool_contribution(p_student_id uuid, p_institution_id uuid, p_amount integer, p_source text, p_reference_id text)`
+- `public.record_sla_metric_sample(p_stream_id uuid, p_sample_type text, p_value numeric, p_detail jsonb)`
+- `public.record_t_league_viewing_heartbeat(p_stream_id uuid)`
+- `public.record_treelz_view(p_post_id uuid, p_watch_seconds integer, p_completed boolean)`
+- `public.record_troll_family_activity(p_user_id uuid, p_event_type text, p_amount numeric, p_metadata jsonb)`
+- `public.redeem_tromocode(p_code text, p_product_type text, p_original_amount integer, p_user_id uuid, p_product_id uuid)`
+- `public.refer_to_broadcast_school(p_target_user_id uuid, p_reason text, p_stream_id uuid, p_cooldown_minutes integer)`
+- `public.refresh_mayor_eligibility(p_user_id uuid)`
+- `public.refresh_user_earnings_summary`
+- `public.register_maielite_phone`
+- `public.reject_report(p_report_id uuid)`
+- `public.remove_departed_random_battle_stage_seat`
+- `public.remove_stream_broadofficer(p_stream_id uuid, p_officer_id uuid)`
+- `public.remove_student_from_team(p_team_id uuid, p_student_id uuid)`
+- `public.report_pet_abuse(p_pet_id uuid)`
+- `public.require_moderation_access`
+- `public.reserve_first_cashout_match_slot(p_user_id uuid, p_payout_request_id uuid, p_qualifying_amount numeric)`
+- `public.reset_rtc_minute_totals`
+- `public.reset_user_permissions(p_target_user_id uuid)`
+- `public.respond_role_invite(p_invite_id uuid, p_status text)`
+- `public.respond_to_artist_staff_offer(p_membership_id uuid, p_accept boolean)`
+- `public.review_broadcast_school_attempt(p_attempt_id uuid, p_status text, p_review_notes text)`
+- `public.review_fast_pay_application(p_admin_notes text, p_application_id uuid, p_new_status text)`
+- `public.revoke_user_restriction(p_restriction_id uuid, p_reason text)`
+- `public.search_artist_staff_candidates(p_artist_id uuid, p_search text, p_limit integer)`
+- `public.search_maipiks_by_hashtag(p_tag text, p_limit integer)`
+- `public.search_protection_order_users(p_username text)`
+- `public.send_admin_bond_quote(p_request_id uuid, p_amount integer, p_message text)`
+- `public.send_attorney_quote(p_request_id uuid, p_amount integer, p_message text, p_attorney_id uuid)`
+- `public.send_challenge_gift(p_sender_id uuid, p_receiver_id uuid, p_gift_id uuid, p_discount_percent numeric)`
+- `public.send_featured_gift_with_reward(p_sender_id uuid, p_receiver_id uuid, p_stream_id uuid, p_gift_id text, p_quantity integer, p_metadata jsonb)`
+- `public.send_gift_in_stream(p_sender_id uuid, p_receiver_id uuid, p_stream_id uuid, p_gift_id text, p_quantity integer, p_metadata jsonb)`
+- `public.send_gift_in_stream(p_sender_id uuid, p_receiver_id uuid, p_stream_id uuid, p_gift_id uuid, p_quantity integer, p_txn_key text, p_metadata jsonb)`
+- `public.send_instructor_message(p_instructor_user_id uuid, p_message text)`
+- `public.send_mayor_promotional_coins(p_recipient_id uuid, p_amount bigint, p_reason text)`
+- `public.send_treelz_tip(p_from_user_id uuid, p_to_user_id uuid, p_post_id uuid, p_amount bigint)`
+- `public.set_active_case(p_case_id uuid, p_session_id uuid)`
+- `public.set_broadcaster_moderation_lock(p_broadcaster_id uuid, p_chat_disabled boolean, p_mic_muted boolean, p_reason text)`
+- `public.set_city_identity(p_street_name text, p_zip_code text, p_neighborhood_name text)`
+- `public.set_platform_ceo(p_user_id uuid, p_is_ceo boolean)`
+- `public.set_podcast_expiration`
+- `public.set_rtc_minute_total(p_minutes integer)`
+- `public.set_trocean_ready(p_match_id uuid, p_ready boolean)`
+- `public.set_tromocode_normalized_columns`
+- `public.set_user_restriction(p_target_user_id uuid, p_restriction_type text, p_reason text, p_duration_minutes integer, p_source_report_id uuid, p_source_page text, p_details jsonb)`
+- `public.set_user_role(new_role text, reason text, target_user uuid)`
+- `public.set_user_role(target_user uuid, new_role text, reason text, acting_admin_id uuid)`
+- `public.set_wall_post_facebook_featured(p_post_id uuid, p_featured boolean)`
+- `public.shop_buy_call_minutes(p_user_id uuid, p_package_id text, p_minutes integer, p_cost integer, p_type text, p_metadata jsonb)`
+- `public.sign_instructor_privacy_agreement(p_institution_id uuid, p_agreement_version text)`
+- `public.sign_ticket(p_ticket_id uuid)`
+- `public.start_auction_me(p_stream_id uuid, p_broadcaster_id uuid, p_title_type text, p_starting_bid bigint)`
+- `public.start_broadcast_with_capacity_check(p_stream_id uuid)`
+- `public.start_court_session(p_case_id uuid, p_room_name text, p_max_boxes integer)`
+- `public.start_town_meeting(p_title text, p_topic text, p_agenda text, p_meeting_type text, p_scheduled_duration_minutes integer, p_seat_roles jsonb, p_proposal_id uuid)`
+- `public.start_trocean_match(p_match_id uuid)`
+- `public.submit_beta_feedback(p_affected_feature text, p_affected_route text, p_app_version text, p_browser_name text, p_category text, p_description text, p_device_type text, p_is_pwa boolean, p_screenshot_url text, p_severity text, p_title text, p_user_agent text, p_viewport_height integer, p_viewport_width integer)`
+- `public.submit_broadcast_school_assessment(p_user_id uuid, p_answers jsonb, p_time_spent_seconds integer)`
+- `public.submit_funding_application(p_application_id uuid)`
+- `public.submit_maipiks_report(p_story_item_id uuid, p_category text, p_description text, p_evidence_path text)`
+- `public.submit_mayor_frontend_request(p_change_type text, p_change_payload jsonb, p_mayor_term_id uuid)`
+- `public.submit_report(p_target_user_id uuid, p_stream_id uuid, p_reason text, p_description text)`
+- `public.submit_trocean_attack(p_match_id uuid, p_target_tile text, p_request_id uuid)`
+- `public.suspend_artist_staff_member(p_membership_id uuid, p_reason text)`
+- `public.sync_league_on_xp_change`
+- `public.sync_treelz_post_likes_count`
+- `public.sync_troll_wall_replies_count`
+- `public.sync_user_warrant_flag(p_user_id uuid)`
+- `public.sync_user_warrant_flag_trigger`
+- `public.t_league_capture_battle`
+- `public.t_league_capture_chat_message`
+- `public.t_league_capture_creator_follow`
+- `public.t_league_capture_maipiks_post`
+- `public.t_league_capture_moderation_action`
+- `public.t_league_capture_story_publish`
+- `public.t_league_capture_story_view`
+- `public.t_league_capture_stream_end`
+- `public.t_league_capture_wall_engagement`
+- `public.t_league_capture_wall_post`
+- `public.t_league_claim_referral_attribution(p_referred_user_id uuid, p_visitor_token uuid)`
+- `public.t_league_process_referral_viewing(p_viewer_id uuid, p_added_minutes numeric)`
+- `public.t_league_record_mission_event(p_user_id uuid, p_event_type text, p_event_value numeric, p_source_table text, p_source_id text)`
+- `public.t_league_record_referral_click(p_referral_code text, p_visitor_token uuid)`
+- `public.t_league_refresh_user(p_user_id uuid)`
+- `public.t_league_roles_for_user(p_user_id uuid)`
+- `public.take_action(p_report_id uuid, p_action_type text, p_target_user_id uuid, p_stream_id uuid, p_reason text, p_action_details text, p_expires_at timestamp with time zone, p_ban_duration_hours integer, p_honesty_message_shown boolean)`
+- `public.terminate_artist_staff_member(p_membership_id uuid, p_reason text)`
+- `public.tip_epaper_story(p_story_id uuid, p_tipper_id uuid, p_amount bigint, p_coin_type text, p_message text)`
+- `public.tip_maipiks_story(p_story_id uuid, p_amount bigint, p_story_item_id uuid, p_message text)`
+- `public.toggle_wall_post_like(p_post_id uuid, p_user_id uuid)`
+- `public.toggle_wall_post_pin(p_post_id uuid, p_user_id uuid)`
+- `public.track_anonymous_viewer(p_anon_display_name text, p_ip_address text, p_stream_id text, p_user_agent text)`
+- `public.trigger_auto_release_jails`
+- `public.trigger_contribute_to_mai_bag`
+- `public.trigger_create_mai_bag_on_stream_start`
+- `public.trigger_notify_admin_arrest`
+- `public.trigger_notify_admin_broadcast_started`
+- `public.trigger_notify_admin_coin_purchase`
+- `public.trigger_notify_admin_court_case`
+- `public.trigger_notify_admin_report`
+- `public.trigger_notify_admin_signup`
+- `public.trigger_notify_admin_stream_kick`
+- `public.trocean_advance_turn(p_match_id uuid, p_current_player uuid)`
+- `public.troll_bank_credit_coins(p_user_id uuid, p_coins bigint, p_bucket text, p_source text, p_ref_id text, p_metadata jsonb)`
+- `public.troll_bank_deny_cashout(p_request_id uuid, p_admin_id uuid, p_reason text)`
+- `public.troll_bank_finalize_cashout(p_request_id uuid, p_admin_id uuid)`
+- `public.troll_wall_users_block_each_other(p_post_user_id uuid)`
+- `public.try_pay_coins_secure(p_amount bigint, p_reason text, p_metadata jsonb)`
+- `public.try_pay_with_credit_card(p_amount numeric, p_context text, p_metadata jsonb, p_user_id uuid)`
+- `public.undo_gift_transaction(p_stream_gift_id text, p_requester_id uuid)`
+- `public.unfollow_instructor(p_instructor_user_id uuid)`
+- `public.unfollow_student(p_following_student_id uuid)`
+- `public.unpin_product_from_broadcast(p_stream_id uuid, p_product_id uuid)`
+- `public.update_artist_staff_member(p_membership_id uuid, p_position text, p_pay_type text, p_pay_amount bigint, p_pay_frequency text, p_permissions jsonb, p_notes text)`
+- `public.update_battle_crowns_and_streak(p_winner_id uuid, p_loser_id uuid)`
+- `public.update_court_docket_status(p_docket_id uuid, p_status text)`
+- `public.update_institution_privacy_settings(p_institution_id uuid, p_ferpa_mode_enabled boolean, p_restricted_mode boolean, p_require_parental_consent boolean, p_minor_age_threshold integer, p_allow_student_opt_out boolean, p_audit_data_access boolean, p_require_annual_privacy_agreement boolean, p_privacy_agreement_version text, p_compliance_notes text)`
+- `public.update_league_on_gift_insert`
+- `public.update_lesson_progress(p_lesson_id uuid, p_status text, p_progress numeric)`
+- `public.update_mission_progress(p_metric text, p_stream_id uuid, p_user_id uuid, p_value integer)`
+- `public.update_school_incident(p_incident_id uuid, p_status text, p_resolution_notes text)`
+- `public.update_stream_sla_on_start`
+- `public.update_stream_viewer_count(p_stream_id uuid, p_count integer)`
+- `public.update_subscription_sla_on_create`
+- `public.upsert_school_rule(p_institution_id uuid, p_rule_code text, p_title text, p_description text, p_category text, p_enforcement text, p_is_active boolean)`
+- `public.use_daily_free_spin(p_user_id uuid)`
+- `public.user_credit_enforce_monthly_positive_cap`
+- `public.user_is_staff_or_approved(p_user_id uuid)`
+- `public.user_needs_public_fee(user_id uuid)`
+- `public.validate_broadcast_password(p_stream_id uuid, p_password text)`
+- `public.validate_funding_availability(p_program_id uuid, p_amount numeric)`
+- `public.validate_tromocode(p_code text, p_product_type text, p_original_amount integer, p_user_id uuid)`
+- `public.weekly_award_point(p_action text, p_base_points integer)`
+- `public.weekly_get_current_week`
+- `public.weekly_get_leaderboard(p_week_id text, p_limit integer)`
+- `public.weekly_get_user_summary(p_week_id text)`
+- `public.weekly_get_week_dates(p_week_id text)`
+- `public.weekly_gift_insert_trigger`
+- `public.weekly_process_friday(p_week_id text)`
+- `public.weekly_record_gift(p_user_id uuid)`
+- `public.weekly_refresh_user_total(p_week_id text, p_user_id uuid)`
+
+### SECURITY DEFINER functions executable by authenticated (678)
+
+Complete Advisor row inventory:
+
+- `public._tc_is_staff(p_user_id uuid)`
+- `public.accept_admin_bond_quote(p_request_id uuid, p_user_id uuid)`
+- `public.accept_attorney_quote(p_request_id uuid, p_payer_id uuid)`
+- `public.accept_attorney_request(p_request_id uuid, p_attorney_id uuid)`
+- `public.activate_basic_ghost_mode`
+- `public.activate_due_random_battles`
+- `public.activate_mayor(p_user_id uuid)`
+- `public.activate_random_battle(p_battle_id uuid)`
+- `public.activate_temporary_review_account(p_user_id uuid, p_marker text)`
+- `public.add_free_coins(p_user_id uuid, p_amount bigint)`
+- `public.add_rtc_minutes(p_minutes integer)`
+- `public.add_student_to_team(p_team_id uuid, p_student_id uuid)`
+- `public.add_troll_coins(p_amount bigint, p_user_id uuid)`
+- `public.add_wishlist_item(p_wishlist_id uuid, p_title text, p_description text, p_target_amount bigint)`
+- `public.adjust_balance(p_user_id uuid, p_currency text, p_amount bigint, p_event text)`
+- `public.admin_get_fee_pool_entries(p_fee_type text, p_limit integer, p_offset integer)`
+- `public.admin_get_fee_pool_summary(p_from timestamp with time zone, p_to timestamp with time zone)`
+- `public.admin_list_first_cashout_match_claims(p_status text, p_review_status text, p_limit integer)`
+- `public.admin_review_first_cashout_match_claim(p_claim_id uuid, p_action text, p_reason text)`
+- `public.admin_set_subscription_maipiks_discount(p_tier_id uuid, p_discount_percent integer)`
+- `public.admin_update_any_profile_field(p_user_id uuid, p_updates jsonb, p_admin_id uuid, p_reason text)`
+- `public.admin_upsert_first_cashout_match_promotion(p_enabled boolean, p_max_winners integer, p_max_match_amount numeric, p_minimum_cashout numeric, p_starts_at timestamp with time zone, p_ends_at timestamp with time zone, p_description text, p_terms text, p_match_type text, p_match_percentage integer, p_eligible_coin_sources text[])`
+- `public.adopt_troll_pet(p_pet_type text, p_name text, p_agreement_version text)`
+- `public.aggregate_stream_analytics`
+- `public.allocate_funding(p_application_id uuid, p_amount numeric, p_reason text)`
+- `public.apply_for_credit_card`
+- `public.apply_moderation_offense(p_user_id uuid, p_offense_type text, p_category text, p_severity text, p_rule_id text, p_source text, p_message_hash text, p_metadata jsonb)`
+- `public.apply_pet_health_promo(p_user_id uuid, p_promo_code text, p_duration_hours integer)`
+- `public.apply_troll_coin_penalty(p_broadcast_id uuid, p_coin_amount integer, p_moderator_id uuid, p_target_user_id uuid, p_violation_category text, p_violation_reason text)`
+- `public.approve_instructor_application(p_application_id uuid, p_decision text, p_notes text)`
+- `public.auto_arrest_new_account_on_ip(p_user_id uuid, p_ip_address text)`
+- `public.auto_follow_admin_on_signup`
+- `public.auto_release_expired_jails`
+- `public.automated_audience_set_settings(p_admin_user_id uuid, p_enabled boolean, p_chat_min_interval_seconds integer, p_chat_max_interval_seconds integer, p_gift_cooldown_seconds integer)`
+- `public.automated_audience_stop_on_broadcast_end`
+- `public.award_battle_crown(p_winner_stream_id uuid, p_loser_stream_id uuid)`
+- `public.award_battle_crowns(p_user_id uuid, p_amount integer)`
+- `public.award_challenge_crowns(p_battle_id uuid, p_winner_team text)`
+- `public.award_friday_battle_gifter_bonus(p_gifter_id uuid, p_battle_id uuid, p_gift_total_coins bigint)`
+- `public.back_wishlist_item(p_user_id uuid, p_item_id uuid, p_amount bigint, p_gift_txn_id text, p_stream_gift_id bigint)`
+- `public.block_temporary_review_storage_mutations`
+- `public.buy_ghost_mode_supreme`
+- `public.buy_mai_supreme`
+- `public.calculate_friday_battle_gifter_bonus(p_gifter_id uuid, p_battle_id uuid, p_gift_total_coins bigint)`
+- `public.can_access_founder_hub(p_user_id uuid)`
+- `public.can_access_rtc_admin_monitor(p_user_id uuid)`
+- `public.can_cashout(p_user_id uuid)`
+- `public.can_founder_arrest(p_user_id uuid)`
+- `public.can_founder_release(p_user_id uuid)`
+- `public.can_founder_schedule_broadcast(p_user_id uuid)`
+- `public.can_founder_summon(p_user_id uuid)`
+- `public.can_founder_use_chat(p_user_id uuid)`
+- `public.can_founder_view_reports(p_user_id uuid)`
+- `public.can_manage_founders(p_user_id uuid)`
+- `public.can_manage_stream(p_stream_id uuid)`
+- `public.can_moderate_stream(p_stream_id uuid, p_user_id uuid)`
+- `public.can_review_maipiks_reports(p_user_id uuid)`
+- `public.can_send_utromail(sender_id uuid, recipient_id uuid)`
+- `public.can_set_to_user(p_target_id uuid)`
+- `public.can_start_broadcast(p_user_id uuid)`
+- `public.can_start_broadcast_school_check(p_user_id uuid)`
+- `public.can_user_broadcast(p_user_id uuid)`
+- `public.can_user_record(p_user_id uuid)`
+- `public.can_view_coin_liability`
+- `public.cancel_auction_me(p_session_id uuid)`
+- `public.cancel_troll_up_subscription(p_subscription_id uuid, p_user_id uuid)`
+- `public.capture_protection_order_username_change`
+- `public.change_maielite_phone_number(p_phone_number text)`
+- `public.check_concurrent_login(p_user_id uuid, p_current_session_id uuid)`
+- `public.check_concurrent_session(p_current_session_id text, p_user_id text)`
+- `public.check_creator_weekly_eligibility(p_batch_id uuid)`
+- `public.check_creator_weekly_eligibility(p_batch_id uuid, p_user_id uuid)`
+- `public.check_daily_login`
+- `public.check_duplicate_account_on_ip(p_ip_address text, p_email text)`
+- `public.check_duplicate_account_on_ip(p_ip_address text, p_email text, p_role text)`
+- `public.check_influencer_eligibility(p_user_id uuid)`
+- `public.check_reward_budget(p_coins_to_grant bigint)`
+- `public.check_user_chat_restriction(p_user_id uuid, p_stream_id uuid)`
+- `public.check_username_safe(p_username text)`
+- `public.check_username_safe(p_username text, p_user_id uuid)`
+- `public.choose_trocean_location(p_match_id uuid, p_selected_tile text)`
+- `public.claim_sla_compensation(p_violation_id uuid)`
+- `public.cleanup_expired_user_purchases`
+- `public.clear_court_warrant(p_warrant_id uuid, p_reason text)`
+- `public.clear_expired_court_warrants`
+- `public.complete_mai_bag(p_broadcast_id uuid, p_mai_bag_id uuid)`
+- `public.configure_access_product(p_access_type text, p_enabled boolean, p_price_coins bigint)`
+- `public.configure_mai_bag_gifts(p_broadcast_id uuid, p_gift_ids uuid[])`
+- `public.consume_reward_budget(p_coins_granted bigint, p_source text)`
+- `public.contribute_to_mai_bag(p_broadcast_id uuid, p_stream_gift_id bigint, p_gift_value bigint)`
+- `public.court_restore_license(p_case_id uuid, p_judge_id uuid, p_target_user_id uuid)`
+- `public.create_artist_staff_offer(p_artist_id uuid, p_employee_user_id uuid, p_position text, p_pay_type text, p_pay_amount bigint, p_pay_frequency text, p_permissions jsonb, p_start_date timestamp with time zone, p_notes text)`
+- `public.create_broadcaster_wishlist(p_broadcaster_id uuid, p_title text, p_description text, p_target_amount bigint)`
+- `public.create_contract_notary_document(p_contract_id uuid, p_contract_number text, p_artist_id text, p_artist_stage_name text, p_tier text, p_artist_split_bps integer, p_label_split_bps integer, p_effective_at timestamp with time zone, p_probation_ends_at timestamp with time zone, p_expires_at timestamp with time zone, p_terms_version text, p_content text, p_created_by uuid)`
+- `public.create_contract_notary_document(p_contract_id uuid, p_contract_number text, p_artist_id uuid, p_artist_stage_name text, p_tier text, p_artist_split_bps integer, p_label_split_bps integer, p_effective_at timestamp with time zone, p_probation_ends_at timestamp with time zone, p_expires_at timestamp with time zone, p_terms_version text, p_content text, p_created_by uuid)`
+- `public.create_court_case(p_case_type text, p_court_session_id uuid, p_defendant_id uuid, p_plaintiff_id uuid)`
+- `public.create_court_case(p_defendant_id uuid, p_plaintiff_id uuid, p_reason text)`
+- `public.create_global_event(p_title text, p_type text, p_icon text, p_priority integer, p_metadata jsonb, p_dedupe_key text, p_source_event_id text, p_status text, p_route text, p_source text, p_expires_at timestamp with time zone)`
+- `public.create_merch_order(p_product_ids uuid[], p_shipping_address jsonb)`
+- `public.create_next_battle_round(p_broadcaster_id uuid, p_stream_id uuid)`
+- `public.create_notification(p_message text, p_metadata jsonb, p_title text, p_type text, p_user_id uuid)`
+- `public.create_notification(p_user_id uuid, p_type text, p_title text, p_message text, p_metadata jsonb)`
+- `public.create_or_verify_instructor_profile(p_user_id uuid, p_institution_id uuid, p_department text)`
+- `public.create_or_verify_student_profile(p_user_id uuid, p_institution_id uuid, p_program_field text)`
+- `public.create_president_election`
+- `public.create_record_label_artist_after_approval`
+- `public.create_role_invite(p_inviter_id uuid, p_invitee_id uuid, p_role text)`
+- `public.create_student_team(p_team_name text, p_description text)`
+- `public.create_subscription(p_broadcaster_id uuid, p_tier_id uuid, p_auto_renew boolean)`
+- `public.create_system_league_event`
+- `public.create_trocean_lobby(p_name text, p_visibility text)`
+- `public.create_troll_up_subscription(p_package_id uuid, p_user_id uuid)`
+- `public.create_tromocode(p_code text, p_description text, p_promotion_type text, p_promotion_value numeric, p_applies_to text, p_max_uses integer, p_starts_at timestamp with time zone, p_expires_at timestamp with time zone, p_is_active boolean, p_created_by uuid)`
+- `public.create_user_credit_on_signup`
+- `public.create_weekly_treasury_payout_run`
+- `public.credit_activity_heartbeat(p_stream_id text, p_activity_role text)`
+- `public.credit_events_cap_monthly_positive`
+- `public.credit_events_set_score_award_context`
+- `public.credit_score_disable_loan_repayment_rewards`
+- `public.credit_score_disable_repayment_rewards`
+- `public.credit_score_guard_profile_update`
+- `public.credit_score_on_loan_created`
+- `public.credit_score_on_stream_gift`
+- `public.credit_score_sync_profile`
+- `public.current_user_is_platform_staff`
+- `public.deactivate_ghost_mode`
+- `public.decide_protection_order(p_order_id uuid, p_grant boolean)`
+- `public.decline_attorney_request(p_request_id uuid, p_attorney_id uuid)`
+- `public.deduct_call_minutes(p_user_id uuid, p_minutes integer, p_type text)`
+- `public.deduct_user_paid_coins(p_user_id uuid, p_amount bigint, p_coin_type text)`
+- `public.delete_school_rule(p_rule_id uuid)`
+- `public.deny_admin_bond_quote(p_request_id uuid, p_user_id uuid)`
+- `public.deny_attorney_quote(p_request_id uuid, p_payer_id uuid)`
+- `public.dispatch_notification_push`
+- `public.distribute_battle_winnings(p_battle_id uuid)`
+- `public.draw_credit_internal(p_user_id uuid, p_amount bigint, p_description text, p_context text, p_metadata jsonb)`
+- `public.end_auction_me(p_session_id uuid)`
+- `public.end_battle_with_rewards(p_battle_id uuid, p_winner_stream_id uuid)`
+- `public.end_court_session(p_session_id uuid)`
+- `public.end_expired_podcasts`
+- `public.end_stream(p_stream_id uuid)`
+- `public.end_town_meeting(p_meeting_id uuid)`
+- `public.enforce_temporary_review_request`
+- `public.ensure_league_system_ready`
+- `public.ensure_user_credit_account`
+- `public.epaper_get_universe_events`
+- `public.epaper_get_universe_events(p_limit integer)`
+- `public.evaluate_ban_evasion(p_user_id uuid)`
+- `public.evaluate_user_discipline(p_user_id uuid)`
+- `public.expire_mayor_terms`
+- `public.extend_court_date(p_case_id uuid, p_new_date date)`
+- `public.file_protection_order(p_respondent_ids uuid[], p_idempotency_key uuid, p_expedited boolean)`
+- `public.file_school_incident(p_institution_id uuid, p_target_student_id uuid, p_stream_id uuid, p_incident_type text, p_severity text, p_description text, p_rule_violated text)`
+- `public.finalize_stream_sla_on_end`
+- `public.find_random_battle_match(p_stream_id uuid, p_broadcaster_id uuid)`
+- `public.find_utromail_thread(user_a uuid, user_b uuid)`
+- `public.finish_random_battle(p_battle_id uuid, p_end_reason text)`
+- `public.follow_instructor(p_instructor_user_id uuid)`
+- `public.follow_student(p_following_student_id uuid)`
+- `public.founder_admin_add(p_user_id uuid, p_duration_months integer, p_gift_multiplier numeric, p_cashout_multiplier numeric, p_start_at timestamp with time zone, p_end_at timestamp with time zone, p_notes text, p_reason text)`
+- `public.founder_admin_get_settings`
+- `public.founder_admin_list(p_status text)`
+- `public.founder_admin_list_actions(p_founder_user_id uuid, p_action_type text, p_target_user_id uuid, p_from timestamp with time zone, p_to timestamp with time zone, p_limit integer)`
+- `public.founder_admin_remove(p_founder_id uuid, p_reason text)`
+- `public.founder_admin_search_users(p_query text, p_limit integer, p_exclude_founders boolean)`
+- `public.founder_admin_update(p_founder_id uuid, p_gift_multiplier numeric, p_cashout_multiplier numeric, p_end_at timestamp with time zone, p_status text, p_notes text, p_reason text)`
+- `public.founder_admin_update_settings(p_program_enabled boolean, p_capacity integer, p_default_duration_months integer, p_default_gift_multiplier numeric, p_default_cashout_multiplier numeric, p_allowed_multipliers numeric[], p_max_multiplier numeric, p_allow_manual_expiration boolean, p_notes text, p_reason text)`
+- `public.founder_apply_cashout_bonus(p_payout_request_id uuid)`
+- `public.founder_apply_gift_bonus(p_stream_gift_id bigint)`
+- `public.founder_arrest_user(p_target_user_id uuid, p_reason text, p_report_id uuid, p_severity text, p_notes text)`
+- `public.founder_cancel_scheduled_broadcast(p_id uuid, p_reason text)`
+- `public.founder_effective_status(p_user_id uuid)`
+- `public.founder_get_my_invite_code`
+- `public.founder_hub_access`
+- `public.founder_is_active(p_user_id uuid)`
+- `public.founder_list_gift_rewards(p_founder_user_id uuid, p_limit integer)`
+- `public.founder_list_messages(p_limit integer, p_before timestamp with time zone)`
+- `public.founder_list_my_referrals(p_limit integer)`
+- `public.founder_list_my_scheduled_broadcasts`
+- `public.founder_list_program_schedule`
+- `public.founder_list_reports(p_status text, p_limit integer)`
+- `public.founder_log_action(p_founder_id uuid, p_action_type text, p_target_user_id uuid, p_reason text, p_report_id uuid, p_case_id uuid, p_scheduled_broadcast_id uuid, p_notes text, p_details jsonb)`
+- `public.founder_log_report_view(p_report_id uuid)`
+- `public.founder_mark_messages_read`
+- `public.founder_mark_referral_paid(p_referral_id uuid)`
+- `public.founder_my_actions(p_limit integer)`
+- `public.founder_my_status`
+- `public.founder_notify(p_user_id uuid, p_type text, p_title text, p_message text, p_metadata jsonb)`
+- `public.founder_public_directory`
+- `public.founder_redeem_invite_code(p_code text, p_invited_user_id uuid)`
+- `public.founder_referral_stats`
+- `public.founder_release_user(p_jail_id uuid, p_reason text, p_notes text)`
+- `public.founder_request_cashout(p_coins_to_redeem bigint, p_provider_type text, p_provider_username text, p_user_tag text, p_id_verification_url text)`
+- `public.founder_schedule_broadcast(p_title text, p_description text, p_scheduled_for timestamp with time zone, p_duration_minutes integer, p_category text)`
+- `public.founder_send_message(p_body text)`
+- `public.founder_summon_to_court(p_target_user_id uuid, p_reason text, p_court_date date, p_court_time time without time zone, p_report_id uuid, p_case_type text, p_notes text)`
+- `public.founder_sync_expirations`
+- `public.founder_sync_public_status`
+- `public.founder_trg_stream_gift_bonus`
+- `public.founder_trg_stream_gift_reversal`
+- `public.founder_unread_count`
+- `public.founder_upcoming_broadcast(p_user_id uuid)`
+- `public.founder_update_scheduled_broadcast(p_id uuid, p_title text, p_description text, p_scheduled_for timestamp with time zone, p_duration_minutes integer, p_category text, p_reason text)`
+- `public.founder_user_is_admin(p_user_id uuid)`
+- `public.founder_verify_referral(p_referral_id uuid)`
+- `public.get_active_city_laws`
+- `public.get_active_court_case(p_session_id uuid)`
+- `public.get_active_event`
+- `public.get_active_event_signup_count`
+- `public.get_active_giveaways`
+- `public.get_active_streams_paged(p_limit integer, p_offset integer)`
+- `public.get_active_trollmers_tournament`
+- `public.get_admin_dashboard_metrics_v1`
+- `public.get_admin_finance_summary_live`
+- `public.get_admin_requests`
+- `public.get_admin_tromocode_redemptions(p_tromocode_id uuid)`
+- `public.get_admin_tromocode_stats`
+- `public.get_all_creator_applications`
+- `public.get_all_docket_entries`
+- `public.get_artist_staff(p_artist_id uuid)`
+- `public.get_artist_staff_dashboard(p_artist_id uuid)`
+- `public.get_artist_staff_payments(p_artist_id uuid)`
+- `public.get_auction_me_state(p_stream_id uuid)`
+- `public.get_authoritative_troll_time(p_battle_id uuid)`
+- `public.get_available_attorney_requests(p_attorney_id uuid)`
+- `public.get_bank_reserves`
+- `public.get_battle_and_event_earnings`
+- `public.get_battle_pot_state(p_broadcaster_id uuid)`
+- `public.get_beta_feedback_stats`
+- `public.get_broadcast_school_status(p_user_id uuid)`
+- `public.get_broadcaster_mai_bag_summary(p_broadcaster_id uuid)`
+- `public.get_broadcaster_sla_summary(p_broadcaster_id uuid)`
+- `public.get_broadcaster_sla_violations(p_broadcaster_id uuid)`
+- `public.get_broadcaster_wishlist_data(p_broadcaster_id uuid)`
+- `public.get_buckets_summary_for_user`
+- `public.get_call_balances(p_user_id uuid)`
+- `public.get_coin_liability_alerts(p_page integer, p_page_size integer, p_status text, p_alert_type text)`
+- `public.get_coin_liability_summary(p_period_start timestamp with time zone, p_period_end timestamp with time zone)`
+- `public.get_court_calendar(p_from_date date)`
+- `public.get_credit_report(p_user_id uuid)`
+- `public.get_current_court_session`
+- `public.get_current_payout_batch`
+- `public.get_current_trollmin`
+- `public.get_daily_free_spins(p_user_id uuid)`
+- `public.get_data_access_audit_log(p_institution_id uuid, p_limit integer, p_offset integer)`
+- `public.get_delinquent_loan_users`
+- `public.get_earnings_overview`
+- `public.get_effective_privileges`
+- `public.get_epaper_stories(p_limit integer, p_offset integer, p_status text)`
+- `public.get_epaper_story(p_slug text)`
+- `public.get_family_home_data(p_user_id uuid)`
+- `public.get_fan_crown_status(p_user_id uuid)`
+- `public.get_first_cashout_match_promotion`
+- `public.get_founder(p_user_id uuid)`
+- `public.get_gift_leaderboard(p_direction text, p_limit integer, p_window text)`
+- `public.get_gifter_leaderboard(p_type text, p_limit integer)`
+- `public.get_hourly_activity`
+- `public.get_institution_privacy_settings(p_institution_id uuid)`
+- `public.get_instructor_followers_count(p_instructor_user_id uuid)`
+- `public.get_instructor_messages(p_instructor_user_id uuid)`
+- `public.get_instructor_privacy_agreement_status(p_institution_id uuid)`
+- `public.get_mai_bag_gift_configuration(p_broadcast_id uuid)`
+- `public.get_mai_bag_state(p_broadcast_id uuid)`
+- `public.get_maielite_phone_directory`
+- `public.get_market_stats`
+- `public.get_my_artist_staff_jobs`
+- `public.get_my_coin_pack_discount_percent`
+- `public.get_my_troll_up_campaigns(p_user_id uuid)`
+- `public.get_my_troll_up_purchases(p_user_id uuid)`
+- `public.get_my_troll_up_subscriptions(p_user_id uuid)`
+- `public.get_officer_payroll_stats`
+- `public.get_or_create_mai_bag(p_broadcast_id uuid, p_broadcaster_id uuid)`
+- `public.get_or_create_next_docket(p_from_date date)`
+- `public.get_or_create_wheel_session`
+- `public.get_pending_payouts_for_review`
+- `public.get_pending_payouts_summary`
+- `public.get_pending_role_invites(p_user_id uuid)`
+- `public.get_pending_tickets`
+- `public.get_platform_admin_user_id`
+- `public.get_platform_subscription_stats`
+- `public.get_portfolio_summary(p_user_id uuid)`
+- `public.get_portfolio_value(p_user_id uuid)`
+- `public.get_profile_statistics(p_user_id uuid)`
+- `public.get_public_docket_board`
+- `public.get_recent_platform_donations`
+- `public.get_royal_family_status`
+- `public.get_rtc_minute_total`
+- `public.get_school_pool_total(p_institution_id uuid)`
+- `public.get_site_usage_analytics(p_since timestamp with time zone)`
+- `public.get_staff_ghost_profile(p_target_user_id uuid)`
+- `public.get_staff_ghost_profiles(p_target_user_ids uuid[])`
+- `public.get_staff_user_ids`
+- `public.get_stream_seats(p_stream_id uuid)`
+- `public.get_stream_sla_status(p_stream_id uuid)`
+- `public.get_student_followers_count(p_student_id uuid)`
+- `public.get_student_following_count(p_student_id uuid)`
+- `public.get_student_pool_contribution(p_student_id uuid, p_institution_id uuid)`
+- `public.get_subscription_sla_status(p_subscription_id uuid)`
+- `public.get_system_settings`
+- `public.get_t_league_state`
+- `public.get_tm_matches(p_user_id uuid, p_dating boolean, p_limit integer)`
+- `public.get_trocean_games_dashboard`
+- `public.get_trocean_private_player_state(p_match_id uuid)`
+- `public.get_trocean_public_state(p_match_id uuid)`
+- `public.get_troll_up_packages`
+- `public.get_trollmers_week_start(p_user_id uuid)`
+- `public.get_trollmin_queue`
+- `public.get_trollmin_stats(p_user_id uuid)`
+- `public.get_tromail_admin(p_user_id uuid)`
+- `public.get_tromail_important(p_user_id uuid)`
+- `public.get_tromail_inbox(p_user_id uuid)`
+- `public.get_tromail_sent(p_user_id uuid)`
+- `public.get_unread_notification_count(p_user_id uuid)`
+- `public.get_user_active_roles(p_user_id uuid)`
+- `public.get_user_active_subscription(p_creator_id uuid, p_subscriber_id uuid)`
+- `public.get_user_active_warrant(p_user_id uuid)`
+- `public.get_user_cashout_eligibility(p_user_id uuid)`
+- `public.get_user_coin_liabilities(p_page integer, p_page_size integer, p_search text, p_sort_by text, p_sort_dir text)`
+- `public.get_user_coin_liability_page(p_page integer, p_page_size integer, p_search text, p_filter text, p_sort_by text, p_sort_dir text)`
+- `public.get_user_discipline_level(p_user_id uuid)`
+- `public.get_user_docket`
+- `public.get_user_monthly_coins_earned(p_user_id uuid, p_month date)`
+- `public.get_user_promo_cards`
+- `public.get_user_restrictions(p_user_id uuid)`
+- `public.get_user_rewards`
+- `public.get_user_state(p_user_id uuid)`
+- `public.get_user_storage_breakdown(p_user_id uuid)`
+- `public.get_user_storage_replay_status(p_user_id uuid)`
+- `public.get_user_subscription_sla_summary(p_user_id uuid)`
+- `public.get_user_tickets(p_user_id uuid)`
+- `public.get_user_vehicle_assets`
+- `public.get_vehicle_catalog`
+- `public.get_viewed_me_users(p_user_id uuid, p_limit integer)`
+- `public.get_viewer_mod_context(p_stream_id uuid)`
+- `public.get_weekly_cashback_status(p_user_id uuid)`
+- `public.get_weekly_family_task_counts`
+- `public.get_weekly_family_task_counts(p_family_id uuid, p_week_start date)`
+- `public.gift_post(p_amount integer, p_message text, p_post_id uuid)`
+- `public.grant_battle_starter_coins`
+- `public.grant_daily_blockers(p_user_id uuid)`
+- `public.grant_xp(p_user_id uuid, p_amount bigint, p_source text, p_source_id text, p_metadata jsonb)`
+- `public.grant_xp(p_user_id uuid, p_amount integer, p_source_type text, p_source_id uuid, p_metadata jsonb)`
+- `public.grant_xp_legacy(p_amount integer, p_source text, p_source_id text, p_user_id uuid)`
+- `public.guard_shared_user_restriction`
+- `public.handle_application_approval`
+- `public.handle_new_user`
+- `public.handle_new_user_profile`
+- `public.handle_new_user_troll_coins`
+- `public.handle_user_signup`
+- `public.handle_zip_city_identity_officer_assignment`
+- `public.handle_zip_stream_officer_assignment`
+- `public.has_active_mai_supreme_entitlement`
+- `public.has_open_verification_ticket(user_id uuid)`
+- `public.increment_ad_clicks(ad_id uuid, count bigint)`
+- `public.increment_ad_impressions(ad_id uuid, count bigint)`
+- `public.increment_epaper_views(p_story_id uuid)`
+- `public.increment_stream_likes(p_stream_id uuid, p_like_count integer)`
+- `public.increment_treelz_comments(p_post_id uuid)`
+- `public.increment_treelz_saves(p_post_id uuid)`
+- `public.increment_treelz_shares(p_post_id uuid)`
+- `public.instructor_has_signed_privacy_agreement(p_institution_id uuid)`
+- `public.interact_with_troll_pet(p_pet_id uuid, p_interaction_type text)`
+- `public.invite_followers_to_broadcast(p_inviter_id uuid, p_stream_id uuid)`
+- `public.is_active_founder(p_user_id uuid)`
+- `public.is_admin(p_user_id uuid)`
+- `public.is_admin_user(p_user_id uuid)`
+- `public.is_anon_arrested(p_ip_address text)`
+- `public.is_beta_feedback_moderator`
+- `public.is_beta_feedback_moderator(p_user_id uuid)`
+- `public.is_bug_center_admin(p_user_id uuid)`
+- `public.is_bug_center_staff(p_user_id uuid)`
+- `public.is_family_leader_secure(p_family_id uuid, p_user_id uuid)`
+- `public.is_family_member_secure(p_family_id uuid, p_user_id uuid)`
+- `public.is_following_instructor(p_instructor_user_id uuid)`
+- `public.is_ghost_mode_staff`
+- `public.is_id_verification_admin`
+- `public.is_ip_banned(p_ip_address text)`
+- `public.is_ip_blocked(p_ip_address text)`
+- `public.is_maitroll_moderation_staff`
+- `public.is_modo_role(p_user_id uuid)`
+- `public.is_modo_role_in(p_user_id uuid, p_roles text[])`
+- `public.is_platform_admin`
+- `public.is_platform_admin(p_user_id uuid)`
+- `public.is_podcast_expired(p_podcast_id uuid)`
+- `public.is_protection_order_active(p_requesting_user uuid, p_target_user uuid)`
+- `public.is_record_label_admin`
+- `public.is_stream_owner_or_admin(p_stream_id uuid, p_user_id uuid)`
+- `public.is_tromocode_admin_user`
+- `public.is_user_chat_disabled`
+- `public.is_user_chat_disabled(p_user_id uuid)`
+- `public.is_user_jailed(p_user_id uuid)`
+- `public.issue_court_sentence(p_case_id uuid, p_sentences jsonb, p_fine_amount integer)`
+- `public.issue_court_warrant(p_case_id uuid, p_reason text, p_bond_amount integer)`
+- `public.issue_first_cashout_match(p_claim_id uuid, p_admin_id uuid)`
+- `public.issue_free_car_insurance(p_user_id uuid, p_vehicle_id uuid)`
+- `public.issue_ticket(p_target_user_id uuid, p_amount numeric, p_notes text)`
+- `public.issue_warrant(p_target_id uuid, p_reason text, p_notes text)`
+- `public.join_court_session(p_court_session_id uuid, p_role text)`
+- `public.join_guest_seat_atomic(p_stream_id uuid, p_seat_index integer, p_guest_token uuid, p_price integer)`
+- `public.join_seat_atomic(p_stream_id uuid, p_seat_index integer, p_price integer, p_user_id uuid, p_guest_id text)`
+- `public.join_stream_as_viewer(p_stream_id uuid, p_user_id uuid, p_guest_id text)`
+- `public.join_town_meeting_seat(p_meeting_id uuid, p_seat_number integer, p_display_role text, p_participant_identity text)`
+- `public.join_trocean_team(p_match_id uuid, p_team public.trocean_team, p_team_slot integer)`
+- `public.judge_pardon_user(p_user_id uuid)`
+- `public.leave_seat_atomic(p_session_id uuid)`
+- `public.leave_stream_as_viewer(p_stream_id uuid, p_user_id uuid, p_guest_id text)`
+- `public.list_reports(p_status_filter text)`
+- `public.list_school_incidents(p_institution_id uuid, p_status_filter text, p_limit integer, p_offset integer)`
+- `public.list_school_rules(p_institution_id uuid, p_active_only boolean)`
+- `public.log_app_bug_report(payload jsonb)`
+- `public.log_data_access(p_viewed_user_id uuid, p_institution_id uuid, p_action text, p_description text, p_source text, p_ip_address text, p_user_agent text)`
+- `public.mai_business_log_activity`
+- `public.mai_city_claim_starter_map`
+- `public.mai_city_convert_coins_to_bricks(p_coins integer, p_idempotency_key text)`
+- `public.mai_city_get_state`
+- `public.mai_city_purchase_map(p_idempotency_key text)`
+- `public.mai_city_purchase_property(p_map_id uuid, p_plot_number integer, p_idempotency_key text)`
+- `public.mai_run_begin_match(p_lobby uuid)`
+- `public.mai_run_cancel_lobby(p_lobby uuid)`
+- `public.mai_run_create_lobby(p_difficulty text)`
+- `public.mai_run_finish(p_run uuid, p_score integer, p_levels integer, p_letters integer, p_collected integer)`
+- `public.mai_run_join_lobby(p_lobby uuid)`
+- `public.mai_run_leaderboard(p_limit integer)`
+- `public.mai_run_match_results(p_lobby uuid)`
+- `public.mai_run_start_solo(p_gender text, p_difficulty text)`
+- `public.mai_voice_can_moderate_room(p_room_kind text, p_room_id uuid, p_user_id uuid)`
+- `public.mai_voice_claim_next_item(p_room_kind text, p_room_id uuid, p_worker_id text, p_claim_status text)`
+- `public.mai_voice_expire_due`
+- `public.mai_voice_get_room_settings(p_room_kind text, p_room_id uuid)`
+- `public.mai_voice_prune_publishers`
+- `public.mai_voice_room_owner(p_room_kind text, p_room_id uuid)`
+- `public.maintain_pet_health_promos`
+- `public.maipiks_add_story_item(p_media_url text, p_media_type text, p_visibility text, p_storage_path text, p_thumbnail_url text, p_caption text, p_duration_ms integer)`
+- `public.maipiks_add_story_item(p_media_url text, p_media_type text, p_visibility text, p_storage_path text, p_thumbnail_url text, p_caption text, p_duration_ms integer, p_lifetime_hours integer)`
+- `public.maipiks_add_story_item(p_media_url text, p_media_type text, p_visibility text, p_storage_path text, p_thumbnail_url text, p_caption text, p_duration_ms integer, p_lifetime_hours integer, p_monetization_mode text, p_base_price_coins bigint, p_subscriber_discount_mode text, p_paid_access_duration text)`
+- `public.maipiks_delete_story(p_story_id uuid)`
+- `public.maipiks_delete_story_item(p_item_id uuid)`
+- `public.maipiks_enforce_user_restriction`
+- `public.maipiks_ensure_tip_ledger`
+- `public.maipiks_get_story_tip_total(p_story_id uuid)`
+- `public.maipiks_guard_restricted_interaction`
+- `public.maipiks_list_reports(p_status text)`
+- `public.maipiks_preserve_report_evidence`
+- `public.maipiks_purchase_story(p_story_id uuid)`
+- `public.maipiks_purge_expired_stories`
+- `public.maipiks_purge_own_expired_stories`
+- `public.maipiks_record_story_view(p_item_id uuid)`
+- `public.maipiks_require_story_access`
+- `public.maipiks_resolve_report(p_report_id uuid, p_decision text, p_reason text)`
+- `public.maipiks_server_now`
+- `public.maipiks_story_pricing(p_story_id uuid)`
+- `public.maipiks_validate_story_tip`
+- `public.maipiks_validate_story_view`
+- `public.manage_court_case_safe(p_defendant_id uuid, p_reason text, p_court_date date, p_case_type text)`
+- `public.manual_clock_in(p_officer_id uuid)`
+- `public.manual_clock_out(p_session_id uuid)`
+- `public.mark_all_notifications_read(p_user_id uuid)`
+- `public.mark_failure_to_appear(p_case_id uuid)`
+- `public.mark_stream_seat_live(p_livekit_participant_identity text, p_seat_index integer, p_stream_id uuid)`
+- `public.mkey_admin_adjust(p_user_id uuid, p_amount integer, p_transaction_type text, p_reason text)`
+- `public.mkey_boost_summary(p_boost_id uuid)`
+- `public.mkey_broadcast_stats(p_broadcast_id text)`
+- `public.mkey_claim_on_join(p_broadcast_id text)`
+- `public.mkey_eligible_recipient_count(p_broadcast_id text)`
+- `public.mkey_expire_invites(p_limit integer)`
+- `public.mkey_is_broadcast_live(p_broadcast_id text)`
+- `public.mkey_my_open_invite(p_broadcast_id text)`
+- `public.mkey_my_recent_sends(p_limit integer)`
+- `public.mkey_purchase_with_coins(p_amount integer)`
+- `public.mkey_send(p_broadcast_id text, p_amount integer)`
+- `public.mkey_wallet`
+- `public.mod_jail_user(p_target_user_id uuid, p_discipline_level integer, p_reason text, p_duration_seconds integer, p_bond_amount integer, p_actor_id uuid)`
+- `public.mod_release_jail(p_jail_id uuid, p_reason text, p_actor_id uuid)`
+- `public.moderate_user_content(p_user_id uuid, p_content text, p_source text, p_context jsonb)`
+- `public.moderate_user_name_change(p_user_id uuid, p_action text, p_display_name text)`
+- `public.moderator_disable_chat(p_stream_id uuid, p_target_user_id uuid, p_duration_minutes integer, p_reason text)`
+- `public.moderator_kick_user(p_stream_id uuid, p_target_user_id uuid, p_reason text)`
+- `public.moderator_mute_user(p_stream_id uuid, p_target_user_id uuid, p_duration_minutes integer, p_reason text)`
+- `public.moderator_unmute_user(p_stream_id uuid, p_target_user_id uuid)`
+- `public.modo_arrest(p_stream_id uuid, p_target_user_id uuid, p_reason text, p_severity text)`
+- `public.modo_audit(p_action_type text, p_action_name text, p_actor_id uuid, p_target_user_id uuid, p_target_display_name text, p_target_role_before text, p_target_role_after text, p_broadcast_id uuid, p_livekit_room_name text, p_reason text, p_duration_minutes integer, p_previous_status text, p_new_status text, p_expires_at timestamp with time zone, p_success boolean, p_error_message text, p_metadata jsonb)`
+- `public.modo_end_stream(p_stream_id uuid, p_target_broadcaster_id uuid, p_reason text, p_restrict_duration_minutes integer)`
+- `public.modo_grant_license(p_target_user_id uuid)`
+- `public.modo_suspend_license(p_target_user_id uuid, p_reason text, p_duration_hours integer)`
+- `public.normalize_tromocode_input(raw_code text)`
+- `public.notify_admin_bug_alert`
+- `public.notify_artist_contract_notarized(p_contract_id uuid, p_contract_number text)`
+- `public.notify_artist_new_contract(p_contract_id uuid, p_artist_id uuid, p_contract_number text)`
+- `public.notify_protection_order_staff`
+- `public.notify_secretary_contract_signed(p_contract_id uuid, p_contract_number text, p_artist_stage_name text)`
+- `public.notify_staff(p_type text, p_title text, p_message text, p_metadata jsonb)`
+- `public.notify_staff_of_broadcast_start`
+- `public.notify_staff_of_job_application`
+- `public.notify_staff_review_event`
+- `public.notify_staff_storage_upload`
+- `public.pay_bank_loan(p_loan_id uuid, p_amount integer)`
+- `public.pay_court_warrant(p_warrant_id uuid)`
+- `public.pay_credit_card(p_amount bigint)`
+- `public.pay_ticket(p_ticket_id uuid)`
+- `public.pay_ticket_coins(p_user_id uuid, p_amount numeric)`
+- `public.persist_stream_minutes`
+- `public.pin_product_to_broadcast(p_stream_id uuid, p_product_id uuid, p_pinned_by uuid)`
+- `public.place_auction_me_bid(p_session_id uuid, p_bid_amount bigint)`
+- `public.play_mai_track(p_track_id uuid, p_user_id uuid)`
+- `public.post_jail_bond(p_jail_id uuid, p_user_id uuid)`
+- `public.prevent_profile_privilege_escalation`
+- `public.process_gift_supporter_economy`
+- `public.protect_owner_admin_changes`
+- `public.protect_sensitive_columns`
+- `public.purchase_access(p_recipient_id uuid, p_access_type text, p_idempotency_key text)`
+- `public.purchase_mai_pay_plus_with_coins(p_user_id uuid)`
+- `public.purchase_troll_up(p_package_id uuid, p_user_id uuid, p_is_subscription boolean, p_subscription_interval text)`
+- `public.raid_property(p_attacker_id uuid, p_target_user_id uuid, p_target_house_id uuid)`
+- `public.reactivate_artist_staff_member(p_membership_id uuid)`
+- `public.reconcile_active_zip_officer_assignments`
+- `public.reconcile_zip_broadcast_officers(p_zip_code text)`
+- `public.record_anonymous_arrest(p_ip_address text, p_anon_display_name text, p_reason text, p_severity text, p_arrested_by uuid, p_duration_minutes integer)`
+- `public.record_city_progression_event`
+- `public.record_defendant_attendance(p_case_id uuid)`
+- `public.record_maielite_call(p_caller_id uuid, p_call_type text, p_status text)`
+- `public.record_maitroll_signal_event(p_event_type text, p_content_type text, p_content_id uuid, p_creator_id uuid, p_surface text, p_value numeric, p_metadata jsonb)`
+- `public.record_platform_fee(p_fee_type text, p_coins bigint, p_gross_coins bigint, p_fee_percent numeric, p_payer_user_id uuid, p_earner_user_id uuid, p_reference_table text, p_reference_id uuid, p_fee_label text, p_metadata jsonb, p_credit_admin boolean, p_idempotency_key text)`
+- `public.record_protection_order_violation(p_order_id uuid, p_violating_account uuid, p_violation_type text, p_metadata jsonb)`
+- `public.record_replay_view(p_creator_user_id uuid, p_stream_id uuid, p_viewer_user_id uuid, p_minutes_watched numeric)`
+- `public.record_school_pool_contribution(p_student_id uuid, p_institution_id uuid, p_amount integer, p_source text, p_reference_id text)`
+- `public.record_sla_metric_sample(p_stream_id uuid, p_sample_type text, p_value numeric, p_detail jsonb)`
+- `public.record_t_league_viewing_heartbeat(p_stream_id uuid)`
+- `public.record_treelz_view(p_post_id uuid, p_watch_seconds integer, p_completed boolean)`
+- `public.record_troll_family_activity(p_user_id uuid, p_event_type text, p_amount numeric, p_metadata jsonb)`
+- `public.redeem_tromocode(p_code text, p_product_type text, p_original_amount integer, p_user_id uuid, p_product_id uuid)`
+- `public.refer_to_broadcast_school(p_target_user_id uuid, p_reason text, p_stream_id uuid, p_cooldown_minutes integer)`
+- `public.refresh_mayor_eligibility(p_user_id uuid)`
+- `public.refresh_user_earnings_summary`
+- `public.register_maielite_phone`
+- `public.reject_report(p_report_id uuid)`
+- `public.remove_departed_random_battle_stage_seat`
+- `public.remove_stream_broadofficer(p_stream_id uuid, p_officer_id uuid)`
+- `public.remove_student_from_team(p_team_id uuid, p_student_id uuid)`
+- `public.report_pet_abuse(p_pet_id uuid)`
+- `public.request_cashout(p_user_id uuid, p_coins_to_redeem bigint, p_provider_type text, p_provider_username text, p_user_tag text, p_id_verification_url text)`
+- `public.require_moderation_access`
+- `public.reserve_first_cashout_match_slot(p_user_id uuid, p_payout_request_id uuid, p_qualifying_amount numeric)`
+- `public.reset_rtc_minute_totals`
+- `public.reset_user_permissions(p_target_user_id uuid)`
+- `public.respond_role_invite(p_invite_id uuid, p_status text)`
+- `public.respond_to_artist_staff_offer(p_membership_id uuid, p_accept boolean)`
+- `public.review_broadcast_school_attempt(p_attempt_id uuid, p_status text, p_review_notes text)`
+- `public.review_fast_pay_application(p_admin_notes text, p_application_id uuid, p_new_status text)`
+- `public.revoke_user_restriction(p_restriction_id uuid, p_reason text)`
+- `public.search_artist_staff_candidates(p_artist_id uuid, p_search text, p_limit integer)`
+- `public.search_maipiks_by_hashtag(p_tag text, p_limit integer)`
+- `public.search_protection_order_users(p_username text)`
+- `public.send_admin_bond_quote(p_request_id uuid, p_amount integer, p_message text)`
+- `public.send_attorney_quote(p_request_id uuid, p_amount integer, p_message text, p_attorney_id uuid)`
+- `public.send_challenge_gift(p_sender_id uuid, p_receiver_id uuid, p_gift_id uuid, p_discount_percent numeric)`
+- `public.send_featured_gift_with_reward(p_sender_id uuid, p_receiver_id uuid, p_stream_id uuid, p_gift_id text, p_quantity integer, p_metadata jsonb)`
+- `public.send_gift_in_stream(p_sender_id uuid, p_receiver_id uuid, p_stream_id uuid, p_gift_id text, p_quantity integer, p_metadata jsonb)`
+- `public.send_gift_in_stream(p_sender_id uuid, p_receiver_id uuid, p_stream_id uuid, p_gift_id uuid, p_quantity integer, p_txn_key text, p_metadata jsonb)`
+- `public.send_instructor_message(p_instructor_user_id uuid, p_message text)`
+- `public.send_mayor_promotional_coins(p_recipient_id uuid, p_amount bigint, p_reason text)`
+- `public.send_treelz_tip(p_from_user_id uuid, p_to_user_id uuid, p_post_id uuid, p_amount bigint)`
+- `public.set_active_case(p_case_id uuid, p_session_id uuid)`
+- `public.set_broadcast_password(p_stream_id uuid, p_password text)`
+- `public.set_broadcaster_moderation_lock(p_broadcaster_id uuid, p_chat_disabled boolean, p_mic_muted boolean, p_reason text)`
+- `public.set_city_identity(p_street_name text, p_zip_code text, p_neighborhood_name text)`
+- `public.set_platform_ceo(p_user_id uuid, p_is_ceo boolean)`
+- `public.set_podcast_expiration`
+- `public.set_rtc_minute_total(p_minutes integer)`
+- `public.set_trocean_ready(p_match_id uuid, p_ready boolean)`
+- `public.set_tromocode_normalized_columns`
+- `public.set_user_restriction(p_target_user_id uuid, p_restriction_type text, p_reason text, p_duration_minutes integer, p_source_report_id uuid, p_source_page text, p_details jsonb)`
+- `public.set_user_role(new_role text, reason text, target_user uuid)`
+- `public.set_user_role(target_user uuid, new_role text, reason text, acting_admin_id uuid)`
+- `public.set_wall_post_facebook_featured(p_post_id uuid, p_featured boolean)`
+- `public.shop_buy_call_minutes(p_user_id uuid, p_package_id text, p_minutes integer, p_cost integer, p_type text, p_metadata jsonb)`
+- `public.sign_instructor_privacy_agreement(p_institution_id uuid, p_agreement_version text)`
+- `public.sign_ticket(p_ticket_id uuid)`
+- `public.singoff_claim_ceo_seat(p_session_id uuid)`
+- `public.singoff_claim_judge_seat(p_session_id uuid, p_position text)`
+- `public.singoff_get_participant_note(p_session_id uuid, p_participant_user_id uuid)`
+- `public.singoff_is_approved_judge(p_session_id uuid, p_user_id uuid)`
+- `public.singoff_save_participant_note(p_session_id uuid, p_participant_user_id uuid, p_note text)`
+- `public.singoff_submit_decision(p_session_id uuid, p_round_id uuid, p_judge_id uuid, p_challenger_id uuid, p_decision text, p_is_mai_winner boolean)`
+- `public.singoff_validate_token_access(p_room_name text, p_user_id uuid, p_mode text)`
+- `public.start_auction_me(p_stream_id uuid, p_broadcaster_id uuid, p_title_type text, p_starting_bid bigint)`
+- `public.start_broadcast_with_capacity_check(p_stream_id uuid)`
+- `public.start_court_session(p_case_id uuid, p_room_name text, p_max_boxes integer)`
+- `public.start_town_meeting(p_title text, p_topic text, p_agenda text, p_meeting_type text, p_scheduled_duration_minutes integer, p_seat_roles jsonb, p_proposal_id uuid)`
+- `public.start_trocean_match(p_match_id uuid)`
+- `public.submit_beta_feedback(p_affected_feature text, p_affected_route text, p_app_version text, p_browser_name text, p_category text, p_description text, p_device_type text, p_is_pwa boolean, p_screenshot_url text, p_severity text, p_title text, p_user_agent text, p_viewport_height integer, p_viewport_width integer)`
+- `public.submit_broadcast_school_assessment(p_user_id uuid, p_answers jsonb, p_time_spent_seconds integer)`
+- `public.submit_funding_application(p_application_id uuid)`
+- `public.submit_government_proposal(p_title text, p_description text, p_category text, p_submitter_role text, p_public_visibility boolean)`
+- `public.submit_maipiks_report(p_story_item_id uuid, p_category text, p_description text, p_evidence_path text)`
+- `public.submit_mayor_frontend_request(p_change_type text, p_change_payload jsonb, p_mayor_term_id uuid)`
+- `public.submit_report(p_target_user_id uuid, p_stream_id uuid, p_reason text, p_description text)`
+- `public.submit_trocean_attack(p_match_id uuid, p_target_tile text, p_request_id uuid)`
+- `public.subscribe_to_creator(p_creator_id uuid)`
+- `public.suspend_artist_staff_member(p_membership_id uuid, p_reason text)`
+- `public.sync_league_on_xp_change`
+- `public.sync_treelz_post_likes_count`
+- `public.sync_troll_wall_replies_count`
+- `public.sync_user_warrant_flag(p_user_id uuid)`
+- `public.sync_user_warrant_flag_trigger`
+- `public.t_league_capture_battle`
+- `public.t_league_capture_chat_message`
+- `public.t_league_capture_creator_follow`
+- `public.t_league_capture_maipiks_post`
+- `public.t_league_capture_moderation_action`
+- `public.t_league_capture_story_publish`
+- `public.t_league_capture_story_view`
+- `public.t_league_capture_stream_end`
+- `public.t_league_capture_wall_engagement`
+- `public.t_league_capture_wall_post`
+- `public.t_league_claim_referral_attribution(p_referred_user_id uuid, p_visitor_token uuid)`
+- `public.t_league_process_referral_viewing(p_viewer_id uuid, p_added_minutes numeric)`
+- `public.t_league_record_mission_event(p_user_id uuid, p_event_type text, p_event_value numeric, p_source_table text, p_source_id text)`
+- `public.t_league_record_referral_click(p_referral_code text, p_visitor_token uuid)`
+- `public.t_league_refresh_user(p_user_id uuid)`
+- `public.t_league_roles_for_user(p_user_id uuid)`
+- `public.take_action(p_report_id uuid, p_action_type text, p_target_user_id uuid, p_stream_id uuid, p_reason text, p_action_details text, p_expires_at timestamp with time zone, p_ban_duration_hours integer, p_honesty_message_shown boolean)`
+- `public.terminate_artist_staff_member(p_membership_id uuid, p_reason text)`
+- `public.tip_epaper_story(p_story_id uuid, p_tipper_id uuid, p_amount bigint, p_coin_type text, p_message text)`
+- `public.tip_maipiks_story(p_story_id uuid, p_amount bigint, p_story_item_id uuid, p_message text)`
+- `public.toggle_wall_post_like(p_post_id uuid, p_user_id uuid)`
+- `public.toggle_wall_post_pin(p_post_id uuid, p_user_id uuid)`
+- `public.track_anonymous_viewer(p_anon_display_name text, p_ip_address text, p_stream_id text, p_user_agent text)`
+- `public.trigger_auto_release_jails`
+- `public.trigger_contribute_to_mai_bag`
+- `public.trigger_create_mai_bag_on_stream_start`
+- `public.trigger_notify_admin_arrest`
+- `public.trigger_notify_admin_broadcast_started`
+- `public.trigger_notify_admin_coin_purchase`
+- `public.trigger_notify_admin_court_case`
+- `public.trigger_notify_admin_report`
+- `public.trigger_notify_admin_signup`
+- `public.trigger_notify_admin_stream_kick`
+- `public.trocean_advance_turn(p_match_id uuid, p_current_player uuid)`
+- `public.troll_bank_credit_coins(p_user_id uuid, p_coins bigint, p_bucket text, p_source text, p_ref_id text, p_metadata jsonb)`
+- `public.troll_bank_deny_cashout(p_request_id uuid, p_admin_id uuid, p_reason text)`
+- `public.troll_bank_finalize_cashout(p_request_id uuid, p_admin_id uuid)`
+- `public.troll_wall_users_block_each_other(p_post_user_id uuid)`
+- `public.try_pay_coins_secure(p_amount bigint, p_reason text, p_metadata jsonb)`
+- `public.try_pay_with_credit_card(p_amount numeric, p_context text, p_metadata jsonb, p_user_id uuid)`
+- `public.try_pay_with_credit_card(p_user_id uuid, p_amount bigint, p_context text, p_metadata jsonb)`
+- `public.undo_gift_transaction(p_stream_gift_id text, p_requester_id uuid)`
+- `public.unfollow_instructor(p_instructor_user_id uuid)`
+- `public.unfollow_student(p_following_student_id uuid)`
+- `public.unpin_product_from_broadcast(p_stream_id uuid, p_product_id uuid)`
+- `public.update_artist_staff_member(p_membership_id uuid, p_position text, p_pay_type text, p_pay_amount bigint, p_pay_frequency text, p_permissions jsonb, p_notes text)`
+- `public.update_battle_crowns_and_streak(p_winner_id uuid, p_loser_id uuid)`
+- `public.update_court_docket_status(p_docket_id uuid, p_status text)`
+- `public.update_institution_privacy_settings(p_institution_id uuid, p_ferpa_mode_enabled boolean, p_restricted_mode boolean, p_require_parental_consent boolean, p_minor_age_threshold integer, p_allow_student_opt_out boolean, p_audit_data_access boolean, p_require_annual_privacy_agreement boolean, p_privacy_agreement_version text, p_compliance_notes text)`
+- `public.update_league_on_gift_insert`
+- `public.update_lesson_progress(p_lesson_id uuid, p_status text, p_progress numeric)`
+- `public.update_mission_progress(p_metric text, p_stream_id uuid, p_user_id uuid, p_value integer)`
+- `public.update_school_incident(p_incident_id uuid, p_status text, p_resolution_notes text)`
+- `public.update_stream_sla_on_start`
+- `public.update_stream_viewer_count(p_stream_id uuid, p_count integer)`
+- `public.update_subscription_sla_on_create`
+- `public.upsert_school_rule(p_institution_id uuid, p_rule_code text, p_title text, p_description text, p_category text, p_enforcement text, p_is_active boolean)`
+- `public.use_daily_free_spin(p_user_id uuid)`
+- `public.user_credit_enforce_monthly_positive_cap`
+- `public.user_is_restricted(p_user_id uuid, p_restriction_type text)`
+- `public.user_is_staff_or_approved(p_user_id uuid)`
+- `public.user_needs_public_fee(user_id uuid)`
+- `public.validate_broadcast_password(p_stream_id uuid, p_password text)`
+- `public.validate_funding_availability(p_program_id uuid, p_amount numeric)`
+- `public.validate_tromocode(p_code text, p_product_type text, p_original_amount integer, p_user_id uuid)`
+- `public.weekly_award_point(p_action text, p_base_points integer)`
+- `public.weekly_get_current_week`
+- `public.weekly_get_leaderboard(p_week_id text, p_limit integer)`
+- `public.weekly_get_user_summary(p_week_id text)`
+- `public.weekly_get_week_dates(p_week_id text)`
+- `public.weekly_gift_insert_trigger`
+- `public.weekly_process_friday(p_week_id text)`
+- `public.weekly_record_gift(p_user_id uuid)`
+- `public.weekly_refresh_user_total(p_week_id text, p_user_id uuid)`
+
+### Functions with mutable search_path (179)
+
+Complete Advisor row inventory:
+
+- `public.next_court_day - mutable search_path`
+- `public.singoff_start_show - mutable search_path`
+- `public.singoff_audit_log - mutable search_path`
+- `public.founder_generate_invite_code - mutable search_path`
+- `public.record_treelz_view - mutable search_path`
+- `public.handle_application_approval - mutable search_path`
+- `public.is_key_owner - mutable search_path`
+- `public.get_user_key_count - mutable search_path`
+- `public.user_has_key_letter - mutable search_path`
+- `public.user_account_age_days - mutable search_path`
+- `public.award_key_to_user - mutable search_path`
+- `public.transfer_key - mutable search_path`
+- `public.update_epaper_stories_updated_at - mutable search_path`
+- `public.trigger_set_timestamp - mutable search_path`
+- `public.calculate_t_league_tier - mutable search_path`
+- `public.calculate_level_details - mutable search_path`
+- `public.get_next_featured_gift_id - mutable search_path`
+- `public.grant_xp - mutable search_path`
+- `public.advance_featured_gift_cycle - mutable search_path`
+- `public.set_user_role - mutable search_path`
+- `public.singoff_kick_user - mutable search_path`
+- `public.set_auction_shows_updated_at - mutable search_path`
+- `public.sync_coin_transaction_amounts - mutable search_path`
+- `public.is_admin - mutable search_path`
+- `public.sync_president_election_end_dates - mutable search_path`
+- `public.issue_promo_card - mutable search_path`
+- `public.generate_user_league_missions - mutable search_path`
+- `public.stream_top_gifters - mutable search_path`
+- `public.enrich_stream_gift_metadata - mutable search_path`
+- `public.sync_court_summons_compat - mutable search_path`
+- `public.register_session - mutable search_path`
+- `public.get_beta_feedback_user_groups - mutable search_path`
+- `public.update_artist_staff_memberships_updated_at - mutable search_path`
+- `public.update_artist_staff_payments_updated_at - mutable search_path`
+- `public.pin_product_to_broadcast - mutable search_path`
+- `public.unpin_product_from_broadcast - mutable search_path`
+- `public.try_pay_coins_secure - mutable search_path`
+- `public.award_battle_crowns - mutable search_path`
+- `public.award_battle_crown - mutable search_path`
+- `public.troll_bank_credit_coins - mutable search_path`
+- `public.update_battle_crowns_and_streak - mutable search_path`
+- `public.calculate_level - mutable search_path`
+- `public.create_subscription - mutable search_path`
+- `public.update_broadcaster_wishlists_updated_at - mutable search_path`
+- `public.update_wishlist_items_updated_at - mutable search_path`
+- `public.send_challenge_gift - mutable search_path`
+- `public.award_challenge_crowns - mutable search_path`
+- `public.cleanup_expired_challenges - mutable search_path`
+- `public.cashout_key - mutable search_path`
+- `public.cashout_maitroll_set - mutable search_path`
+- `public.cancel_key_listing - mutable search_path`
+- `public.trocean_touch_updated_at - mutable search_path`
+- `public.cancel_trade_request - mutable search_path`
+- `public.get_user_keys_public - mutable search_path`
+- `public.get_key_supply_stats - mutable search_path`
+- `public.get_key_verified_value - mutable search_path`
+- `public.admin_seed_key - mutable search_path`
+- `public.mai_business_updated_at - mutable search_path`
+- `public._user_is_mayor_blocked - mutable search_path`
+- `public.get_mayor_eligibility_total - mutable search_path`
+- `public.update_updated_at_column - mutable search_path`
+- `public.singoff_is_staff - mutable search_path`
+- `public.singoff_join_session - mutable search_path`
+- `public.touch_troll_up_updated_at - mutable search_path`
+- `public.next_protection_order_hearing - mutable search_path`
+- `public.singoff_mai_winner - mutable search_path`
+- `public.singoff_update_config - mutable search_path`
+- `public.increment_ad_impressions - mutable search_path`
+- `public.touch_facebook_integration_updated_at - mutable search_path`
+- `public.increment_ad_clicks - mutable search_path`
+- `public.singoff_cancel_scheduled_show - mutable search_path`
+- `public.set_default_troll_coins - mutable search_path`
+- `public.protect_owner_admin_changes - mutable search_path`
+- `public.set_og_badge - mutable search_path`
+- `public.grant_og_badge - mutable search_path`
+- `public.create_trade_request - mutable search_path`
+- `public.accept_trade_request - mutable search_path`
+- `public.decline_trade_request - mutable search_path`
+- `public.list_key_for_sale - mutable search_path`
+- `public.purchase_key - mutable search_path`
+- `public.get_user_keys_private - mutable search_path`
+- `public.assign_og_user - mutable search_path`
+- `public.set_og_status_for_new_users - mutable search_path`
+- `public.sync_troll_role - mutable search_path`
+- `public.auto_grant_admin_officer_status - mutable search_path`
+- `public.log_user_moderation - mutable search_path`
+- `public.update_officer_tier_badge - mutable search_path`
+- `public.auto_remove_verification_on_ban - mutable search_path`
+- `public.auto_upgrade_influencer_tier - mutable search_path`
+- `public.send_gift_in_stream - mutable search_path`
+- `public.calculate_friday_battle_gifter_bonus - mutable search_path`
+- `public.award_friday_battle_gifter_bonus - mutable search_path`
+- `public.check_reward_budget - mutable search_path`
+- `public.consume_reward_budget - mutable search_path`
+- `public.user_needs_public_fee - mutable search_path`
+- `public.has_open_verification_ticket - mutable search_path`
+- `public.increment_treelz_shares - mutable search_path`
+- `public.increment_treelz_comments - mutable search_path`
+- `public.increment_treelz_saves - mutable search_path`
+- `public.t_league_tier_for_points - mutable search_path`
+- `public.send_treelz_tip - mutable search_path`
+- `public.create_or_verify_instructor_profile - mutable search_path`
+- `public.unfollow_student - mutable search_path`
+- `public.remove_student_from_team - mutable search_path`
+- `public.create_or_verify_student_profile - mutable search_path`
+- `public.follow_student - mutable search_path`
+- `public.create_student_team - mutable search_path`
+- `public.add_student_to_team - mutable search_path`
+- `public.record_school_pool_contribution - mutable search_path`
+- `public.get_student_following_count - mutable search_path`
+- `public.get_student_followers_count - mutable search_path`
+- `public.get_school_pool_total - mutable search_path`
+- `public.get_student_pool_contribution - mutable search_path`
+- `public.get_instructor_privacy_agreement_status - mutable search_path`
+- `public.log_data_access - mutable search_path`
+- `public.get_data_access_audit_log - mutable search_path`
+- `public.instructor_has_signed_privacy_agreement - mutable search_path`
+- `public.founder_set_updated_at - mutable search_path`
+- `public.delete_school_rule - mutable search_path`
+- `public.get_instructor_followers_count - mutable search_path`
+- `public.get_instructor_messages - mutable search_path`
+- `public.get_institution_privacy_settings - mutable search_path`
+- `public.singoff_can_manage_session - mutable search_path`
+- `public.singoff_is_active_judge - mutable search_path`
+- `public.singoff_create_session - mutable search_path`
+- `public.singoff_assign_position - mutable search_path`
+- `public.singoff_move_host - mutable search_path`
+- `public.singoff_complete_championship - mutable search_path`
+- `public.singoff_call_to_stage - mutable search_path`
+- `public.singoff_request_queue - mutable search_path`
+- `public.singoff_update_queue_status - mutable search_path`
+- `public.singoff_end_round - mutable search_path`
+- `public.singoff_get_stats - mutable search_path`
+- `public.singoff_start_round - mutable search_path`
+- `public.update_institution_privacy_settings - mutable search_path`
+- `public.singoff_apply_judge - mutable search_path`
+- `public.sign_instructor_privacy_agreement - mutable search_path`
+- `public.file_school_incident - mutable search_path`
+- `public.list_school_incidents - mutable search_path`
+- `public.update_school_incident - mutable search_path`
+- `public.upsert_school_rule - mutable search_path`
+- `public.list_school_rules - mutable search_path`
+- `public.singoff_end_show - mutable search_path`
+- `public.singoff_schedule_show - mutable search_path`
+- `public.singoff_update_scheduled_show - mutable search_path`
+- `public.singoff_list_scheduled_shows - mutable search_path`
+- `public.singoff_apply_role - mutable search_path`
+- `public.singoff_list_championships - mutable search_path`
+- `public.singoff_review_application - mutable search_path`
+- `public.singoff_set_judge_status - mutable search_path`
+- `public.singoff_release_role - mutable search_path`
+- `public.singoff_generate_championship - mutable search_path`
+- `public.singoff_edit_grand_prize - mutable search_path`
+- `public.singoff_get_upcoming_events - mutable search_path`
+- `public.singoff_list_role_applications - mutable search_path`
+- `public.singoff_list_active_roles - mutable search_path`
+- `public.refresh_featured_live_state_updated_at - mutable search_path`
+- `public.follow_instructor - mutable search_path`
+- `public.unfollow_instructor - mutable search_path`
+- `public.is_following_instructor - mutable search_path`
+- `public.send_instructor_message - mutable search_path`
+- `public.refresh_featured_live_cycles_updated_at - mutable search_path`
+- `public.set_default_address - mutable search_path`
+- `public.is_maitroll_open - mutable search_path`
+- `public.is_authorized_maitroll_staff - mutable search_path`
+- `public.can_start_broadcast_maitroll - mutable search_path`
+- `public.get_maitroll_operating_state - mutable search_path`
+- `public.refresh_featured_gift_cycles_updated_at - mutable search_path`
+- `public.set_updated_at - mutable search_path`
+- `public.get_current_featured_gift - mutable search_path`
+- `public.singoff_get_session_state - mutable search_path`
+- `public.staff_notification_tab - mutable search_path`
+- `public.issue_ticket - mutable search_path`
+- `public.sign_ticket - mutable search_path`
+- `public.pay_ticket - mutable search_path`
+- `public.pay_ticket_coins - mutable search_path`
+- `public.get_user_tickets - mutable search_path`
+- `public.get_pending_tickets - mutable search_path`
+- `public.can_issue_tickets - mutable search_path`
+
+### Leaked-password protection (1)
+
+- Supabase Auth prevents the use of compromised passwords by checking against HaveIBeenPwned.org. Enable this feature to enhance security.
+
+### Extension installed in public schema (1)
+
+- Extension \`pg_net\` is installed in the public schema. Move it to another schema.
+
+### RLS enabled without policies (INFO) (49)
+
+- Table \`private.broadcast_passwords\` has RLS enabled, but no policies exist
+- Table \`public.android_update_push_tracking\` has RLS enabled, but no policies exist
+- Table \`public.auction_scan_events\` has RLS enabled, but no policies exist
+- Table \`public.automated_audience_accounts\` has RLS enabled, but no policies exist
+- Table \`public.automated_audience_balances\` has RLS enabled, but no policies exist
+- Table \`public.automated_audience_events\` has RLS enabled, but no policies exist
+- Table \`public.automated_audience_ledger\` has RLS enabled, but no policies exist
+- Table \`public.automated_audience_logs\` has RLS enabled, but no policies exist
+- Table \`public.automated_audience_sessions\` has RLS enabled, but no policies exist
+- Table \`public.automated_audience_settings\` has RLS enabled, but no policies exist
+- Table \`public.battle_starter_coin_grants\` has RLS enabled, but no policies exist
+- Table \`public.broadcaster_guidance_deliveries\` has RLS enabled, but no policies exist
+- Table \`public.broadcaster_guidance_sequences\` has RLS enabled, but no policies exist
+- Table \`public.coin_liability_alerts\` has RLS enabled, but no policies exist
+- Table \`public.coin_pack_catalog\` has RLS enabled, but no policies exist
+- Table \`public.credit_activity_monthly_totals\` has RLS enabled, but no policies exist
+- Table \`public.credit_activity_sessions\` has RLS enabled, but no policies exist
+- Table \`public.facebook_oauth_states\` has RLS enabled, but no policies exist
+- Table \`public.facebook_page_credentials\` has RLS enabled, but no policies exist
+- Table \`public.ghost_mode_identity_access_audit\` has RLS enabled, but no policies exist
+- Table \`public.government_audit_log\` has RLS enabled, but no policies exist
+- Table \`public.guest_seat_identities\` has RLS enabled, but no policies exist
+- Table \`public.guest_seat_identity_rate_limits\` has RLS enabled, but no policies exist
+- Table \`public.mai_city_requests\` has RLS enabled, but no policies exist
+- Table \`public.mai_singoff_participant_notes\` has RLS enabled, but no policies exist
+- Table \`public.mai_voice_queue\` has RLS enabled, but no policies exist
+- Table \`public.mayor_coin_allowances\` has RLS enabled, but no policies exist
+- Table \`public.mayor_frontend_requests\` has RLS enabled, but no policies exist
+- Table \`public.moderation_audit_log\` has RLS enabled, but no policies exist
+- Table \`public.moderation_forbidden_usernames\` has RLS enabled, but no policies exist
+- Table \`public.moderation_prohibited_terms\` has RLS enabled, but no policies exist
+- Table \`public.moderation_risk_evidence\` has RLS enabled, but no policies exist
+- Table \`public.paypal_donation_webhook_events\` has RLS enabled, but no policies exist
+- Table \`public.pet_care_lifecycle_state\` has RLS enabled, but no policies exist
+- Table \`public.platform_donation_rate_limits\` has RLS enabled, but no policies exist
+- Table \`public.platform_donations\` has RLS enabled, but no policies exist
+- Table \`public.protection_order_username_history\` has RLS enabled, but no policies exist
+- Table \`public.protection_order_violations\` has RLS enabled, but no policies exist
+- Table \`public.redemptions\` has RLS enabled, but no policies exist
+- Table \`public.role_invites\` has RLS enabled, but no policies exist
+- Table \`public.t_league_eligible_coin_sources\` has RLS enabled, but no policies exist
+- Table \`public.t_league_mission_events\` has RLS enabled, but no policies exist
+- Table \`public.t_league_referral_attributions\` has RLS enabled, but no policies exist
+- Table \`public.t_league_referral_clicks\` has RLS enabled, but no policies exist
+- Table \`public.t_league_referral_reward_ledger\` has RLS enabled, but no policies exist
+- Table \`public.t_league_viewing_sessions\` has RLS enabled, but no policies exist
+- Table \`public.temporary_review_account_audit\` has RLS enabled, but no policies exist
+- Table \`public.trocean_coin_transactions\` has RLS enabled, but no policies exist
+- Table \`public.trocean_player_locations\` has RLS enabled, but no policies exist
+
+## Performance Advisor
+
+These are Advisor finding counts, not unique-table counts. Policy findings may repeat across roles/actions and should be prioritized with query and workload evidence.
+
+### Multiple Permissive Policies: WARN (3929)
+
+- Table \`public.MaiTroll_shops\` has multiple permissive policies for role \`authenticated\` for action \`INSERT\`. Policies include \`{"Admins can manage all shops","Users can insert own shops"}\`
+- Table \`public.MaiTroll_shops\` has multiple permissive policies for role \`authenticated\` for action \`SELECT\`. Policies include \`{"Admins can manage all shops","Public can view active shops","Users can view own shops"}\`
+- Table \`public.MaiTroll_shops\` has multiple permissive policies for role \`authenticated\` for action \`UPDATE\`. Policies include \`{"Admins can manage all shops","Users can update own shops"}\`
+- Table \`public.academy_accreditation_orgs\` has multiple permissive policies for role \`anon\` for action \`SELECT\`. Policies include \`{authenticated_read,authenticated_write}\`
+- Table \`public.academy_accreditation_orgs\` has multiple permissive policies for role \`authenticated\` for action \`SELECT\`. Policies include \`{authenticated_read,authenticated_write}\`
+- 3924 additional findings omitted here; see Advisor remediation link below.
+- Remediation: https://supabase.com/docs/guides/database/database-linter?lint=0006_multiple_permissive_policies
+
+### Auth RLS Initialization Plan: WARN (1903)
+
+- Table \`public.user_stats\` has a row level security policy \`Users can view their own stats\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \`auth.<function>()\` with \`(select auth.<function>())\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.
+- Table \`public.user_stats\` has a row level security policy \`Users can create their own stats\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \`auth.<function>()\` with \`(select auth.<function>())\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.
+- Table \`public.user_stats\` has a row level security policy \`Users can update their own stats\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \`auth.<function>()\` with \`(select auth.<function>())\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.
+- Table \`public.profile_tab_visibility\` has a row level security policy \`profile_tab_visibility_select_own\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \`auth.<function>()\` with \`(select auth.<function>())\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.
+- Table \`public.profile_tab_visibility\` has a row level security policy \`profile_tab_visibility_insert_own\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \`auth.<function>()\` with \`(select auth.<function>())\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.
+- 1898 additional findings omitted here; see Advisor remediation link below.
+- Remediation: https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan
+
+### Duplicate Index: WARN (49)
+
+- Table \`public.academy_teachers\` has identical indexes {academy_teachers_user_id_idx,idx_academy_teachers_user_id}. Drop all except one of them
+- Table \`public.app_bug_reports\` has identical indexes {app_bug_reports_created_at_idx,idx_bug_reports_created_at_desc}. Drop all except one of them
+- Table \`public.app_bug_reports\` has identical indexes {app_bug_reports_severity_idx,idx_bug_reports_severity}. Drop all except one of them
+- Table \`public.app_bug_reports\` has identical indexes {app_bug_reports_status_idx,idx_bug_reports_status}. Drop all except one of them
+- Table \`public.app_bug_reports\` has identical indexes {app_bug_reports_user_id_idx,idx_bug_reports_user_id}. Drop all except one of them
+- 44 additional findings omitted here; see Advisor remediation link below.
+- Remediation: https://supabase.com/docs/guides/database/database-linter?lint=0009_duplicate_index
+
+### Unindexed foreign keys: INFO (420)
+
+- Table \`public.abuse_reports\` has a foreign key \`abuse_reports_offender_user_id_fkey\` without a covering index. This can lead to suboptimal query performance.
+- Table \`public.abuse_reports\` has a foreign key \`abuse_reports_reported_by_fkey\` without a covering index. This can lead to suboptimal query performance.
+- Table \`public.abuse_reports\` has a foreign key \`abuse_reports_reviewed_by_fkey\` without a covering index. This can lead to suboptimal query performance.
+- Table \`public.abuse_reports\` has a foreign key \`abuse_reports_stream_id_fkey\` without a covering index. This can lead to suboptimal query performance.
+- Table \`public.academy_announcements\` has a foreign key \`academy_announcements_course_id_fkey\` without a covering index. This can lead to suboptimal query performance.
+- 415 additional findings omitted here; see Advisor remediation link below.
+- Remediation: https://supabase.com/docs/guides/database/database-linter?lint=0001_unindexed_foreign_keys
+
+### Unused Index: INFO (594)
+
+- Index \`idx_moderation_reports_institution\` on table \`public.moderation_reports\` has not been used
+- Index \`user_stats_level_idx\` on table \`public.user_stats\` has not been used
+- Index \`user_stats_xp_total_idx\` on table \`public.user_stats\` has not been used
+- Index \`user_profiles_is_org_student_idx\` on table \`public.user_profiles\` has not been used
+- Index \`idx_stream_gifts_gift_type\` on table \`public.stream_gifts\` has not been used
+- 589 additional findings omitted here; see Advisor remediation link below.
+- Remediation: https://supabase.com/docs/guides/database/database-linter?lint=0005_unused_index
+
+### No Primary Key: INFO (3)
+
+- Table \`public.admin_broadcasts\` does not have a primary key
+- Table \`public.active_sessions\` does not have a primary key
+- Table \`public.city_ads\` does not have a primary key
+- Remediation: https://supabase.com/docs/guides/database/database-linter?lint=0004_no_primary_key
+
+### Auth DB Connection Strategy is not Percentage: INFO (1)
+
+- Your project's Auth server is configured to use at most 10 connections. Increasing the instance size without manually adjusting this number will not improve the performance of the Auth server. Switch to a percentage based connection allocation strategy instead.
+- Remediation: https://supabase.com/docs/guides/deployment/going-into-prod
+
+## Suggested next-step sequence
+
+1. Classify the 644 anon-executable functions into intentional public APIs versus private/admin RPCs. Review the full inventory above; do not mass-revoke without checking callers and grants.
+2. Fix confirmed excessive grants with a targeted migration, preserving documented public endpoints; separately enable leaked-password protection and set secure search paths where safe.
+3. Resolve live/local migration-history drift and deploy the remaining requested notifications work after validation.
+4. Prioritize RLS policy/performance work using production query stats and representative load testing; then rerun the Supabase advisors.
+
+## Snapshot provenance
+
+- Security and performance counts were taken from Supabase Advisor output on November 6, 2026.
+- Live Edge Function and migration-history observations were checked separately from local repository files.
+- Build, SEO, and phone-route checks were run in the current workspace; they do not replace production smoke tests, payment testing, backup/restore drills, or capacity tests.
+
+For review, choose one concrete next step from the sequence above; no broad grants or live database changes were made as part of this report.
+

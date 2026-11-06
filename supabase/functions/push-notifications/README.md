@@ -20,9 +20,9 @@ The function is the shared push-delivery gateway: it supports browser Web Push t
    supabase functions deploy signup --project-ref gejtbllazzighxwxudyu
    ```
 
-6. Apply only `supabase/migrations/20261005000015_universal_notification_push.sql` for this feature. It enables `pg_net` and adds an `AFTER INSERT` trigger on `public.notifications`; do not use a command that applies every pending migration.
+6. Ensure `supabase/migrations/20261005000015_universal_notification_push.sql` has been applied. It enables `pg_net` and adds an `AFTER INSERT` trigger on `public.notifications`. Apply `supabase/migrations/20291105000000_bug_alert_admin_push_notifications.sql` to route new Bug Catcher alerts to admin notifications and desktop push. Do not use a command that applies every pending migration.
 
-7. Send a normal notification to an account with an active Android row in `native_push_tokens`. The dispatcher response/logs report Android token counts and delivery failures; logs never print device tokens, dispatch tokens, or service-account values.
+7. Enable push notifications from the signed-in account's Header menu on each desktop/browser where alerts should appear. Then send a normal notification to an account with an active push subscription. The dispatcher response/logs report delivery counts and failures; logs never print device tokens, dispatch tokens, or service-account values.
 
 The Firebase service account project ID must match the Firebase project that issued the device tokens. Missing FCM credentials leave Web Push working and cause Android sends to be skipped with a server-side warning. This integration currently sends to Android tokens; iOS APNs delivery needs separate Apple push credentials and configuration.
 
