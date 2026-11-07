@@ -467,7 +467,7 @@ BEGIN
   RETURN jsonb_build_object('success', true, 'amount_cents', p_amount_cents, 'message', 'Squad Cash accrued');
 EXCEPTION WHEN unique_violation THEN
   RETURN jsonb_build_object('success', true, 'already_credited', true, 'message', 'Earning already recorded (race)');
-EXCEPTION WHEN OTHERS THEN
+WHEN OTHERS THEN
   RETURN jsonb_build_object('success', false, 'error', SQLERRM);
 END;
 $$;
@@ -641,6 +641,7 @@ DECLARE
   v_count INTEGER := 0;
   v_total_cents BIGINT := 0;
   v_is_admin BOOLEAN := FALSE;
+  v_settle_rec RECORD;
 BEGIN
   IF v_actor_id IS NULL THEN
     RETURN jsonb_build_object('success', false, 'error', 'Authentication required');
@@ -672,8 +673,8 @@ BEGIN
   WHERE id = p_settlement_period_id;
 
   -- For every member with pending Squad Cash earnings in this settlement
-  FOR v_leader_id, v_squad_id, v_user_id, v_amount IN
-    SELECT sm.user_id, sm.squad_id, scl.user_id, COALESCE(SUM(scl.amount_cents), 0)
+  FOR v_settle_rec IN
+    SELECT sm.user_id AS leader_id, sm.squad_id, scl.user_id, COALESCE(SUM(scl.amount_cents), 0) AS amount
     FROM public.squad_cash_ledger scl
     JOIN public.squad_memberships sm ON sm.squad_id = scl.squad_id AND sm.user_id = scl.user_id AND sm.left_at IS NULL
     JOIN public.squads s ON s.id = scl.squad_id AND s.status = 'active'
@@ -683,28 +684,28 @@ BEGIN
     GROUP BY sm.user_id, sm.squad_id, scl.user_id
   LOOP
     -- Minimum threshold check (carry forward if below)
-    IF v_amount < v_min_coins * 100 THEN
+    IF v_settle_rec.amount < v_min_coins * 100 THEN
       -- Keep locked; carry forward to next settlement
       UPDATE public.squad_cash_ledger
       SET status = 'locked'
-      WHERE user_id = v_user_id AND settlement_period_id = p_settlement_period_id AND status = 'pending';
+      WHERE user_id = v_settle_rec.user_id AND settlement_period_id = p_settlement_period_id AND status = 'pending';
       CONTINUE;
     END IF;
 
     -- Apply 2% Squad payout fee
     DECLARE
-      v_fee_cents BIGINT := CASE WHEN v_fee_enabled THEN ROUND(v_amount * v_fee_pct / 100.0)::BIGINT ELSE 0 END;
-      v_net_cents BIGINT := v_amount - v_fee_cents;
+      v_fee_cents BIGINT := CASE WHEN v_fee_enabled THEN ROUND(v_settle_rec.amount * v_fee_pct / 100.0)::BIGINT ELSE 0 END;
+      v_net_cents BIGINT := v_settle_rec.amount - v_fee_cents;
     BEGIN
       INSERT INTO public.squad_payouts (
         user_id, squad_id, settlement_period_id, eligible_cents, fee_cents, net_cents, status, created_at, updated_at
       ) VALUES (
-        v_user_id, v_squad_id, p_settlement_period_id, v_amount, v_fee_cents, v_net_cents, 'pending', NOW(), NOW()
+        v_settle_rec.user_id, v_settle_rec.squad_id, p_settlement_period_id, v_settle_rec.amount, v_fee_cents, v_net_cents, 'pending', NOW(), NOW()
       );
 
       UPDATE public.squad_cash_ledger
       SET status = 'settled'
-      WHERE user_id = v_user_id AND settlement_period_id = p_settlement_period_id AND status = 'pending';
+      WHERE user_id = v_settle_rec.user_id AND settlement_period_id = p_settlement_period_id AND status = 'pending';
 
       v_count := v_count + 1;
       v_total_cents := v_total_cents + v_net_cents;

@@ -89,7 +89,6 @@ interface UserListItem {
 interface RTCStats {
   totalMinutes: number;
   activeSessions: number;
-  activeUsers: number;
   liveStreams: number;
   liveStreamDetails: StreamDetail[];
   totalUsers: number;
@@ -326,7 +325,6 @@ export default function RTCAdminMonitor({
   const [stats, setStats] = useState<RTCStats>({
     totalMinutes: 0,
     activeSessions: 0,
-    activeUsers: 0,
     liveStreams: 0,
     liveStreamDetails: [],
     totalUsers: 0,
@@ -460,7 +458,7 @@ const [analyticsRange, setAnalyticsRange] = useState<1 | 7 | 30>(7);
     const _WALKIE_TALKIE_ALLOWED_ROLES = [
       'admin', 'ceo', 'staff', 'officer', 'broadofficer',
       'troll_officer', 'lead_troll_officer', 'secretary', 'president',
-      'attorney',
+      'agency_hr', 'agency_hr_manager', 'agency_leader', 'attorney',
       'prosecutor', 'journalist', 'tcnn_news_caster', 'tcnn_chief_news_caster',
       'auctioneer', 'pastor', 'org_admin', 'empire_partner',
       'ceo_assistant', 'noah_assistant',
@@ -604,11 +602,6 @@ return {
           .select('id, user_id, room_name, started_at, ended_at, duration_seconds, is_active, rtc_provider');
 
         const rtcSessions = (sessions || []) as RTSSession[];
-        const activeRtcUsers = new Set(
-          rtcSessions
-            .filter((session) => session.is_active && session.user_id)
-            .map((session) => session.user_id),
-        ).size;
 
         let totalMinutesFromDB: number | null = null;
         try {
@@ -642,7 +635,6 @@ return {
         setStats({
           totalMinutes,
           activeSessions: rtcSessions.filter((s) => s.is_active).length,
-          activeUsers: activeRtcUsers,
           liveStreams: streamDetails.length + singOffDetails.length,
           liveStreamDetails: [...singOffDetails, ...streamDetails],
           totalUsers: totalUsers || 0,
@@ -1085,15 +1077,12 @@ const openAction = useCallback((user: UserListItem, action: string) => {
          if (activeAction === 'grant') {
              const amount = Number(actionAmount.trim());
              if (!Number.isSafeInteger(amount) || amount <= 0) throw new Error('Enter a valid amount');
-             const { data, error } = await supabase.functions.invoke('coin-admin', {
-               body: {
-                 userId: actionTarget.id,
-                 amount,
-                 reason: actionReason || 'Admin grant via RTC Monitor',
-               },
+             const { error } = await supabase.rpc('admin_grant_coins', {
+                 p_user_id: actionTarget.id,
+                 p_amount: amount,
+                 p_reason: actionReason || 'Admin grant via RTC Monitor',
              });
              if (error) throw error;
-             if (!data?.success) throw new Error(data?.error || 'Failed to grant coins');
              toast.success(`Granted ${amount.toLocaleString()} coins`);
          }
 
@@ -2382,7 +2371,7 @@ const renderRtcTab = () => (
               <Activity className="h-3 w-3 text-green-400" />
               <span className="truncate">Online</span>
             </div>
-            <div className="text-base font-bold leading-tight text-white">{stats.activeUsers}</div>
+            <div className="text-base font-bold leading-tight text-white">{displayOnlineCount}</div>
           </div>
           <StatCard label="Users" value={stats.totalUsers} tone="border-purple-500/20 bg-purple-500/10 text-purple-400" icon={<Users className="h-3 w-3" />} />
            <div className="rounded-md border border-blue-500/20 bg-blue-500/10 p-2">
