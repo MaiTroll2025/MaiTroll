@@ -2,6 +2,32 @@
 
 **Date:** 2026-10-05
 
+## Anonymous Access Review
+
+**Review date:** 2026-11-06  
+**Scope:** Anonymous (`anon`) access only  
+**Status:** Source-based review; production application of every migration and deployed function version still requires live Supabase verification.
+
+| # | Severity | File | Lines | Vulnerability | Confidence |
+|---|----------|------|-------|---------------|------------|
+| 1 | 🔴 CRITICAL | `migrations/20260819_create_treelz_missing_functions.sql` | 57-88, 106-107 | `send_treelz_tip` is `SECURITY DEFINER`, callable by `anon`, trusts caller-supplied sender IDs, and accepts negative amounts. | 10/10 |
+| 2 | 🟠 HIGH | `migrations/20260109_create_payment_logs.sql` | 73-81, 111-145 | Anonymous clients can insert/update payment logs under permissive RLS; completing a forged record can affect financial aggregates. | 9/10 |
+| 3 | 🟠 HIGH | `supabase/migrations/20260816000001_fix_user_profiles_public_read.sql` | 12-16 | Anonymous access can select every column from `user_profiles`, including sensitive identity, payout, tax, balance, and security fields. | 9/10 |
+| 4 | 🟠 HIGH | `supabase/migrations/20260810000009_enforce_stream_seat_limit.sql` | 9-11, 51-112, 120 | Anonymous callers can supply another user’s ID to `join_seat_atomic`, potentially charging that user and creating a seat session as them. | 9/10 |
+
+### Anonymous public surface
+
+Public routes include home, profiles, calendar/events, podcasts, gaming, Treelz, court, broadcasts, watch/live/stream pages, and MaiTroll Run. Anonymous LiveKit audience tokens are intentionally supported; publisher access still requires authentication.
+
+The reviewed source also exposes anonymous-callable functions/RPCs for guest-seat identity, bug reports, viewer tokens/tracking, Treelz operations, e-paper reads, signal logging, global event insertion, and IP-block checks. Their production behavior requires verification against deployed function versions and live grants.
+
+### Recommended remediation
+
+1. Revoke `anon` execution on `send_treelz_tip` and `join_seat_atomic`; derive actor identity from `auth.uid()` or use a server-issued guest identity.
+2. Remove anonymous table writes to `payment_logs`; accept payment completion only through validated webhook/service workflows.
+3. Revoke anonymous reads from the base `user_profiles` table and expose a restricted public-profile view with only safe fields.
+4. Verify live production grants, RLS policies, deployed Edge Function versions, and financial aggregate triggers before re-enabling affected flows.
+
 ## Findings
 
 | # | Severity | File | Lines | Vulnerability | Confidence |
