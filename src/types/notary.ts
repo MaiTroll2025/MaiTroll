@@ -154,7 +154,6 @@ export type NotaryTab =
   | 'approval_logs'
   | 'payroll'
   | 'loans'
-  | 'agency'
   | 'staff_apps'
   | 'my_documents'
   | 'create'

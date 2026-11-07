@@ -321,8 +321,6 @@ export default function AllApplications() {
         return 'Lead Officer'
       case 'troller':
         return 'Troller'
-      case 'troll_family':
-        return 'Troll Family'
       case 'troll_station_dj':
         return 'Troll Station DJ'
       case 'troll_station_manager':

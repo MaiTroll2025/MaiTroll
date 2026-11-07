@@ -11,28 +11,10 @@ const STAFF_ROLES = new Set([
   'secretary',
   'prosecutor',
   'attorney',
-  'agency_hr_manager',
-  'agency_hr',
   'hr_admin',
   'marketing_agent',
   'empire_partner',
 ]);
-
-const AGENCY_HR_ROLES = new Set([
-  'agency_hr',
-  'agency_hr_manager',
-  'agency hr',
-  'agency hr manager',
-]);
-
-export function isAgencyHRProfile(profile: any): boolean {
-  if (!profile) return false;
-
-  const role = String(profile.role || '').toLowerCase();
-  const trollRole = String(profile.troll_role || '').toLowerCase();
-
-  return AGENCY_HR_ROLES.has(role) || AGENCY_HR_ROLES.has(trollRole);
-}
 
 export function isStaffProfile(profile: any): boolean {
   if (!profile) return false;
@@ -65,8 +47,6 @@ export const NIGHT_WATCH_PATROL_ROLES = [
   'troll_officer',
   'ceo_assistant',
   'noah_assistant',
-  'agency_hr',
-  'agency_hr_manager',
   'hr_admin',
   'marketing_agent',
   'secretary'
@@ -97,8 +77,6 @@ export function canAccessNightWatch(profile: any): boolean {
     role === 'troll_officer' ||
     role === 'ceo_assistant' ||
     role === 'noah_assistant' ||
-    role === 'agency_hr' ||
-    role === 'agency_hr_manager' ||
     role === 'hr_admin' ||
     role === 'secretary' ||
     trollRole === 'admin' ||

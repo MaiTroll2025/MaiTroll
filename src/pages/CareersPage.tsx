@@ -182,26 +182,6 @@ const volunteerRoles: VolunteerRole[] = [
     requirements: ['Leadership', 'Clear communication', 'Strong judgment'],
   },
   {
-    id: 'agency_hr_manager',
-    roleKey: 'agency_hr_manager',
-    title: 'Agency HR Manager',
-    category: 'Agency',
-    description: 'Help an approved Mai Troll agency manage its internal volunteer/member workflows.',
-    responsibilities: ['Help manage agency member processes', 'Support approved agency role workflows', 'Follow agency and platform rules'],
-    powers: ['Agency HR manager tools, including permissions tied to is_agency_hr_manager where applicable'],
-    requirements: ['Organization', 'Fair judgment', 'Ability to handle member information responsibly'],
-  },
-  {
-    id: 'agency_leader',
-    roleKey: 'agency_leader',
-    title: 'Agency Leader',
-    category: 'Agency',
-    description: 'Help lead an approved Mai Troll agency and coordinate its platform activities.',
-    responsibilities: ['Guide agency activity', 'Help manage agency members', 'Follow Mai Troll agency rules'],
-    powers: ['Agency leadership permissions assigned by Mai Troll'],
-    requirements: ['Leadership', 'Responsibility', 'Good communication'],
-  },
-  {
     id: 'hr_manager',
     roleKey: 'hr_manager',
     title: 'HR Manager',
@@ -270,16 +250,6 @@ const volunteerRoles: VolunteerRole[] = [
     responsibilities: ['Participate responsibly', 'Follow platform rules', 'Use any assigned role powers appropriately'],
     powers: ['Troller permissions assigned by Mai Troll'],
     requirements: ['Good standing', 'Responsible behavior', 'Understanding of community rules'],
-  },
-  {
-    id: 'troll_family',
-    roleKey: 'troll_family',
-    title: 'Troll Family',
-    category: 'Community',
-    description: 'Participate in approved Troll Family community features and responsibilities inside Mai Troll.',
-    responsibilities: ['Support approved family activities', 'Follow community rules', 'Use family-related permissions responsibly'],
-    powers: ['Troll Family permissions assigned by Mai Troll'],
-    requirements: ['Good standing', 'Community participation', 'Responsible conduct'],
   },
 ]
 

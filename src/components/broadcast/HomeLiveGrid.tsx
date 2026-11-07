@@ -6,6 +6,7 @@ import { Users, Radio, Star, TrendingUp, Zap } from 'lucide-react';
 import LazyLiveThumbnail from '@/components/broadcast/LazyLiveThumbnail';
 import { toast } from 'sonner';
 import FacebookPublishButton from '@/components/marketing/FacebookPublishButton';
+import ActiveOfficialEventTiles from '@/components/maiCalendar/ActiveOfficialEventTiles';
 
 interface Stream {
   id: string;
@@ -162,37 +163,45 @@ export default function HomeLiveGrid() {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="bg-slate-900/50 rounded-xl aspect-video animate-pulse border border-white/5" />
-        ))}
-      </div>
+      <>
+        <ActiveOfficialEventTiles />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-slate-900/50 rounded-xl aspect-video animate-pulse border border-white/5" />
+          ))}
+        </div>
+      </>
     )
   }
 
   if (streams.length === 0) {
     return (
-      <div className="text-center py-12 bg-slate-900/30 rounded-2xl border border-white/5 backdrop-blur-sm">
-        <div className="bg-slate-800/50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Radio className="w-8 h-8 text-slate-500" />
+      <>
+        <ActiveOfficialEventTiles />
+        <div className="text-center py-12 bg-slate-900/30 rounded-2xl border border-white/5 backdrop-blur-sm">
+          <div className="bg-slate-800/50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Radio className="w-8 h-8 text-slate-500" />
+          </div>
+          <h3 className="text-xl font-semibold text-slate-300 mb-2">No Live Streams</h3>
+          <p className="text-slate-500 max-w-sm mx-auto">
+            It&apos;s quiet in Mai Troll right now. Be the first to go live!
+          </p>
+          <button
+            onClick={() => navigate('/broadcast/setup')}
+            className="mt-6 px-6 py-2 bg-gradient-to-r from-purple-600 to-cyan-600 text-white rounded-lg font-medium hover:opacity-90 transition-opacity"
+          >
+            Start Streaming
+          </button>
         </div>
-        <h3 className="text-xl font-semibold text-slate-300 mb-2">No Live Streams</h3>
-        <p className="text-slate-500 max-w-sm mx-auto">
-          It&apos;s quiet in Mai Troll right now. Be the first to go live!
-        </p>
-        <button
-          onClick={() => navigate('/broadcast/setup')}
-          className="mt-6 px-6 py-2 bg-gradient-to-r from-purple-600 to-cyan-600 text-white rounded-lg font-medium hover:opacity-90 transition-opacity"
-        >
-          Start Streaming
-        </button>
-      </div>
+      </>
     )
   }
 
   return (
-    <div className="max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <>
+      <ActiveOfficialEventTiles />
+      <div className="max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {streams.map((stream) => (
           <div
             key={stream.id}
@@ -291,7 +300,8 @@ export default function HomeLiveGrid() {
             </div>
           </div>
         ))}
+        </div>
       </div>
-    </div>
+    </>
   )
 }

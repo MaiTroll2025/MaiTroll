@@ -8,7 +8,6 @@ import { PreflightStore } from '../../lib/preflightStore';
 import { generateUUID } from '../../lib/uuid';
 import { toast } from 'sonner';
 import { useMissionProgress } from '../../hooks/useMissionProgress';
-import useTrollFamilyActivity from '../../hooks/useTrollFamilyActivity';
 import GiftBoxModal from './GiftBoxModal';
 import ModActionsPopup from './ModActionsPopup';
 import ProfileFrame from '@/components/profile/ProfileFrame';
@@ -481,7 +480,6 @@ export default function BroadcastChat({
   const { user, profile } = useAuthStore();
   const { userChatDisabled, chatDisabledRemainingMinutes } = useChatBlockStatus(user?.id, streamId);
   const { trackChatMessage } = useMissionProgress(streamId);
-  const { recordChatMessage } = useTrollFamilyActivity();
   const { highestTier: viewerHighestTier } = useUserSubscriptionTier(user?.id);
   const { badges: subscriberBadges } = useSubscriberBadges(hostId);
 
@@ -1635,9 +1633,6 @@ const fetchMessages = async () => {
             : message
         ));
         trackChatMessage();
-        
-        // Record family activity for chat message
-        await recordChatMessage(content.length, streamId);
         
         onMessageSent?.();
         } catch (err: any) {

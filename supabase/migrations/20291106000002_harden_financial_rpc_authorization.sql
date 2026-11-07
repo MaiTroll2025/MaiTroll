@@ -62,12 +62,20 @@ BEGIN
       USING ERRCODE = 'P0002';
   END IF;
 
-  INSERT INTO public.admin_audit_logs (admin_id, target_id, action, details, created_at)
+  INSERT INTO public.admin_actions_log (
+    admin_user_id,
+    target_user_id,
+    action_type,
+    reason,
+    metadata,
+    created_at
+  )
   VALUES (
     p_admin_id,
     p_user_id,
     'update_profile_field',
-    jsonb_build_object('updates', p_updates, 'reason', p_reason),
+    p_reason,
+    jsonb_build_object('updates', p_updates),
     now()
   );
 
@@ -532,15 +540,47 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = pg_catalog, public
 AS $$
+BEGIN
+  RAISE EXCEPTION 'Verified PayPal batch ID is required to finalize a payout'
+    USING ERRCODE = '42501';
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.troll_bank_finalize_cashout(
+  p_request_id uuid,
+  p_admin_id uuid,
+  p_paypal_batch_id text
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = pg_catalog, public
+AS $$
 DECLARE
   v_payout public.payout_requests%ROWTYPE;
   v_claim_id uuid;
   v_promo_result jsonb;
   v_now timestamptz := now();
 BEGIN
-  IF p_admin_id IS NULL THEN
-    RAISE EXCEPTION 'A verified processing actor is required'
+  IF p_admin_id IS NULL
+     OR p_paypal_batch_id IS NULL
+     OR btrim(p_paypal_batch_id) = '' THEN
+    RAISE EXCEPTION 'A verified actor and PayPal batch ID are required'
       USING ERRCODE = '22023';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM public.user_profiles
+    WHERE id = p_admin_id
+      AND (
+        role IN ('admin', 'lead_troll_officer')
+        OR is_admin = true
+        OR is_lead_officer = true
+      )
+  ) THEN
+    RAISE EXCEPTION 'Unauthorized payout processor'
+      USING ERRCODE = '42501';
   END IF;
 
   SELECT *
@@ -553,12 +593,31 @@ BEGIN
     RETURN jsonb_build_object('success', false, 'error', 'Payout request not found');
   END IF;
 
-  IF v_payout.status IN ('paid', 'completed') THEN
+  IF v_payout.status = 'paid' THEN
+    IF v_payout.payment_reference IS DISTINCT FROM p_paypal_batch_id THEN
+      RAISE EXCEPTION 'PayPal batch ID does not match the settled payout'
+        USING ERRCODE = '22023';
+    END IF;
     RETURN jsonb_build_object('success', true, 'message', 'Already paid', 'duplicate', true);
   END IF;
 
+  IF COALESCE(
+       to_jsonb(v_payout)->>'payment_method',
+       to_jsonb(v_payout)->>'provider_type'
+     ) IS DISTINCT FROM 'paypal' THEN
+    RAISE EXCEPTION 'Only PayPal payouts can be finalized by this function'
+      USING ERRCODE = '22023';
+  END IF;
+
+  IF v_payout.payment_reference IS NOT NULL
+     AND v_payout.payment_reference <> ''
+     AND v_payout.payment_reference <> p_paypal_batch_id THEN
+    RAISE EXCEPTION 'PayPal batch ID does not match the payout request'
+      USING ERRCODE = '22023';
+  END IF;
+
   IF v_payout.status IS NULL
-     OR v_payout.status NOT IN ('pending', 'approved', 'processing') THEN
+     OR v_payout.status NOT IN ('pending', 'approved', 'processing', 'failed') THEN
     RETURN jsonb_build_object(
       'success', false,
       'error', 'Payout is not in a payable state',
@@ -566,12 +625,30 @@ BEGIN
     );
   END IF;
 
+  PERFORM set_config('app.paypal_settlement_verified', 'true', true);
+
   UPDATE public.payout_requests
   SET status = 'paid',
       paid_at = v_now,
       updated_at = v_now,
-      processed_by = p_admin_id
+      processed_by = p_admin_id,
+      payment_reference = p_paypal_batch_id
   WHERE id = p_request_id;
+  IF EXISTS (
+    SELECT 1 FROM pg_attribute
+    WHERE attrelid = 'public.user_profiles'::regclass
+      AND attname = 'cashout_reserved_coins'
+      AND NOT attisdropped
+  ) THEN
+    EXECUTE '
+      UPDATE public.user_profiles
+      SET cashout_reserved_coins = GREATEST(
+            0, COALESCE(cashout_reserved_coins, 0) - $1
+          ),
+          updated_at = $2
+      WHERE id = $3'
+    USING COALESCE(v_payout.coin_amount, 0), v_now, v_payout.user_id;
+  END IF;
 
   INSERT INTO public.coin_transactions (
     user_id,
@@ -588,6 +665,7 @@ BEGIN
     'Cashout finalized - payout processed',
     jsonb_build_object(
       'payout_request_id', p_request_id,
+      'paypal_batch_id', p_paypal_batch_id,
       'admin_id', p_admin_id,
       'action', 'finalize'
     ),
@@ -613,6 +691,7 @@ BEGIN
   RETURN jsonb_build_object(
     'success', true,
     'payout_id', p_request_id,
+    'paypal_batch_id', p_paypal_batch_id,
     'promotion_issued', COALESCE((v_promo_result->>'success')::boolean, false),
     'promotion', v_promo_result,
     'duplicate', false
@@ -642,6 +721,20 @@ BEGIN
       USING ERRCODE = '22023';
   END IF;
 
+  IF NOT EXISTS (
+    SELECT 1
+    FROM public.user_profiles
+    WHERE id = p_admin_id
+      AND (
+        role IN ('admin', 'lead_troll_officer')
+        OR is_admin = true
+        OR is_lead_officer = true
+      )
+  ) THEN
+    RAISE EXCEPTION 'Unauthorized payout processor'
+      USING ERRCODE = '42501';
+  END IF;
+
   SELECT *
   INTO v_payout
   FROM public.payout_requests
@@ -660,8 +753,15 @@ BEGIN
     RETURN jsonb_build_object('success', false, 'error', 'Cannot cancel a paid payout');
   END IF;
 
+  IF COALESCE(v_payout.payment_reference, '') <> '' THEN
+    RETURN jsonb_build_object(
+      'success', false,
+      'error', 'A payout submitted to PayPal must be reconciled with PayPal before refunding'
+    );
+  END IF;
+
   IF v_payout.status IS NULL
-     OR v_payout.status NOT IN ('pending', 'approved', 'processing', 'failed') THEN
+     OR v_payout.status NOT IN ('pending', 'approved', 'failed') THEN
     RETURN jsonb_build_object(
       'success', false,
       'error', 'Payout is not in a refundable state',
@@ -684,6 +784,20 @@ BEGIN
   IF v_updated_rows = 0 THEN
     RAISE EXCEPTION 'Payout owner not found'
       USING ERRCODE = 'P0002';
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM pg_attribute
+    WHERE attrelid = 'public.user_profiles'::regclass
+      AND attname = 'cashout_reserved_coins'
+      AND NOT attisdropped
+  ) THEN
+    EXECUTE '
+      UPDATE public.user_profiles
+      SET cashout_reserved_coins = GREATEST(
+            0, COALESCE(cashout_reserved_coins, 0) - $1
+          )
+      WHERE id = $2'
+    USING COALESCE(v_payout.coin_amount, 0), v_payout.user_id;
   END IF;
 
   UPDATE public.payout_requests
@@ -747,8 +861,47 @@ BEGIN
 END;
 $$;
 
+CREATE OR REPLACE FUNCTION public.guard_payout_paid_transition()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = pg_catalog, public
+AS $$
+BEGIN
+  IF NEW.status = 'paid'
+     AND (
+       auth.role() IS DISTINCT FROM 'service_role'
+       OR current_setting('app.paypal_settlement_verified', true) IS DISTINCT FROM 'true'
+     ) THEN
+    IF TG_OP = 'INSERT' THEN
+      RAISE EXCEPTION 'Payouts can only be marked paid after verified PayPal settlement'
+        USING ERRCODE = '42501';
+    END IF;
+    IF OLD.status IS DISTINCT FROM 'paid' THEN
+      RAISE EXCEPTION 'Payouts can only be marked paid after verified PayPal settlement'
+        USING ERRCODE = '42501';
+    END IF;
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS guard_payout_paid_transition ON public.payout_requests;
+CREATE TRIGGER guard_payout_paid_transition
+  BEFORE INSERT OR UPDATE OF status ON public.payout_requests
+  FOR EACH ROW
+  EXECUTE FUNCTION public.guard_payout_paid_transition();
+
 REVOKE ALL ON FUNCTION public.can_cashout(uuid) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.can_cashout(uuid) TO authenticated, service_role;
+
+REVOKE ALL PRIVILEGES ON FUNCTION public.troll_bank_finalize_cashout(uuid, uuid)
+  FROM PUBLIC, anon, authenticated, service_role;
+REVOKE ALL PRIVILEGES ON FUNCTION public.guard_payout_paid_transition()
+  FROM PUBLIC, anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.troll_bank_finalize_cashout(uuid, uuid, text)
+  TO service_role;
 
 DO $$
 DECLARE

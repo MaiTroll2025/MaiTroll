@@ -1,5 +1,5 @@
 import React from "react";
-import { Bell, Crown, FileText, Gavel, GraduationCap, Home, Lock, MessageCircle, Radio, Scan, Settings, Shield, Sparkles, Store, User, Wrench, Heart, Gamepad2, DollarSign, Newspaper, BarChart3 } from "lucide-react";
+import { Bell, Crown, FileText, Gavel, GraduationCap, Home, Lock, MessageCircle, Radio, Scan, Settings, Shield, Sparkles, Store, User, Wrench, Gamepad2, DollarSign, Newspaper, BarChart3 } from "lucide-react";
 
 import MobileHomePage from "./pages/MobileHomepage";
 import MobileSetupPage from "./pages/MobileSetupPage";
@@ -43,9 +43,6 @@ export type MobileUserRole =
   | "troll_court_prosecutor"
   | "seller"
   | "troller"
-  | "agency_hr"
-  | "agency_hr_manager"
-  | "agency_leader"
   | "ceo_assistant"
   | "noah_assistant"
   | string;
@@ -234,17 +231,6 @@ export const mobileRoutes: MobileRouteItem[] = [
     showInBottomBubble: true,
   },
   {
-    key: "troll-match",
-    label: "Troll Match",
-    path: "/match",
-    element: <MobilePlaceholder title="Troll Match" />,
-    icon: Heart,
-    priority: 97,
-    regular: true,
-    public: true,
-    showInBottomBubble: true,
-  },
-  {
     key: "city-laws-fees",
     label: "City Laws & Fees",
     path: "/city-laws-fees",
@@ -262,7 +248,7 @@ export const mobileRoutes: MobileRouteItem[] = [
     element: <MobilePlaceholder title="Department Tools" />,
     icon: Wrench,
     priority: 99,
-    roles: ["troll_officer", "lead_troll_officer", "secretary", "ceo_assistant", "noah_assistant", "pastor", "attorney", "prosecutor", "moderator", "agency_hr_manager", "hr_admin", "journalist", "auctioneer", "admin", "ceo"],
+    roles: ["troll_officer", "lead_troll_officer", "secretary", "ceo_assistant", "noah_assistant", "pastor", "attorney", "prosecutor", "moderator", "hr_admin", "journalist", "auctioneer", "admin", "ceo"],
     showInBottomBubble: true,
   },
 
@@ -449,16 +435,6 @@ export const mobileRoutes: MobileRouteItem[] = [
     icon: GraduationCap,
     priority: 210,
     roles: ["student", "org_student", "org_admin", "president", "ceo", "admin"],
-    showInBottomBubble: true,
-  },
-  {
-    key: "agency-hr",
-    label: "Agency HR",
-    path: "/department-tools",
-    element: <MobilePlaceholder title="Department Tools" />,
-    icon: Wrench,
-    priority: 220,
-    roles: ["agency_hr", "agency_hr_manager", "agency_leader", "org_admin", "president", "ceo", "admin"],
     showInBottomBubble: true,
   },
   {

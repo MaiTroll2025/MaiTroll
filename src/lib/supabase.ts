@@ -173,8 +173,6 @@ export interface UserProfile {
   temporary_review_status?: 'active' | 'expired' | 'deletion_pending' | null
   display_name: string
   name: string
-  is_agency_hr: boolean
-  is_agency_hr_manager: any
   is_superadmin: boolean
   id: string
   username: string
@@ -413,10 +411,8 @@ export interface UserProfile {
   is_staff?: boolean
   is_moderator?: boolean
   is_owner?: boolean
-  is_troll_family?: boolean
   is_troller?: boolean
-  is_troll_family_leader?: boolean
-  is_agency_leader?: boolean
+  is_hr_admin?: boolean
   is_noah_admin?: boolean
   is_ceo_assistant?: boolean
   is_noah_assistant?: boolean
@@ -643,11 +639,9 @@ export enum UserRole {
   MODERATOR = 'moderator',
   ADMIN = 'admin',
   OWNER = 'owner',
-  AGENCY_HR_MANAGER = 'agency_hr_manager',
   HR_ADMIN = 'hr_admin',
   HR_MANAGER = 'hr_manager',
   PASTOR = 'pastor',
-  AGENCY_LEADER = 'agency_leader',
   ATTORNEY = 'attorney',
   PROSECUTOR = 'prosecutor',
   JOURNALIST = 'journalist',
@@ -656,7 +650,6 @@ export enum UserRole {
   NOAH_ASSISTANT = 'noah_assistant',
   LEAD_TROLL_OFFICER = 'lead_troll_officer',
   TROLL_OFFICER = 'troll_officer',
-  TROLL_FAMILY = 'troll_family',
   TROLLER = 'troller',
   EMPIRE_PARTNER = 'empire_partner',
   SECRETARY = 'secretary',
@@ -729,11 +722,6 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.ISSUE_WARNINGS,
     Permission.MANAGE_USERS
   ],
-  [UserRole.TROLL_FAMILY]: [
-    Permission.BROADCAST,
-    Permission.CREATE_CONTENT,
-    Permission.MONETIZE
-  ],
   [UserRole.TROLLER]: [
     Permission.BROADCAST,
     Permission.CREATE_CONTENT
@@ -779,16 +767,6 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   ],
   [UserRole.HR_ADMIN]: [
     // HR Admin has user management permissions
-    Permission.MANAGE_USERS,
-    Permission.MODERATE_CHAT,
-    Permission.MODERATE_STREAMS,
-    Permission.MANAGE_REPORTS,
-    Permission.ISSUE_WARNINGS,
-    Permission.BROADCAST,
-    Permission.CREATE_CONTENT,
-    Permission.MONETIZE
-  ],
-  [UserRole.AGENCY_HR_MANAGER]: [
     Permission.MANAGE_USERS,
     Permission.MODERATE_CHAT,
     Permission.MODERATE_STREAMS,
@@ -917,12 +895,6 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.MONETIZE,
     Permission.MODERATE_CHAT
   ],
-  [UserRole.AGENCY_LEADER]: [
-    Permission.MANAGE_USERS,
-    Permission.BROADCAST,
-    Permission.CREATE_CONTENT,
-    Permission.MONETIZE
-  ],
   [UserRole.ATTORNEY]: [
     Permission.BROADCAST,
     Permission.CREATE_CONTENT,
@@ -1040,9 +1012,6 @@ export const hasRole = (
     journalist: (profile as any).is_journalist,
     tcnn_news_caster: (profile as any).is_news_caster,
     tcnn_chief_news_caster: (profile as any).is_chief_news_caster,
-    agency_hr: (profile as any).is_agency_hr,
-    agency_hr_manager: (profile as any).is_agency_hr_manager,
-    agency_leader: (profile as any).is_agency_leader,
     hr_manager: (profile as any).is_hr_manager,
     hr_admin: (profile as any).is_hr_admin,
     ceo_assistant: (profile as any).is_ceo_assistant,
@@ -1124,12 +1093,10 @@ export const getRoleDisplayName = (role?: string | null, _isAdmin?: boolean): st
     'moderator': 'Moderator',
     'troll_officer': 'Troll Officer',
     'lead_troll_officer': 'Lead Officer',
-    'troll_family': 'Troll Family',
     'troller': 'Troller',
     'secretary': 'Secretary',
     'president': 'President',
     'vice_president': 'Vice President',
-    'agency_hr_manager': 'Agency HR Manager',
     'hr_admin': 'HR Admin',
     'temp_city_admin': 'Temp Admin',
     'temp_admin': 'Temp Admin',

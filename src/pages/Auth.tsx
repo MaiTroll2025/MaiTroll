@@ -427,7 +427,6 @@ const [showPassword, setShowPassword] = useState(false)
 
   const landingForProfile = (prof: any) => {
     const userRole = prof?.role || prof?.troll_role
-    if (userRole === 'troll_family') return '/family/home'
     return '/home'
   }
 

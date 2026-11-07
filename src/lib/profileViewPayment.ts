@@ -78,50 +78,7 @@ export async function chargeProfileView(
     return { success: true }
   }
 
-  if (profileViewPrice > 0) {
-    return {
-      success: false,
-      error: 'Paid profile views are temporarily unavailable while secure server-side settlement is being deployed.',
-    }
-  }
-
-  try {
-    // Deduct from viewer securely
-    const { data: spendResult, error: spendError } = await supabase.rpc('troll_bank_spend_coins', {
-      p_user_id: viewerId,
-      p_amount: profileViewPrice,
-      p_bucket: 'profile_view',
-      p_source: 'profile_view',
-      p_metadata: { profile_owner_id: profileOwnerId }
-    })
-
-    if (spendError) {
-      return { success: false, error: spendError.message }
-    }
-
-    if (spendResult && spendResult.success === false) {
-      return { success: false, error: spendResult.error || 'Insufficient balance' }
-    }
-
-    // Note: If we need to credit the profile owner, we should add that logic here using a credit RPC
-    // For now, we only handle the deduction as per original code structure
-    
-    // Add to profile owner's earned coins
-    const { error: ownerError } = await supabase.rpc('add_troll_coins', {
-       p_user_id: profileOwnerId,
-       p_amount: profileViewPrice
-    });
-
-    if (ownerError) {
-       console.error('Error adding coins to owner:', ownerError);
-       // Don't fail the transaction, just log it
-    }
-
-    return { success: true }
-  } catch (error: any) {
-    console.error('Error charging profile view:', error)
-    return { success: false, error: error.message || 'Unknown error' }
-  }
+  return { success: false, error: 'Paid profile views are temporarily unavailable.' }
 }
 
 /**
@@ -136,6 +93,10 @@ export async function chargeMessageCost(
   recipientId: string,
   cost: number
 ): Promise<{ success: boolean; transactionId?: string; error?: string }> {
+  if (!senderId || !recipientId) {
+    return { success: false, error: 'Sender and recipient are required.' }
+  }
+
   if (!Number.isFinite(cost) || cost < 0) {
     return { success: false, error: 'Invalid message cost.' }
   }
@@ -144,67 +105,7 @@ export async function chargeMessageCost(
     return { success: true }
   }
 
-  if (cost > 0) {
-    return {
-      success: false,
-      error: 'Paid messages are temporarily unavailable while secure server-side settlement is being deployed.',
-    }
-  }
-
-  try {
-    // Deduct from sender securely using troll_bank_spend_coins
-    const { data: spendResult, error: spendError } = await supabase.rpc('troll_bank_spend_coins', {
-      p_user_id: senderId,
-      p_amount: cost,
-      p_bucket: 'message_cost',
-      p_source: 'message_payment',
-      p_metadata: { recipient_id: recipientId }
-    })
-
-    if (spendError) {
-      return { success: false, error: spendError.message }
-    }
-
-    if (spendResult && spendResult.success === false) {
-      return { success: false, error: spendResult.error || 'Insufficient balance' }
-    }
-
-    // Add to recipient's earned coins
-    const { error: ownerError } = await supabase.rpc('add_troll_coins', {
-      p_user_id: recipientId,
-      p_amount: cost
-    })
-
-    if (ownerError) {
-      console.error('Error adding coins to recipient:', ownerError)
-    }
-
-    // Record transaction
-    const { data: transaction, error: txError } = await supabase
-      .from('coin_transactions')
-      .insert({
-        user_id: senderId,
-        coins: -cost,
-        type: 'message_cost', 
-        source: 'message_payment',
-        payment_status: 'completed',
-        metadata: {
-          recipient_id: recipientId,
-          message_cost: cost
-        }
-      })
-      .select()
-      .single()
-
-    if (txError) {
-      console.error('Error recording transaction:', txError)
-    }
-
-    return { success: true, transactionId: transaction?.id }
-  } catch (error: any) {
-    console.error('Error charging message cost:', error)
-    return { success: false, error: error.message || 'Unknown error' }
-  }
+  return { success: false, error: 'Paid messages are temporarily unavailable.' }
 }
 
 /**

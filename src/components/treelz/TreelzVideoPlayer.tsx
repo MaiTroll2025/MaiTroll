@@ -18,6 +18,7 @@ import {
 import { useAuthStore } from '@/lib/store'
 import { toast } from 'sonner'
 import FacebookPublishButton from '@/components/marketing/FacebookPublishButton'
+import '../../styles/ios-treelz.css'
 
 function formatCount(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
@@ -354,7 +355,7 @@ function ActionBubble({
 }) {
   return (
     <button onClick={onClick} className="group flex flex-col items-center gap-1 border-none bg-transparent p-0 text-white">
-      <span className={`relative flex h-12 w-12 items-center justify-center rounded-2xl border backdrop-blur-2xl transition duration-300 group-hover:-translate-y-1 group-hover:scale-105 ${active ? 'border-cyan-300/55 bg-cyan-300/18 shadow-[0_0_28px_rgba(34,211,238,0.35)]' : 'border-white/15 bg-black/35 shadow-[0_12px_42px_rgba(0,0,0,0.35)] group-hover:border-white/35 group-hover:bg-white/12'}`}>
+      <span className={`relative flex h-10 w-10 items-center justify-center rounded-xl border backdrop-blur-2xl transition duration-300 group-hover:-translate-y-1 group-hover:scale-105 ${active ? 'border-cyan-300/55 bg-cyan-300/18 shadow-[0_0_28px_rgba(34,211,238,0.35)]' : 'border-white/15 bg-black/35 shadow-[0_12px_42px_rgba(0,0,0,0.35)] group-hover:border-white/35 group-hover:bg-white/12'}`}>
         <span className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/15 via-transparent to-cyan-300/10 opacity-0 transition-opacity group-hover:opacity-100" />
         <span className="relative z-10">{children}</span>
       </span>
@@ -404,29 +405,29 @@ export const TreelzActions = memo(function TreelzActions({ post, onCommentClick,
   }
 
   return (
-    <div className="absolute bottom-24 right-3 z-30 flex flex-col items-center gap-4 md:right-4">
+    <div className="treelz-action-rail absolute bottom-24 right-3 z-30 flex flex-col items-center gap-3 md:right-4 md:gap-4">
       <ActionBubble label="Troll" count={trollCount} active={trolled} onClick={(e) => { e.stopPropagation(); handleTroll() }}>
-        <span className="text-[26px] drop-shadow">🤡</span>
+        <span className="text-[20px] drop-shadow">🤡</span>
       </ActionBubble>
 
       <ActionBubble label="Comments" count={post.comments_count || 0} onClick={(e) => { e.stopPropagation(); onCommentClick() }}>
-        <MessageCircle className="h-6 w-6" />
+        <MessageCircle className="h-5 w-5" />
       </ActionBubble>
 
       <ActionBubble label="Share" count={shareCount} onClick={(e) => { e.stopPropagation(); handleShareClick() }}>
-        <Share2 className="h-6 w-6" />
+        <Share2 className="h-5 w-5" />
       </ActionBubble>
 
       <ActionBubble label="Tip" count={post.gifts_received || 0} onClick={(e) => { e.stopPropagation(); onTip() }}>
-        <Gift className="h-6 w-6" />
+        <Gift className="h-5 w-5" />
       </ActionBubble>
 
       <ActionBubble label="Save" count={post.saves_count || 0} active={saved} onClick={(e) => { e.stopPropagation(); handleSave() }}>
-        <Bookmark className={`h-6 w-6 ${saved ? 'fill-cyan-200 text-cyan-200' : ''}`} />
+        <Bookmark className={`h-5 w-5 ${saved ? 'fill-cyan-200 text-cyan-200' : ''}`} />
       </ActionBubble>
 
       <ActionBubble label="More" onClick={(e) => { e.stopPropagation(); onMore() }}>
-        <MoreHorizontal className="h-6 w-6" />
+        <MoreHorizontal className="h-5 w-5" />
       </ActionBubble>
     </div>
   )

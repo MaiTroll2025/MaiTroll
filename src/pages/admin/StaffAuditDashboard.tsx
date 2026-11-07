@@ -18,7 +18,7 @@ const STAFF_ROLES = [
   'pastor', 'journalist', 'tcnn_news_caster', 'tcnn_chief_news_caster',
   'ceo_assistant', 'noah_assistant',
   'president', 'vice_president',
-  'hr_admin', 'hr_manager', 'agency_hr', 'agency_hr_manager', 'agency_leader',
+  'hr_admin', 'hr_manager',
   'marketing_agent', 'notary', 'broadofficer',
   'academy_teacher', 'academy_director', 'admissions_officer',
   'temp_city_admin', 'temp_admin', 'moderator',

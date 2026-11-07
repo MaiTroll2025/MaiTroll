@@ -71,6 +71,9 @@ export const PUBLIC_WEB_ONLY_ROUTES: string[] = [
   // /podcast/:id, /agency/:id, /watch/:id, /broadcast/:id, /gaming/watch/:id)
   // are deliberately absent so real phone visitors keep the native experience.
   // Only routes with no phone equivalent belong here.
+  '/calendar/events/:slug',
+  '/events',
+  '/events/:eventSlug',
   '/trending',
   '/creators',
   '/top-creators',
@@ -105,8 +108,6 @@ export const PUBLIC_WEB_ONLY_ROUTES: string[] = [
   '/:username/live/:slug',
   '/songs/:id',
   '/apply',
-  '/jobs',
-  '/jobs/apply',
   '/press',
   '/town-meeting',
 
@@ -222,11 +223,8 @@ export const PRIVATE_ROUTE_PREFIXES: string[] = [
   '/t',
   '/admin-mobile',
   '/founder',
-  '/agency-dashboard',
-  '/agency-hr-dashboard',
   '/xtrollz',
   '/mai-business',
-  '/agency-apply',
   '/hytrogaming/apply',
   '/hytrogaming/contract',
 

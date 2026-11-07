@@ -22,6 +22,11 @@ type UID = import('agora-rtc-sdk-ng').UID;
 const MAX_JOIN_RETRIES = 3;
 const RETRY_DELAYS_MS = [1000, 3000, 5000];
 
+function isAgoraUid(value: unknown): value is UID {
+  return typeof value === 'string' ||
+    (typeof value === 'number' && Number.isInteger(value) && value >= 0);
+}
+
 function isRetryableJoinError(err: any): boolean {
   if (!err) return false;
   const message = String(err?.message || err || '').toLowerCase();
@@ -35,6 +40,9 @@ function isRetryableJoinError(err: any): boolean {
 export function useAgoraRoom({
   channelName,
   userId,
+  eventId,
+  roomType,
+  meetingId,
   userName: _userName = 'User',
   role = 'publisher',
   onUserJoined,
@@ -43,6 +51,9 @@ export function useAgoraRoom({
 }: {
   channelName: string;
   userId: string;
+  eventId?: string;
+  roomType?: string;
+  meetingId?: string;
   userName?: string;
   role?: 'publisher' | 'subscriber';
   onUserJoined?: (user: IAgoraRTCRemoteUser) => void;
@@ -131,18 +142,25 @@ export function useAgoraRoom({
   }, [getAgoraAppId, onError, onUserJoined, onUserLeft]);
 
   // Fetch Agora token
-  const fetchAgoraToken = useCallback(async (channel: string, uid: UID) => {
+  const fetchAgoraToken = useCallback(async (channel: string, uid: UID): Promise<{ token: string; uid: UID }> => {
     try {
       debugAgora('🎫 Fetching Agora token for channel:', channel, 'uid:', uid);
 
-      const { data, error: tokenError } = await supabase.functions.invoke('agora-token', {
-        body: {
-          channel,
-          userId: uid.toString(),
-          tokenType: 'rtc',
-          role
+      const { data, error: tokenError } = await supabase.functions.invoke(
+        eventId ? 'official-event-token' : 'agora-token',
+        {
+          body: eventId
+            ? { channel, eventId, role }
+            : {
+                channel,
+                userId: uid.toString(),
+                tokenType: 'rtc',
+                role,
+                ...(roomType ? { roomType } : {}),
+                ...(meetingId ? { meetingId } : {})
+            }
         }
-      });
+      );
 
       if (tokenError) {
         console.error('❌ Token fetch error response:', tokenError);
@@ -160,13 +178,16 @@ export function useAgoraRoom({
       }
 
       debugAgora('✅ Agora token received, length:', data.token.length);
-      return data.token;
+      const resolvedUid = (eventId || roomType) && isAgoraUid(data.uid)
+        ? data.uid
+        : uid;
+      return { token: data.token, uid: resolvedUid };
     } catch (err) {
       const errMsg = err instanceof Error ? err.message : 'Failed to fetch Agora token';
       console.error('❌ Token fetch error:', errMsg, err);
       throw err;
     }
-  }, [role]);
+  }, [eventId, meetingId, role, roomType]);
 
   // Convert user ID to numeric UID
   const getUserUid = (uid: string): UID => {
@@ -200,8 +221,8 @@ export function useAgoraRoom({
   }, []);
 
   // Join channel with retry only for network/5xx errors
-  const joinChannel = useCallback(async () => {
-    if (joiningRef.current || joinedRef.current) return;
+  const joinChannel = useCallback(async (): Promise<boolean> => {
+    if (joiningRef.current || joinedRef.current) return joinedRef.current;
 
     joiningRef.current = true;
     joinAbortRef.current = false;
@@ -258,8 +279,8 @@ export function useAgoraRoom({
 
           clientRef.current = client;
 
-          const token = await fetchAgoraToken(channelName, uid);
-          const joinPromise = client.join(appId, channelName, token, uid);
+          const { token, uid: resolvedUid } = await fetchAgoraToken(channelName, uid);
+          const joinPromise = client.join(appId, channelName, token, resolvedUid);
           const timeoutPromise = new Promise<never>((_, reject) =>
             setTimeout(() => reject(new Error('Join timeout - connection took too long')), 15000)
           );
@@ -303,7 +324,7 @@ export function useAgoraRoom({
           }
 
           debugAgora('✅ Joined Agora channel');
-          return;
+          return true;
         } catch (err) {
           lastError = err;
           const shouldRetry = isRetryableJoinError(err);
@@ -328,6 +349,7 @@ export function useAgoraRoom({
       joiningRef.current = false;
       onError?.(errMsg);
       toast.error('Meeting connection failed: ' + errMsg);
+      return false;
     }
   }, [getAgoraAppId, userId, cleanClientAfterFailure, fetchAgoraToken, channelName, role, onUserJoined, onUserLeft, onError]);
 
@@ -400,6 +422,3 @@ export function useAgoraRoom({
     toggleMicrophone
   };
 }
-
-
-

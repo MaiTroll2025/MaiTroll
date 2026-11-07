@@ -26,7 +26,6 @@ import {
 
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { useLeagueProgress } from '../../hooks/useLeagueProgress'
-import { useTrollFamilyActivity } from '../../hooks/useTrollFamilyActivity'
 import { useChatBlockStatus } from '../../hooks/useChatBlockStatus'
 import LeagueProgressPanel from '../../components/broadcast/LeagueProgressPanel'
 import LeagueLevelUpBanner from '../../components/broadcast/LeagueLevelUpBanner'
@@ -43,6 +42,7 @@ import MobileAudienceTicker from '@/components/broadcast/MobileAudienceTicker'
 import BroadcastOfficerModal from '../../components/broadcast/BroadcastOfficerModal'
 import PayBroadOfficersModal from '../../components/broadcast/PayBroadOfficersModal'
 import MoreControlsDrawer from '../../components/broadcast/MoreControlsDrawer'
+import LiveFeatureQuickAccess from '../../components/broadcast/LiveFeatureQuickAccess'
 import MobileBroadcastHostSettings from '../../components/broadcast/MobileBroadcastHostSettings'
 import BroadcasterControlsModal from '@/components/broadcast/BroadcasterControlsModal'
 import CameraOffImageModal from '@/components/broadcast/CameraOffImageModal'
@@ -631,7 +631,6 @@ export function BroadcastPage() {
   const founderStatus = useFounderSelfStatus()
   const { clearTracks, screenTrack, cameraTrack } = useStreamStore()
   const { isMobileWidth, hasMounted } = useIsMobile()
-  const { recordStreamStarted } = useTrollFamilyActivity()
   const {
     featuredBroadcasters,
     featuredEvent,
@@ -3342,11 +3341,7 @@ const handleOpenShareModal = useCallback(() => setIsShareModalOpen(true), [])
       };
     });
 
-    // Record stream started event if transitioning from not live to live
     if (!wasLive && isNowLive && streamId) {
-       recordStreamStarted(streamId).catch(err => {
-         console.warn('[BroadcastPage] Failed to record stream started:', err)
-       })
         void Promise.resolve(
           supabase.from('rtc_sessions').insert({
             user_id: user?.id,
@@ -3381,7 +3376,7 @@ const handleOpenShareModal = useCallback(() => setIsShareModalOpen(true), [])
         navigate(`/broadcast/summary/${nextStream.id || streamId}`);
       }, 100);
     }
-  }, [areStreamRealtimeUpdatesEqual, navigate, recordStreamStarted, streamId, user?.id]);
+  }, [areStreamRealtimeUpdatesEqual, navigate, streamId, user?.id]);
 
   // Ensure rtc_sessions exists when stream is live (handles page load after stream already started)
   useEffect(() => {
@@ -5319,8 +5314,7 @@ const toggleMicrophone = useCallback(async () => {
 
     const MOD_MENU_ROLE_TYPES = new Set([
       'broadcaster', 'troll_officer', 'lead_troll_officer', 'pastor',
-      'secretary', 'ceo_assistant', 'noah_assistant', 'agency_leader',
-      'agency_hr', 'agency_hr_manager', 'attorney', 'prosecutor',
+      'secretary', 'ceo_assistant', 'noah_assistant', 'attorney', 'prosecutor',
       'journalist', 'news_caster', 'chief_news_caster', 'auctioneer', 'seller', 'troller',
     ])
     const hasModMenuFromRoles = myProfileRoleTypes.some((r) => MOD_MENU_ROLE_TYPES.has(r))
@@ -8829,6 +8823,8 @@ const showFallback =
               <BroadcastAbilityEffects
                 activeEffects={abilityActiveEffects}
               />
+
+              <LiveFeatureQuickAccess />
 
               {/* More Controls Drawer */}
               {isMoreControlsOpen && (

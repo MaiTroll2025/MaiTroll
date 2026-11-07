@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useAuthStore } from '../../lib/store';
 import { supabase } from '../../lib/supabase';
-import { getUserAffiliation, UserAffiliation } from '../../lib/userAffiliations';
 import { useNavigate } from 'react-router-dom';
 import { User, MessageCircle, Gift, Flag, Camera, Crown, X, Users, Loader2, MoreVertical, Ban, Shield, Coins, Gavel } from 'lucide-react';
 import { toast } from 'sonner';
@@ -43,7 +42,6 @@ const UserMiniProfile: React.FC<UserMiniProfileProps> = ({
   const isOwnProfile = user?.id === userId;
   const [targetProfile, setTargetProfile] = useState<any>(null);
   const [subscription, setSubscription] = useState<any>(null);
-  const [affiliation, setAffiliation] = useState<UserAffiliation | null>(null);
   const [loading, setLoading] = useState(true);
   const [following, setFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
@@ -72,15 +70,6 @@ const UserMiniProfile: React.FC<UserMiniProfileProps> = ({
       console.error('Error checking follow status:', err);
     }
   }, [user, userId, isOwnProfile]);
-
-  const fetchAffiliation = useCallback(async () => {
-    try {
-      const data = await getUserAffiliation(userId);
-      setAffiliation(data);
-    } catch (error) {
-      console.error('Error fetching affiliation:', error);
-    }
-  }, [userId]);
 
   const checkSubscription = useCallback(async () => {
     if (!user) return;
@@ -131,11 +120,6 @@ const UserMiniProfile: React.FC<UserMiniProfileProps> = ({
     if (!user || !userId) return
     checkSubscription()
   }, [user, userId, checkSubscription])
-
-  useEffect(() => {
-    if (!userId) return
-    fetchAffiliation()
-  }, [userId, fetchAffiliation])
 
   useEffect(() => {
     if (!userId) return
@@ -399,18 +383,6 @@ const UserMiniProfile: React.FC<UserMiniProfileProps> = ({
             </div>
           )}
 
-          {affiliation && (
-            <div className="mb-3 text-xs text-slate-300">
-              <span className="font-semibold text-white">
-                {affiliation.type === 'agency' ? 'Agency' : 'Family'}:
-              </span>{' '}
-              {affiliation.name}
-              {affiliation.role ? (
-                <span className="text-slate-400"> • {affiliation.role}</span>
-              ) : null}
-            </div>
-          )}
-
           {/* Action Buttons */}
           <div className="grid grid-cols-2 gap-2 mb-3">
             {!isOwnProfile ? (
@@ -519,43 +491,6 @@ const UserMiniProfile: React.FC<UserMiniProfileProps> = ({
               </>
             )}
           </div>
-
-          {affiliation && !isOwnProfile && (
-            <div className="grid grid-cols-1 gap-2 mb-3">
-              {affiliation.type === 'family' ? (
-                <button
-                  onClick={() => {
-                    navigate(`/family/profile/${affiliation.id}`)
-                    onClose()
-                  }}
-                  className="w-full px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm"
-                >
-                  Join Family
-                </button>
-              ) : (
-                <>
-                  <button
-                    onClick={() => {
-                      navigate(`/agency/${affiliation.slug || affiliation.id}`)
-                      onClose()
-                    }}
-                    className="w-full px-3 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg text-sm"
-                  >
-                    View Agency
-                  </button>
-                  <button
-                    onClick={() => {
-                      navigate(`/agency-apply/${affiliation.slug || affiliation.id}`)
-                      onClose()
-                    }}
-                    className="w-full px-3 py-2 bg-cyan-700 hover:bg-cyan-800 text-white rounded-lg text-sm"
-                  >
-                    Apply to Join
-                  </button>
-                </>
-              )}
-            </div>
-          )}
 
           {/* Subscriber badge if subscribed to this person */}
           {targetProfile?.subscriber_badge_color_hex && !isOwnProfile && (

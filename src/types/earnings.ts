@@ -94,32 +94,6 @@ export interface UserEarningSummary {
   paid_events: number
 }
 
-// Agency Earnings
-export interface AgencyEarningsData {
-  agency_id: string
-  agency_name: string
-  agency_role: 'owner' | 'manager' | 'creator' | null
-  contract_status: string | null
-  split_percent: number | null
-  applies_to: string | null
-  pending_agency_earnings: number
-  paid_agency_earnings: number
-  application_fee_status: boolean
-  monthly_agency_fee_status: boolean
-  agency_application_status: string | null
-}
-
-// Family Conversion Data
-export interface FamilyConversionData {
-  family_id: string | null
-  family_name: string | null
-  member_count: number
-  is_leader: boolean
-  conversion_eligible: boolean
-  conversion_status: string | null
-  pending_application: boolean
-}
-
 // Treasury Payout Item
 export interface TreasuryPayoutItem {
   id: string
@@ -137,4 +111,3 @@ export interface TreasuryPayoutItem {
 
 // Role Status Types
 export type RoleStatus = 'active' | 'pending' | 'locked' | 'eligible' | 'inactive'
-

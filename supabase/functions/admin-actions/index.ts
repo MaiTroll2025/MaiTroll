@@ -116,27 +116,22 @@ Deno.serve(async (req) => {
         if (error) throw error;
 
         if (data && data.status !== 'rejected' && data.status !== 'denied') {
-          const { error: denyError } = await supabaseAdmin.rpc("troll_bank_deny_cashout", {
+          const { data: denyResult, error: denyError } = await supabaseAdmin.rpc("troll_bank_deny_cashout", {
             p_request_id: requestId,
             p_admin_id: user.id,
             p_reason: reason || null,
           });
 
-          if (denyError) {
+          if (denyError || denyResult?.success !== true) {
             console.error("[reject_payout] troll_bank_deny_cashout error", denyError);
+            throw new Error(denyError?.message || denyResult?.error || "Failed to return payout coins");
           }
         }
 
         const { data: updateData, error: updateError } = await supabaseAdmin
           .from("payout_requests")
-          .update({
-            status: "rejected",
-            rejected_reason: reason,
-            reviewed_by: user.id,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", requestId)
           .select()
+          .eq("id", requestId)
           .single();
 
         if (updateError) throw updateError;
@@ -155,20 +150,45 @@ Deno.serve(async (req) => {
         if (!isAdmin) throw new Error("Unauthorized");
         const { payoutId, newStatus, reason, paymentReference, notes } = params;
         if (!payoutId || !newStatus) throw new Error("Missing required fields");
+        if (newStatus === "paid") {
+          throw new Error("Payouts can only be marked paid by the verified PayPal settlement workflow");
+        }
+
+        if (newStatus === "rejected" || newStatus === "denied") {
+          const { data: denyResult, error: denyError } = await supabaseAdmin.rpc("troll_bank_deny_cashout", {
+            p_request_id: payoutId,
+            p_admin_id: user.id,
+            p_reason: reason || null,
+          });
+          if (denyError || denyResult?.success !== true) {
+            throw new Error(denyError?.message || denyResult?.error || "Failed to return payout coins");
+          }
+          const { data, error } = await supabaseAdmin
+            .from("payout_requests")
+            .select()
+            .eq("id", payoutId)
+            .single();
+          if (error) throw error;
+
+          await supabaseAdmin.rpc("log_admin_action", {
+            p_action_type: "update_payout_status",
+            p_target_id: payoutId,
+            p_details: { status: newStatus, reason, paymentReference, notes },
+          });
+          result = { success: true, data };
+          break;
+        }
+
+        if (newStatus !== "approved" && newStatus !== "pending" && newStatus !== "processing" && newStatus !== "failed") {
+          throw new Error("Unsupported payout status transition");
+        }
 
         const updates: any = {
             status: newStatus,
             updated_at: new Date().toISOString()
         };
 
-        if (newStatus === 'rejected') {
-            updates.rejection_reason = reason;
-            updates.processed_by = user.id;
-            updates.processed_at = new Date().toISOString();
-        } else if (newStatus === 'paid') {
-             updates.paid_at = new Date().toISOString();
-             updates.processed_by = user.id;
-        } else if (newStatus === 'approved') {
+        if (newStatus === 'approved') {
              updates.approved_at = new Date().toISOString();
              updates.processed_by = user.id;
         }

@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react'
-import { Star, Crown } from 'lucide-react'
+import { Star, Crown, DollarSign } from 'lucide-react'
 import { useAuthStore } from '@/lib/store'
 import { useXPStore } from '@/stores/useXPStore'
 import { getLevelName } from '@/lib/xp'
+import { supabase } from '@/lib/supabase'
 
 interface LevelStatusCardProps {
   userId?: string;
@@ -15,6 +16,7 @@ export default function LevelStatusCard({ userId }: LevelStatusCardProps) {
   const { profile } = useAuthStore()
   const { level, progress, xpToNext, fetchXP, subscribeToXP } = useXPStore()
   const [loading, setLoading] = React.useState(true)
+  const [squadCash, setSquadCash] = React.useState<{ visible: boolean; usd: number } | null>(null)
 
   const targetUserId = userId || profile?.id;
 
@@ -30,11 +32,17 @@ export default function LevelStatusCard({ userId }: LevelStatusCardProps) {
   useEffect(() => {
     if (targetUserId) {
       subscribeToXP(targetUserId)
+      void supabase.rpc('get_squad_cash_balance', {
+        p_target_user_id: targetUserId,
+        p_viewer_id: profile?.id ?? null,
+      }).then(({ data }) => {
+        setSquadCash(data as any)
+      })
     }
     return () => {
       useXPStore.getState().unsubscribe()
     }
-  }, [targetUserId, subscribeToXP])
+  }, [targetUserId, subscribeToXP, profile?.id])
 
   if (!targetUserId) {
     return (
@@ -99,6 +107,12 @@ export default function LevelStatusCard({ userId }: LevelStatusCardProps) {
         <span className="font-black text-fuchsia-300">{xpToNext.toLocaleString()} XP</span> to next level
         <span className="float-right font-black text-cyan-300">+{bonusCoins.toLocaleString()} bonus coins</span>
       </p>
+      {squadCash?.visible && (
+        <p className="mt-1 flex items-center gap-1.5 text-[9px] font-bold text-slate-300">
+          <DollarSign className="w-3 h-3 text-cyan-300" />
+          Squad Cash <span className="text-white">$ {squadCash.usd.toFixed(2)}</span>
+        </p>
+      )}
     </section>
   )
 }

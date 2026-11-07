@@ -1,8 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { X, Crown, Sword, Trophy, Coins, Star } from 'lucide-react'
+import { X, Sword, Trophy, Coins, Star } from 'lucide-react'
 import { useAuthStore } from '../lib/store'
 import { supabase } from '../lib/supabase'
-import { getFamilySeasonStats } from '../lib/familySeasons'
 import { useXPStore } from '../stores/useXPStore'
 
 interface ExpandedStatsPanelProps {
@@ -16,10 +15,6 @@ interface UserStats {
   totalXp: number
   nextLevelXp: number
    troll_coins: number
-  familyName?: string
-  familyLevel?: number
-  familyXp?: number
-  seasonScore?: number
   warWins?: number
   warLosses?: number
   warStreak?: number
@@ -40,40 +35,6 @@ export default function ExpandedStatsPanel({ isOpen, onClose }: ExpandedStatsPan
     const loadStats = async () => {
       try {
         setLoading(true)
-
-        // Load family data
-        let familyData = null
-        const { data: familyMember, error: familyError } = await supabase
-          .from('family_members')
-          .select('family_id, role')
-          .eq('user_id', user.id)
-          .maybeSingle()
-        
-        if (familyError && familyError.code !== 'PGRST116') {
-          console.error('Error fetching family member:', familyError)
-        }
-
-        if (familyMember?.family_id) {
-          const familyStats = await getFamilySeasonStats(familyMember.family_id)
-          const { data: family, error: familyError2 } = await supabase
-            .from('troll_families')
-            .select('name')
-            .eq('id', familyMember.family_id)
-            .maybeSingle()
-
-          if (familyError2) {
-            console.error('Error fetching family:', familyError2)
-          }
-
-          if (family) {
-            familyData = {
-              familyName: family.name,
-              familyLevel: familyStats.seasonRank || 1,
-              familyXp: familyStats.weeklyCoins || 0,
-              seasonScore: familyStats.seasonCoins || 0
-            }
-          }
-        }
 
         // Load battle stats from profile if available
         const { data: battleProfile, error: battleProfileError } = await supabase
@@ -105,7 +66,6 @@ export default function ExpandedStatsPanel({ isOpen, onClose }: ExpandedStatsPan
         // Calculate badges
         const badges = []
         if (profile?.role === 'admin' || profile?.is_admin) badges.push('🛡️ Admin')
-        if (familyMember) badges.push('⚔️ Family War')
         if (level >= 10) badges.push('👑 Top Rank')
 
         setStats({
@@ -114,7 +74,6 @@ export default function ExpandedStatsPanel({ isOpen, onClose }: ExpandedStatsPan
           totalXp: xpTotal,
           nextLevelXp: xpToNext + xpTotal,
           troll_coins: profile?.troll_coins || 0,
-          ...familyData,
           ...warStats,
           badges
         })
@@ -131,8 +90,6 @@ export default function ExpandedStatsPanel({ isOpen, onClose }: ExpandedStatsPan
   if (!isOpen) return null
 
   const levelProgress = stats ? Math.min((stats.level / (stats.level + 1)) * 100, 100) : 0
-  const familyXpProgress = stats?.familyXp ? Math.min((stats.familyXp / 1000) * 100, 100) : 0 // Example calculation
-
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
       <div className="bg-[#0A0A14] border border-[#2C2C2C] rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
@@ -177,35 +134,6 @@ export default function ExpandedStatsPanel({ isOpen, onClose }: ExpandedStatsPan
                   </div>
                 </div>
               </div>
-
-              {/* FAMILY STATUS */}
-              {stats.familyName && (
-                <div className="bg-[#1A1A24] border border-cyan-500/30 rounded-xl p-4">
-                  <h3 className="text-cyan-300 font-semibold mb-3 flex items-center gap-2">
-                    <Crown className="w-4 h-4" />
-                    FAMILY STATUS
-                  </h3>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-white font-bold flex items-center gap-2">
-                        🔥 {stats.familyName} (Level {stats.familyLevel})
-                      </span>
-                    </div>
-                    <div className="text-sm text-gray-300">
-                      Family XP: {stats.familyXp?.toLocaleString() || 0}
-                    </div>
-                    <div className="w-full bg-[#2A2A34] rounded-full h-2 overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full"
-                        style={{ width: `${familyXpProgress}%` }}
-                      />
-                    </div>
-                    <div className="text-sm text-gray-300">
-                      Season Score: {stats.seasonScore?.toLocaleString() || 0}
-                    </div>
-                  </div>
-                </div>
-              )}
 
               {/* BATTLE / WAR STATS */}
               <div className="bg-[#1A1A24] border border-red-500/30 rounded-xl p-4">

@@ -73,17 +73,13 @@ export default function HRCenter() {
     isAdmin ||
     role === UserRole.HR_ADMIN ||
     role === UserRole.HR_MANAGER ||
-    role === UserRole.AGENCY_HR_MANAGER ||
     trollRole === UserRole.HR_ADMIN ||
     trollRole === UserRole.HR_MANAGER ||
-    trollRole === UserRole.AGENCY_HR_MANAGER ||
-    (profile as any)?.is_hr_admin === true ||
-    (profile as any)?.is_agency_hr_manager === true
+    (profile as any)?.is_hr_admin === true
 
   const hasApprovedRole = useMemo(() => {
     const approvedRoles = [
-      'troll_officer', 'lead_troll_officer', 'pastor', 'agency_hr', 'agency_hr_manager',
-      'agency_leader', 'secretary', 'attorney', 'prosecutor', 'journalist', 'tcnn_news_caster',
+      'troll_officer', 'lead_troll_officer', 'pastor', 'secretary', 'attorney', 'prosecutor', 'journalist', 'tcnn_news_caster',
       'tcnn_chief_news_caster', 'auctioneer', 'troller', 'ceo_assistant', 'noah_assistant',
       'hr_manager', 'hr_admin',
     ]
@@ -94,9 +90,6 @@ export default function HRCenter() {
       p?.is_troll_officer,
       p?.is_lead_officer,
       p?.is_pastor,
-      p?.is_agency_hr,
-      p?.is_agency_hr_manager,
-      p?.is_agency_leader,
       p?.is_secretary,
       p?.is_attorney,
       p?.is_prosecutor,

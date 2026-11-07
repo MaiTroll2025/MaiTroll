@@ -15,7 +15,6 @@ export const STAFF_ROLES: UserRole[] = [
   UserRole.TROLL_OFFICER,
   UserRole.MODERATOR,
   UserRole.OWNER,
-  UserRole.AGENCY_HR_MANAGER,
   UserRole.HR_ADMIN,
   UserRole.TEMP_CITY_ADMIN,
   UserRole.TEMP_ADMIN,
@@ -40,11 +39,6 @@ export function isStaffUser(profile: UserProfile | null | undefined): boolean {
 
   // Check explicit role field
   if (profile.role && STAFF_ROLES.includes(profile.role as UserRole)) {
-    return true;
-  }
-
-  // Treat standard agency HR as staff as well
-  if (String(profile.role || '').toLowerCase() === 'agency_hr') {
     return true;
   }
 

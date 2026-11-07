@@ -6,6 +6,7 @@ import { CartProvider } from "./lib/cartContext";
 import { Routes, Route, Navigate, Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
 import { SwipeNavigationProvider } from "./contexts/SwipeNavigationContext";
 import { trackSitePageView } from "./lib/siteAnalytics";
+import RouteTransition from "./components/route/RouteTransition";
 
 const TreelzPage = lazyWithRetry(() => import("./pages/TreelzPage"));
 const TreelzUploadPage = lazyWithRetry(() => import("./pages/TreelzUploadPage"));
@@ -111,20 +112,13 @@ import RequireRole from "./components/RequireRole";
 import ErrorBoundary from "./components/ErrorBoundary";
 import UnderConstructionPage from "./components/UnderConstructionPage";
 const CareersPage = lazyWithRetry(() => import("./pages/CareersPage"));
-
-// Agency Pages (lazy-loaded)
-const AgenciesPage = lazyWithRetry(() => import("./pages/agencies"));
-const CreateAgencyPage = lazyWithRetry(() => import("./pages/agencies/CreateAgencyPage"));
-const AgencyProfilePage = lazyWithRetry(() => import("./pages/agency/[agencyId]"));
-const AgencyApplyPage = lazyWithRetry(() => import("./pages/agency-apply/[agencyId]"));
-const AgencyDashboard = lazyWithRetry(() => import("./pages/agency-dashboard"));
 const HytroGaming = lazyWithRetry(() => import("./pages/gaming/HytroGaming"));
 const HytroGamingApply = lazyWithRetry(() => import("./pages/gaming/HytroGamingApply"));
 const HytroGamingContract = lazyWithRetry(() => import("./pages/gaming/HytroGamingContract"));
 
 const GamesPage = lazyWithRetry(() => import("./pages/games/GamesPage"));
 const MaiTrollRun = lazyWithRetry(() => import("./components/games/MaiTrollRun/MaiTrollRun"));
-const AgencyHRDashboard = lazyWithRetry(() => import("./pages/agency-hr-dashboard"));
+const MaiDontKnowGame = lazyWithRetry(() => import("./components/games/MaiDontKnowGame/MaiDontKnowGame"));
 const AttorneyDashboard = lazyWithRetry(() => import("./pages/attorney/AttorneyDashboard"));
 const ProsecutorDashboard = lazyWithRetry(() => import("./pages/prosecutor/ProsecutorDashboard"));
 const _Support = lazyWithRetry(() => import("./pages/Support"));
@@ -171,6 +165,17 @@ const CashoutPage = lazyWithRetry(() => import("./pages/CashoutPage"));
 const FastPayApplication = lazyWithRetry(() => import("./pages/FastPayApplication"));
 const MaiPayPage = lazyWithRetry(() => import("./pages/MaiPayPage"));
 
+// Squads
+const SquadsPage = lazyWithRetry(() => import("./pages/Squads"));
+const SquadCreatePage = lazyWithRetry(() => import("./pages/SquadCreate"));
+const SquadProfilePage = lazyWithRetry(() => import("./pages/SquadProfile"));
+const SquadMembersPage = lazyWithRetry(() => import("./pages/SquadMembers"));
+const SquadLivePage = lazyWithRetry(() => import("./pages/SquadLive"));
+const SquadBattlesPage = lazyWithRetry(() => import("./pages/SquadBattles"));
+const SquadChatPage = lazyWithRetry(() => import("./pages/SquadChat"));
+const SquadManagePage = lazyWithRetry(() => import("./pages/SquadManage"));
+const SquadManageLivePage = lazyWithRetry(() => import("./pages/SquadManageLive"));
+
 const ShopPartnerPage = lazyWithRetry(() => import("./pages/ShopPartnerPage"));
 const ShopEarnings = lazyWithRetry(() => import("./pages/ShopEarnings"));
 const NotaryDashboard = lazyWithRetry(() => import("./pages/NotaryDashboard"));
@@ -185,11 +190,9 @@ const CourtViewerPage = lazyWithRetry(() => import("./pages/CourtViewerPage"));
 const Call = lazyWithRetry(() => import("./pages/Call"));
 const InterviewPage = lazyWithRetry(() => import("./pages/InterviewPage"));
 const Notifications = lazyWithRetry(() => import("./pages/Notifications"));
-const HytroGamingViewer = lazyWithRetry(() => import("./pages/gaming/HytroGamingViewer"));
 const Trollifications = lazyWithRetry(() => import("./pages/Trollifications"));
+const HytroGamingViewer = lazyWithRetry(() => import("./pages/gaming/HytroGamingViewer"));
 const Trollifieds = lazyWithRetry(() => import("./pages/Trollifieds"));
-const HowToVideosPage = lazyWithRetry(() => import("./pages/JobsHowToPage"));
-const JobsOpportunitiesPage = lazyWithRetry(() => import("./pages/Jobs"));
 const _OfficerScheduling = lazyWithRetry(() => import("./pages/OfficerScheduling"));
 const PolicyCenter = lazyWithRetry(() => import("./pages/PolicyCenter"));
 const UniverseEventPage = lazyWithRetry(() => import("./pages/UniverseEventPage"));
@@ -198,6 +201,9 @@ const UniverseLiveArenaPage = lazyWithRetry(() => import("./pages/UniverseLiveAr
 const UniverseArenaDevPreview = lazyWithRetry(() => import("./pages/UniverseArenaDevPreview"));
 const UniverseRegisterPage = lazyWithRetry(() => import("./pages/UniverseRegisterPage"));
 const UniverseCalendarPage = lazyWithRetry(() => import("./pages/UniverseCalendarPage"));
+const MaiCalendarPage = lazyWithRetry(() => import("./pages/maiCalendar/MaiCalendarPage"));
+const MaiCalendarEventPage = lazyWithRetry(() => import("./pages/maiCalendar/MaiCalendarEventPage"));
+const OfficialEventsPage = lazyWithRetry(() => import("./pages/officialEvents/OfficialEventsPage"));
 const TermsOfServiceLegal = lazyWithRetry(() => import("./pages/legal/TermsOfService"));
 const PrivacyPolicyLegal = lazyWithRetry(() => import("./pages/legal/PrivacyPolicy"));
 const RefundPolicyLegal = lazyWithRetry(() => import("./pages/legal/RefundPolicy"));
@@ -300,7 +306,6 @@ const StateDetail = lazyWithRetry(() => import("./pages/StateDetail"));
 const VerifiedBadgePage = lazyWithRetry(() => import("./pages/VerifiedBadgePage"));
 const FounderHub = lazyWithRetry(() => import("./pages/FounderHub"));
 const FounderInvitesPage = lazyWithRetry(() => import("./pages/FounderInvitesPage"));
-const TMFamilyInviteHandler = lazyWithRetry(() => import("./components/trollmatch/TMFamilyInviteHandler"));
 const EmbedPage = lazyWithRetry(() => import("./pages/broadcast/EmbedPage"));
 
 const HomepageBackgroundShowcase = lazyWithRetry(() => import("./pages/dev/HomepageBackgroundShowcase"));
@@ -346,10 +351,14 @@ const isPublicRoute = (pathname: string) => {
   if (pathname.startsWith('/legal/')) return true
 
   // Jobs page is public
-  if (pathname === '/jobs') return true
 
   // Careers page is public
   if (pathname === '/careers') return true
+
+  // Public events calendar — no login required to read
+  if (pathname === '/calendar') return true
+  if (pathname.startsWith('/calendar/events/')) return true
+  if (pathname === '/events' || pathname.startsWith('/events/')) return true
 
   // Profile pages are public - usernames and user IDs
   if (pathname.startsWith('/profile/')) return true
@@ -580,8 +589,6 @@ const HighBcastersPage = lazyWithRetry(() => import("./pages/HighBcasters"));
 const ExploreSearchResults = lazyWithRetry(() => import("./pages/ExploreSearchResults.js"));
 const StreamSwipePage = lazyWithRetry(() => import("./pages/StreamSwipePage.js"));
 const ApplicationPage = lazyWithRetry(() => import("./pages/ApplicationPage.js"));
-const JobsApplicationPage = lazyWithRetry(() => import("./pages/ApplicationPage.js"));
-const JobsStatusPage = lazyWithRetry(() => import("./pages/Jobs.tsx"));
 const SetupPage = lazyWithRetry(() => import("./pages/broadcast/SetupPage.js"));
 const GamingSetupPage = lazyWithRetry(() => import("./pages/broadcast/GamingSetupPage.tsx"));
 const BroadcastSchoolPage = lazyWithRetry(() => import("./pages/broadcast/BroadcastSchoolPage.tsx"));
@@ -595,7 +602,6 @@ const PresidentPage = lazyWithRetry(() => import("./pages/President.js"));
 const PresidentDashboard = lazyWithRetry(() => import("./pages/president/PresidentDashboard.js"));
 const SecretaryDashboard = lazyWithRetry(() => import("./pages/president/SecretaryDashboard.js"));
 const TreasuryDashboard = lazyWithRetry(() => import("./pages/TreasuryDashboard"));
-const MatchPage = lazyWithRetry(() => import("./pages/MatchPage"));
 const CityRegistry = lazyWithRetry(() => import("./pages/CityRegistry"));
 const AdvertisePage = lazyWithRetry(() => import("./pages/city-registry/AdvertisePage"));
 const Following = lazyWithRetry(() => import("./pages/Following"));
@@ -614,7 +620,6 @@ const TrollBank = lazyWithRetry(() => import("./pages/TrollBank"));
 const Leaderboard = lazyWithRetry(() => import("./pages/Leaderboard"));
 const WallPage = lazyWithRetry(() => import("./pages/WallPage"));
 const WallPostPage = lazyWithRetry(() => import("./pages/WallPostPage"));
-import LivingPage from "./pages/UnderConstructionPage";
 const ChurchPage = lazyWithRetry(() => import("./pages/ChurchPage"));
 const TrollUpPage = lazyWithRetry(() => import("./pages/TrollUp"));
 const PastorDashboard = lazyWithRetry(() => import("./pages/church/PastorDashboard"));
@@ -652,15 +657,6 @@ const ProfileFrameStore = lazyWithRetry(() => import("./pages/ProfileFrameStore"
 const SellOnTrollCity = lazyWithRetry(() => import("./pages/SellOnTrollCity"));
 const SellerOrders = lazyWithRetry(() => import("./pages/SellerOrders.js"));
 const MyOrders = lazyWithRetry(() => import("./pages/MyOrders.js"));
-const FamilyBrowse = lazyWithRetry(() => import("./pages/FamilyBrowse.js"));
-const TrollFamilyCity = lazyWithRetry(() => import("./pages/TrollFamilyCity.js"));
-const FamilyProfilePage = lazyWithRetry(() => import("./pages/FamilyProfilePage.js"));
-const FamilyChatPage = lazyWithRetry(() => import("./pages/FamilyChatPage.js"));
-const FamilyWarsPage = lazyWithRetry(() => import("./pages/FamilyChatPage.js"));
-const TrollFamilyHome = lazyWithRetry(() => import("./pages/TrollFamilyHome.js"));
-const FamilyWarsHub = lazyWithRetry(() => import("./pages/FamilyWarsHub.js"));
-const FamilyLeaderboard = lazyWithRetry(() => import("./pages/FamilyLeaderboard.js"));
-const FamilyShop = lazyWithRetry(() => import("./pages/FamilyShop.js"));
 const _TrollOfficerLounge = lazyWithRetry(() => import("./pages/TrollOfficerLounge.js"));
 const _OfficerModeration = lazyWithRetry(() => import("./pages/OfficerModeration.js"));
 const HomeNotificationPrompt = lazyWithRetry(() => import("./components/HomeNotificationPrompt.js"));
@@ -1047,12 +1043,7 @@ function AppContent() {
 
     hasNavigatedRef.current = true;
 
-    // Redirect to family home if troll_family role, otherwise stay on /
-    // Note: /home redirects back to /, so we avoid that loop by staying on /
-    if (profileRole === 'troll_family') {
-      navigate('/family/home', { replace: true });
-    }
-    // For all other roles, stay on / (the homepage) — no redirect needed
+    // For all roles, stay on / (the homepage) — no redirect needed
   }, [location.pathname, userId, profile, profileRole, navigate]);
 
 
@@ -1631,7 +1622,7 @@ const handleVisibilityChange = async () => {
     const targets = [mainRef.current, document.scrollingElement, document.body]
     targets.forEach((el) => {
       if (el && typeof (el as HTMLElement).scrollTo === "function") {
-        ;(el as HTMLElement).scrollTo({ top: 0, left: 0 })
+        ;(el as HTMLElement).scrollTo({ top: 0, left: 0, behavior: 'smooth' })
       }
     })
   }, [location.pathname])
@@ -1704,7 +1695,8 @@ const appShell = (
               <ErrorBoundary>
                 <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div></div>}>
                  <PageChannelProvider>
-                 <Routes>
+                 <RouteTransition>
+                  <Routes>
                  {/* Public Routes */}
                  <Route path="/intro" element={<Navigate to="/" replace />} />
                  <Route path="/landing" element={<Navigate to="/" replace />} />
@@ -1746,12 +1738,12 @@ const appShell = (
                  <Route path="/high-bcasters" element={<HighBcastersPage />} />
                  <Route path="/live-swipe" element={<StreamSwipePage />} />
                 <Route path="/embed/:id" element={<EmbedPage />} />
-                <Route path="/jobs" element={<HowToVideosPage />} />
-                <Route path="/jobs/opportunities" element={<JobsOpportunitiesPage />} />
                 <Route path="/games" element={<GamesPage />} />
 <Route path="/mai-troll-run" element={<MaiTrollRun />} />
+<Route path="/mai-dont-know-game" element={<MaiDontKnowGame />} />
 
-                <Route path="/hytrogaming" element={<HytroGaming />} />
+                 {/* HytroGaming */}
+                 <Route path="/hytrogaming" element={<HytroGaming />} />
                  <Route path="/hytrogaming/apply" element={<HytroGamingApply />} />
                  <Route path="/hytrogaming/contract/:id" element={<HytroGamingContract />} />
                  <Route path="/hytro/:id" element={<HytroGaming />} />
@@ -1792,18 +1784,7 @@ const appShell = (
                 <Route path="/blog" element={<SiteUpdatesPage postType="blog" />} />
                 <Route path="/blog/:slug" element={<SiteUpdatesPage postType="blog" />} />
 
-                {/* 🏢 Talent Offices (Public) */}
-                <Route path="/agencies" element={<AgenciesPage />} />
-                <Route path="/agencies/create" element={<CreateAgencyPage />} />
-                <Route path="/agency/:agencyIdOrSlug" element={<AgencyProfilePage />} />
-                <Route path="/agency/:agencyIdOrSlug/roster" element={<AgencyProfilePage />} />
-                <Route path="/agency/:agencyIdOrSlug/goals" element={<AgencyProfilePage />} />
-                <Route path="/agency-apply/:agencyIdOrSlug" element={<AgencyApplyPage />} />
-
                 {/* Jobs Routes */}
-                <Route path="/jobs" element={<HowToVideosPage />} />
-                <Route path="/jobs/apply" element={<JobsApplicationPage />} />
-                <Route path="/jobs/status" element={<JobsStatusPage />} />
 
                 {/* Application Routes */}
                 <Route path="/apply" element={<ApplicationPage />} />
@@ -1829,17 +1810,15 @@ const appShell = (
                 <Route path="/profile/id/:userId" element={<Profile />} />
                 <Route path="/profile/:username" element={<Profile />} />
 
-{/* Broadcast/Stream routes - public with password protection */}
-                  <Route path="/gaming/watch/:streamId" element={<HytroGamingViewer />} />
-
                   {/* Username-based stream routes (SEO-friendly, e.g. /live/username) */}
                 <Route path="/live/:username" element={<BroadcastRouter />} />
                 <Route path="/:username/live/:slug" element={<BroadcastRouter />} />
                 <Route path="/stream/:username" element={<BroadcastRouter />} />
-                 {/* UUID-based stream routes (backwards compatibility) */}
-                 <Route path="/broadcast/summary/:id" element={<StreamSummary />} />
-                 <Route path="/broadcast/:id" element={<BroadcastRouter />} />
-                 <Route path="/watch/:id" element={<BroadcastRouter />} />
+                  {/* UUID-based stream routes (backwards compatibility) */}
+                  <Route path="/broadcast/summary/:id" element={<StreamSummary />} />
+                  <Route path="/broadcast/:id" element={<BroadcastRouter />} />
+                  <Route path="/watch/:id" element={<BroadcastRouter />} />
+                  <Route path="/gaming/watch/:streamId" element={<HytroGamingViewer />} />
 
                   {/* 🏛️ State Battle Routes */}
                  <Route path="/state-rankings" element={<StateRankings />} />
@@ -1869,29 +1848,14 @@ const appShell = (
                   {/* 💰 Mai Pay — public landing when signed out; app when signed in */}
                   <Route path="/mai-pay" element={<MaiPayPage />} />
 
+                  {/* 📅 MaiTroll Public Events Calendar — publicly indexable, no login required */}
+                  <Route path="/calendar" element={<MaiCalendarPage />} />
+                  <Route path="/calendar/events/:slug" element={<MaiCalendarEventPage />} />
+                  <Route path="/events" element={<OfficialEventsPage />} />
+                  <Route path="/events/:eventSlug" element={<OfficialEventsPage />} />
+
                   {/* 🔐 Protected Routes */}
-                 <Route element={<RequireAuth />}>
-                  
-                  {/* Talent Office Dashboard (Protected) */}
-                  <Route path="/agency-dashboard" element={<AgencyDashboard />} />
-                  <Route
-                    path="/agency-hr-dashboard"
-                    element={
-                      <RequireRole
-                        roles={[
-                          UserRole.ADMIN,
-                          UserRole.AGENCY_HR_MANAGER,
-                          UserRole.HR_ADMIN,
-                          'agency hr',
-                          'agency_hr',
-                          'agency hr manager',
-                          'agency_hr_manager',
-                        ]}
-                      >
-                        <AgencyHRDashboard />
-                      </RequireRole>
-                    }
-                   />
+                  <Route element={<RequireAuth />}>
                    <Route
                      path="/hr-center"
                      element={
@@ -1899,13 +1863,11 @@ const appShell = (
                          roles={[
                            UserRole.ADMIN,
                            UserRole.HR_ADMIN,
-                           UserRole.HR_MANAGER,
-                           UserRole.AGENCY_HR_MANAGER,
-                           UserRole.TROLL_OFFICER,
+                            UserRole.HR_MANAGER,
+                            UserRole.TROLL_OFFICER,
                            UserRole.LEAD_TROLL_OFFICER,
-                           UserRole.PASTOR,
-                           UserRole.AGENCY_LEADER,
-                           UserRole.SECRETARY,
+                            UserRole.PASTOR,
+                            UserRole.SECRETARY,
                            UserRole.ATTORNEY,
                            UserRole.PROSECUTOR,
                            UserRole.JOURNALIST,
@@ -2014,15 +1976,12 @@ const appShell = (
                      <Route path="/lead-officer" element={<Navigate to="/department-tools?role=lead_troll_officer" replace />} />
                      <Route path="/secretary" element={<Navigate to="/department-tools?role=secretary" replace />} />
                       <Route path="/ceo-assistant-dashboard" element={<Navigate to="/department-tools?role=ceo_assistant" replace />} />
-                      <Route path="/hr-center" element={<Navigate to="/department-tools" replace />} />
-                     <Route path="/agency-hr" element={<Navigate to="/agency-hr-dashboard" replace />} />
-                    <Route path="/pastor" element={<Navigate to="/department-tools?role=pastor" replace />} />
+                     <Route path="/hr-center" element={<Navigate to="/department-tools" replace />} />
+                     <Route path="/pastor" element={<Navigate to="/department-tools?role=pastor" replace />} />
                     <Route path="/church/pastor" element={<Navigate to="/department-tools?role=pastor" replace />} />
                     <Route path="/attorney" element={<Navigate to="/department-tools?role=attorney" replace />} />
                     <Route path="/prosecutor" element={<Navigate to="/department-tools?role=prosecutor" replace />} />
-                    <Route path="/notary" element={<Navigate to="/department-tools?role=notary" replace />} />
 
-                    <Route path="/match" element={<MatchPage />} />
                     <Route path="/city-laws-fees" element={<CityLawsFeesPage />} />
            <Route path="/city-hall" element={<Navigate to="/home" replace />} />
                    <Route path="/city-registry" element={<CityRegistry />} />
@@ -2125,7 +2084,6 @@ const appShell = (
                    <Route path="/profile/delete" element={<DeleteAccount />} />
                   <Route path="/search" element={<SearchPage />} />
                   <Route path="/blocked-users" element={<BlockedUsers />} />
-                   <Route path="/living" element={<LivingPage />} />
                     <Route path="/map" element={<MapPage />} />
                     <Route path="/neighborhood-setup" element={<NeighborhoodOnboarding />} />
                     <Route path="/driver-test" element={<DriverTest />} />
@@ -2229,6 +2187,18 @@ const appShell = (
                     <Route path="/cashout" element={<CashoutPage />} />
                     <Route path="/fast-pay-application" element={<FastPayApplication />} />
 
+                    {/* Squads */}
+                    <Route path="/squads" element={<SquadsPage />} />
+                    <Route path="/squads/leaderboard" element={<SquadsPage />} />
+                    <Route path="/squads/create" element={<SquadCreatePage />} />
+                    <Route path="/squads/:slug" element={<SquadProfilePage />} />
+                    <Route path="/squads/:slug/members" element={<SquadMembersPage />} />
+                    <Route path="/squads/:slug/live" element={<SquadLivePage />} />
+                    <Route path="/squads/:slug/battles" element={<SquadBattlesPage />} />
+                    <Route path="/squads/:slug/chat" element={<SquadChatPage />} />
+                    <Route path="/squads/manage" element={<SquadManagePage />} />
+                    <Route path="/squads/manage/live" element={<SquadManageLivePage />} />
+
                   <Route path="/shop-partner" element={<ShopPartnerPage />} />
                   <Route path="/sell" element={<SellOnTrollCity />} />
                   <Route path="/seller/orders" element={<SellerOrders />} />
@@ -2236,21 +2206,9 @@ const appShell = (
                   <Route path="/seller/earnings" element={<ShopEarnings />} />
                   {/* Gift store routes removed */}
 
-                  {/* 👨‍👩‍👧 Family */}
-                <Route path="/family" element={<Navigate to="/family/browse" replace />} />
-                <Route path="/family/browse" element={<FamilyBrowse />} />
-                  <Route path="/family/create" element={<FamilyBrowse />} />
-                  <Route path="/family/city" element={<TrollFamilyCity />} />
-                  <Route path="/family/profile/:id" element={<FamilyProfilePage />} />
-                  <Route path="/family/chat" element={<Navigate to="/family" replace />} />
-                  <Route path="/family/chat/:familyId" element={<FamilyChatPage />} />
-                  <Route path="/family/wars" element={<FamilyWarsPage />} />
+              
 
-                  {/* 🏰 Troll Family Ecosystem */}
-                  <Route path="/family/home" element={<TrollFamilyHome />} />
-                  <Route path="/family/wars-hub" element={<FamilyWarsHub />} />
-                  <Route path="/family/leaderboard" element={<FamilyLeaderboard />} />
-                  <Route path="/family/shop" element={<FamilyShop />} />
+                  
 
                    
 
@@ -2900,6 +2858,7 @@ const appShell = (
                   */}
                   <Route path="*" element={<NotFoundPage />} />
                 </Routes>
+                 </RouteTransition>
               </PageChannelProvider>
               </Suspense>
             </ErrorBoundary>
@@ -3000,11 +2959,11 @@ function App() {
   const location = useLocation();
 
   useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
     document.documentElement.scrollTop = 0;
     document.body.scrollTop = 0;
     document.querySelectorAll<HTMLElement>('[data-route-scroll], main, [role="main"]').forEach((element) => {
-      element.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      element.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
     });
   }, [location.key, location.pathname, location.search]);
 
@@ -3062,7 +3021,6 @@ function App() {
                     />
                   </GhostDropInProvider>
                 </TabSwitchHandler>
-                <TMFamilyInviteHandler />
               </ProfileFrameProvider>
             </TrollProvider>
           </CartProvider>

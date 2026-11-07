@@ -273,11 +273,21 @@ export function ProfileHeader({
     coinsStatValue,
 }: ProfileHeaderProps) {
     const { theme } = useTheme()
+    const { user } = useAuthStore()
     const themeColor = profile.theme_color || '#9333ea';
     const accentColor = profile.accent_color || '#22d3ee';
     const avatarUrl = profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.username}`;
     const [expandedCover, setExpandedCover] = useState(false);
     const [countdown, setCountdown] = useState(5);
+    const [bankCash, setBankCash] = React.useState<{ visible: boolean; usd: number; coins: number } | null>(null)
+    const [squadCash, setSquadCash] = React.useState<{ visible: boolean; usd: number } | null>(null)
+
+    React.useEffect(() => {
+      if (!profile?.id) return
+      const viewerId = user?.id ?? null
+      void supabase.rpc('get_bank_cash_value', { p_target_user_id: profile.id, p_viewer_id: viewerId }).then(({ data }) => setBankCash(data as any))
+      void supabase.rpc('get_squad_cash_balance', { p_target_user_id: profile.id, p_viewer_id: viewerId }).then(({ data }) => setSquadCash(data as any))
+    }, [profile?.id, user?.id, supabase])
 
     const getCareerRoleLabel = (): string | null => {
         if (!profile) return null;
@@ -450,6 +460,11 @@ export function ProfileHeader({
                                 <h1 className={`text-3xl font-black tracking-tight md:text-5xl ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>
                                     {profile.username || profile.display_name}
                                 </h1>
+                                {squadCash?.visible && (
+                                    <span className="flex items-center gap-1 text-xs font-bold text-cyan-300 bg-cyan-900/30 px-2 py-0.5 rounded">
+                                        <DollarSign className="w-3 h-3" /> ${squadCash.usd.toFixed(2)}
+                                    </span>
+                                )}
                                 {/* ⭐ Founder badge — shown next to the profile name. */}
                                 <FounderBadge userId={profile.id} showMultipliers />
                             </div>
@@ -511,9 +526,11 @@ export function ProfileHeader({
                         { label: 'Following', value: profile.following_count, clickable: !!onFollowingClick, onClick: onFollowingClick },
                         ...(showModActionsStat ? [{ label: 'Mod Actions', value: modActionsCount, clickable: true, onClick: onModActionsClick }] : []),
                         ...(showCoinsStat ? [{ label: 'Coins', value: coinsStatValue ?? 0, clickable: false }] : []),
+                        ...(bankCash?.visible ? [{ label: 'Bank', value: bankCash.usd.toFixed(2), clickable: false, usd: true }] : []),
+                        ...(squadCash?.visible ? [{ label: 'Squad Cash', value: squadCash.usd.toFixed(2), clickable: false, usd: true }] : []),
                     ].map(stat => (
-                        <div key={stat.label} className={`rounded-2xl border border-white/10 bg-black/40 p-3 text-center transition ${stat.clickable ? 'cursor-pointer hover:-translate-y-0.5 hover:border-cyan-400/40 hover:bg-cyan-500/5' : 'hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/5'}`} onClick={stat.clickable ? stat.onClick : undefined}>
-                            <div className="text-sm font-black text-white sm:text-2xl">{stat.value.toLocaleString()}</div>
+                        <div key={stat.label} className={`rounded-2xl border border-white/10 bg-black/40 p-3 text-center transition hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/5`} onClick={stat.clickable ? stat.onClick : undefined}>
+                            <div className="text-sm font-black text-white sm:text-2xl">{stat.usd ? '$' + stat.value : stat.value.toLocaleString()}</div>
                             <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/50 sm:text-xs sm:tracking-[0.25em]">{stat.label}</div>
                         </div>
                     ))}

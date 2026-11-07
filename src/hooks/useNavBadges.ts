@@ -11,7 +11,6 @@ export interface NavBadges {
   court: number;
   neighborhood: number;
   wallet: number;
-  family: number;
   shop: number;
   inventory: number;
   alerts: number;
@@ -22,7 +21,7 @@ export interface NavBadges {
 const dismissedTabs: Set<keyof NavBadges> = new Set();
 let lastBadgeCounts: NavBadges = {
   home: 0, chats: 0, coins: 0, auctions: 0, court: 0,
-  neighborhood: 0, wallet: 0, family: 0,
+  neighborhood: 0, wallet: 0,
   shop: 0, inventory: 0, alerts: 0, careers: 0,
 };
 const listeners: Set<() => void> = new Set();
@@ -128,15 +127,9 @@ const TAB_NOTIFICATION_TYPES: Record<keyof NavBadges, string[]> = {
     'inmate_message_received',
   ],
 
-  // Neighborhood tab: neighborhood/family social events
+  // Neighborhood tab: neighborhood social events
   neighborhood: [
     'neighborhood_event_started',
-    'family_invite_received',
-    'family_invite_accepted',
-    'family_role_changed',
-    'family_xp_milestone',
-    'family_challenge_started',
-    'family_challenge_completed',
     'someone_followed',
     'friend_request_received',
     'request_accepted',
@@ -154,16 +147,6 @@ const TAB_NOTIFICATION_TYPES: Record<keyof NavBadges, string[]> = {
     'cashout_hold_removed',
     'wallet_adjustment',
     'refund_issued',
-  ],
-
-  // Family tab: family-specific events
-  family: [
-    'family_invite_received',
-    'family_invite_accepted',
-    'family_role_changed',
-    'family_xp_milestone',
-    'family_challenge_started',
-    'family_challenge_completed',
   ],
 
   // Shop tab: store/purchase events
@@ -202,7 +185,6 @@ export function useNavBadges(): NavBadges & { dismissed: Set<keyof NavBadges>; d
     court: 0,
     neighborhood: 0,
     wallet: 0,
-    family: 0,
     shop: 0,
     inventory: 0,
     alerts: 0,
@@ -236,7 +218,6 @@ export function useNavBadges(): NavBadges & { dismissed: Set<keyof NavBadges>; d
           court: 0,
           neighborhood: 0,
           wallet: 0,
-          family: 0,
           shop: 0,
           inventory: 0,
         }));
@@ -264,7 +245,6 @@ export function useNavBadges(): NavBadges & { dismissed: Set<keyof NavBadges>; d
       court: 0,
       neighborhood: 0,
       wallet: 0,
-      family: 0,
       shop: 0,
       inventory: 0,
     };
@@ -330,7 +310,7 @@ export function useNavBadges(): NavBadges & { dismissed: Set<keyof NavBadges>; d
     if (!user?.id) {
       setBadgeCounts({
         home: 0, chats: 0, coins: 0, auctions: 0, court: 0,
-        neighborhood: 0, wallet: 0, family: 0,
+        neighborhood: 0, wallet: 0,
         shop: 0, inventory: 0, alerts: 0, careers: 0,
       });
       return;

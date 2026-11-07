@@ -152,7 +152,6 @@ export async function logStaffAction(log: StaffActionLog): Promise<string | null
       'prosecutor', 'attorney', 'judge', 'auctioneer',
       'pastor', 'journalist', 'ceo_assistant', 'noah_assistant',
       'president', 'vice_president', 'hr_admin', 'hr_manager',
-      'agency_hr', 'agency_hr_manager', 'agency_leader',
       'marketing_agent', 'empire_partner', 'notary', 'broadofficer',
       'temp_city_admin', 'temp_admin', 'moderator',
       'tcnn_news_caster', 'tcnn_chief_news_caster',
@@ -176,8 +175,6 @@ export async function logStaffAction(log: StaffActionLog): Promise<string | null
       (profile as any).is_noah_assistant ||
       (profile as any).is_pastor ||
       (profile as any).is_hr_admin ||
-      (profile as any).is_agency_hr_manager ||
-      (profile as any).is_agency_leader ||
       staffRoles.has(role) ||
       staffRoles.has(trollRole);
 

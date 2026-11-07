@@ -304,7 +304,6 @@ function getNotificationCategory(type: string, metadata?: any): NotificationCate
       'battle_result',
       'battle_started',
       'random_battle_started',
-      'family_battle_started',
       'live_auction_started',
     ].includes(type)
   ) {
@@ -554,7 +553,7 @@ function resolveNotificationDestination(
     metadata.streamId
   )
 
-  const battleId = firstString(metadata.battle_id, metadata.random_battle_id, metadata.family_battle_id)
+  const battleId = firstString(metadata.battle_id, metadata.random_battle_id)
   const podcastId = firstString(metadata.podcast_id, metadata.episode_id, metadata.pod_id)
   const auctionId = firstString(metadata.auction_id, metadata.live_auction_id, metadata.marketplace_auction_id)
   const orderId = firstString(metadata.order_id, metadata.marketplace_order_id)
@@ -650,7 +649,6 @@ function resolveNotificationDestination(
 
     case 'battle_started':
     case 'random_battle_started':
-    case 'family_battle_started':
       return {
         route: battleId
           ? withQuery('/battle', { battle: battleId, stream: streamId })
@@ -787,7 +785,7 @@ function resolveNotificationDestination(
     case 'application_result':
     case 'trollg_application':
       return {
-        route: applicationId ? withQuery('/jobs/status', { application: applicationId }) : '/jobs/status',
+        route: applicationId ? withQuery('/careers', { application: applicationId }) : '/careers',
         label: 'Open application status',
       }
 
@@ -1157,7 +1155,6 @@ case 'stream_live':
        case 'followed_user_live':
        case 'battle_started':
        case 'random_battle_started':
-       case 'family_battle_started':
        case 'live_auction_started':
        case 'team_meeting_started':
        case 'team_meeting_scheduled':

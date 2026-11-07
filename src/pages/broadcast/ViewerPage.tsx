@@ -25,6 +25,7 @@ import { awardSharePoint } from '../../lib/weeklyPointsService'
 import { MAX_GUEST_SEATS } from '../../config/broadcastCategories'
 
 import BroadcastNeonHeader from '../../components/broadcast/BroadcastNeonHeader'
+import LiveFeatureQuickAccess from '../../components/broadcast/LiveFeatureQuickAccess'
 import ErrorBoundary from '../../components/ErrorBoundary'
 import GiftBoxModal from '../../components/broadcast/GiftBoxModal'
 import UserActionModal from '../../components/broadcast/UserActionModal'
@@ -68,7 +69,6 @@ import SubscriptionTierSelector from '../../components/user/SubscriptionTierSele
 import { useStreamTopGifters } from '../../hooks/useStreamTopGifters'
 import { getBroadcastChatLockRemainingMs, isBroadcastChatLockActive } from '../../lib/broadcastModeration'
 import { isValidUuid } from '../../lib/courtUtils'
-import { useTrollFamilyActivity } from '../../hooks/useTrollFamilyActivity'
 import { useBroadcastTextPopup } from '../../hooks/useBroadcastTextPopup'
 import { logActiveChannels } from '../../lib/realtimeChannelDiagnostics'
 import BroadcastTextPopupOverlay from '../../components/broadcast/BroadcastTextPopupOverlay'
@@ -765,7 +765,6 @@ function ViewerPage() {
   const autoJoinSeatRequestRef = useRef<string | null>(null)
   const { isMobileWidth, hasMounted } = useIsMobile()
   const isMobileViewer = hasMounted && isMobileWidth
-  const { recordWatchTime } = useTrollFamilyActivity()
   const { data: liveStreamsData } = useLiveStreams()
   const {
     featuredBroadcasters,
@@ -1378,8 +1377,7 @@ const [broadcasterProfileLoaded, setBroadcasterProfileLoaded] = useState(false)
 
   const MOD_MENU_ROLE_TYPES = new Set([
     'broadcaster', 'troll_officer', 'lead_troll_officer', 'pastor',
-    'secretary', 'ceo_assistant', 'noah_assistant', 'agency_leader',
-    'agency_hr', 'agency_hr_manager', 'attorney', 'prosecutor',
+    'secretary', 'ceo_assistant', 'noah_assistant', 'attorney', 'prosecutor',
     'journalist', 'news_caster', 'chief_news_caster', 'auctioneer', 'seller', 'troller',
   ])
   const hasModMenuFromRoles = myProfileRoleTypes.some((r) => MOD_MENU_ROLE_TYPES.has(r))
@@ -3026,7 +3024,6 @@ const handleOpenFloatingChatUsername = useCallback(async (username: string) => {
 
     const recordWatchActivity = async () => {
       try {
-        await recordWatchTime(60, streamId)
       } catch (recordErr) {
         console.warn('[ViewerPage] Failed to record watch time:', recordErr)
       }
@@ -3043,7 +3040,7 @@ const handleOpenFloatingChatUsername = useCallback(async (username: string) => {
         watchTimeIntervalRef.current = null
       }
     }
-  }, [streamId, user?.id, isStreamLive, hostId, recordWatchTime])
+  }, [streamId, user?.id, isStreamLive, hostId])
 
   useEffect(() => {
     setBroadcasterProfile(null)
@@ -3826,9 +3823,13 @@ useStreamRealtime(
                           is_key_to_city: !!result.is_key_to_city,
                           cashout_available_at: result.cashout_available_at || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
                         })
+                      } else if (result?.error === 'DAILY_LIMIT_REACHED') {
+                        toast.info(result.message || 'You already received a key today. Try again next time.')
+                      } else if (result?.error) {
+                        console.warn('[Broadcast] Key award failed:', result.error, result.message)
                       }
-                    } catch {
-                      // non-blocking
+                    } catch (err) {
+                      console.warn('[Broadcast] Key award threw:', err)
                     }
                   })()
                 }
@@ -3997,6 +3998,7 @@ useStreamRealtime(
       <ErrorBoundary>
         <GiftSystemProvider streamId={streamId} defaultReceiverId={hostId}>
           <GiftFlyOverlay streamId={streamId} />
+          <LiveFeatureQuickAccess />
           <UndoRecentGiftBar />
           <VirtualAudienceActivityOverlay streamId={streamId} />
           <div className="relative flex h-dvh w-full flex-col overflow-hidden">
@@ -4043,6 +4045,7 @@ useStreamRealtime(
   return (
     <GiftSystemProvider streamId={streamId} defaultReceiverId={hostId}>
       <GiftFlyOverlay streamId={streamId} />
+      <LiveFeatureQuickAccess />
       <UndoRecentGiftBar />
       <VirtualAudienceActivityOverlay streamId={streamId} />
       {isFeaturedEvent && (

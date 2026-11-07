@@ -54,6 +54,7 @@ export function usePodcastAgora({
 
   const clientRef = useRef<IAgoraRTCClient | null>(null)
   const audioTrackRef = useRef<IMicrophoneAudioTrack | null>(null)
+  const uidNonceRef = useRef<UID>(generateUniqueUid())
   const joinedRef = useRef(false)
   const joiningRef = useRef(false)
   const startTimeRef = useRef<number | null>(null)
@@ -197,8 +198,8 @@ export function usePodcastAgora({
         throw new Error(`Token error: ${tokenError.message}`)
       }
 
-      if (!data?.token) {
-        throw new Error('No token in response')
+      if (!data?.token || !Number.isInteger(data.uid)) {
+        throw new Error('No valid token in response')
       }
 
       debugAgora('[PodcastAgora] Token received successfully')
@@ -236,15 +237,16 @@ export function usePodcastAgora({
         throw new Error('Agora App ID not configured')
       }
 
-      const { token } = await fetchAgoraToken(channelName, uid, resolvedPodcastId)
+      const { token, uid: resolvedUid } = await fetchAgoraToken(channelName, uidNonceRef.current, resolvedPodcastId)
+      uidRef.current = resolvedUid
 
-      const joinPromise = client.join(appId, channelName, token, uid)
+      const joinPromise = client.join(appId, channelName, token, resolvedUid)
       const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Join timeout')), 15000)
       )
 
       await Promise.race([joinPromise, timeoutPromise])
-      debugAgora('[PodcastAgora] Joined channel successfully with uid:', uid)
+      debugAgora('[PodcastAgora] Joined channel successfully with uid:', resolvedUid)
 
       if (isHost) {
         try {

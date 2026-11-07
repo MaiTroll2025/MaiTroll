@@ -13,7 +13,6 @@ export type SecurityEvent = {
   actor_id: string | null;
   target_user_id: string | null;
   stream_id: string | null;
-  agency_id: string | null;
   cashout_id: string | null;
   ip_address: string | null;
   user_agent: string | null;

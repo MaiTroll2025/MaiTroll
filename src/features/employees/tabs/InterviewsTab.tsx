@@ -120,7 +120,6 @@ export default function InterviewsTab({
     Boolean(effectiveProfile?.is_secretary) ||
     effectiveProfile?.role === 'lead_troll_officer' ||
     effectiveProfile?.role === 'secretary' ||
-    effectiveProfile?.role === 'agency_hr_manager' ||
     effectiveProfile?.role === 'hr_admin'
 
   const [loading, setLoading] = useState(true)
@@ -146,7 +145,7 @@ export default function InterviewsTab({
       .from('user_profiles')
       .select('id, username, role, is_admin, is_lead_officer, is_troll_officer')
       .or(
-        'is_admin.eq.true,is_lead_officer.eq.true,is_troll_officer.eq.true,role.eq.lead_troll_officer,role.eq.secretary,role.eq.agency_hr_manager,role.eq.hr_admin,role.eq.admin',
+        'is_admin.eq.true,is_lead_officer.eq.true,is_troll_officer.eq.true,role.eq.lead_troll_officer,role.eq.secretary,role.eq.hr_admin,role.eq.admin',
       )
       .limit(200)
 

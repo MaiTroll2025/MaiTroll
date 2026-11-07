@@ -27,55 +27,6 @@ export async function addXp(userId: string, amount: number, reason?: string) {
   
   const { data, error } = await supabase.rpc('add_xp', { p_user_id: userId, p_amount: Math.max(0, Math.floor(amount)), p_reason: reason || null })
 
-  // Family XP earning hook: Allocate XP to family stats
-  if (data && amount > 0) {
-    try {
-      // Check if user is in a family
-      const { data: familyMember } = await supabase
-        .from('family_members')
-        .select('family_id')
-        .eq('user_id', userId)
-        .single()
-
-      if (familyMember?.family_id) {
-        const familyXpBonus = Math.floor(amount * 0.05) // 5% of earned XP goes to family
-        if (familyXpBonus > 0) {
-          // Use RPC function to atomically update family stats
-          const { data: _familyResult, error: familyError } = await supabase.rpc('increment_family_stats', {
-            p_family_id: familyMember.family_id,
-            p_coin_bonus: 0,
-            p_xp_bonus: parseInt(String(familyXpBonus))
-          })
-
-          if (familyError) {
-            console.warn('Failed to update family stats for XP earning:', familyError)
-          } else {
-            console.log(`Allocated ${familyXpBonus} XP to family ${familyMember.family_id}`)
-          }
-        }
-
-        // Track XP earning for family tasks
-        try {
-          const { trackXpEarning } = await import('./familyTasks')
-          await trackXpEarning(userId, amount)
-        } catch (taskErr) {
-          console.warn('Failed to track XP earning for tasks:', taskErr)
-        }
-
-        // Track XP earning for active wars
-        try {
-          const { trackWarActivity } = await import('./familyWars')
-          await trackWarActivity(userId, 'xp_earned', amount)
-        } catch (warErr) {
-          console.warn('Failed to track XP earning for wars:', warErr)
-        }
-      }
-    } catch (familyErr) {
-      console.warn('Family XP allocation failed:', familyErr)
-      // Don't fail the main XP transaction for family allocation errors
-    }
-  }
-
   return { data, error }
 }
 

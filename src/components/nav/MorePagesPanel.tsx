@@ -54,6 +54,7 @@ import {
   MessageCircle,
   LogOut,
   Lightbulb,
+  Calendar,
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/store';
 import { useCoins } from '@/lib/hooks/useCoins';
@@ -92,8 +93,8 @@ export function MorePagesPanel({ isOpen, onClose }: MorePagesPanelProps) {
   const nextXp = xpStore.xpToNext ?? profile?.next_level_xp ?? 1;
   const progress = xpStore.progress ?? (nextXp > 0 ? Math.min((currentXp / nextXp) * 100, 100) : 0);
   const {
-    isAdmin, isSecretary, isLead, isOfficer, isPresident, isBroadcaster: _isBroadcaster, isAgencyHR, isHRAdmin,
-    isAgencyLeader, isAttorney, isProsecutor, isPastor, isJournalist, isNewsCaster,
+    isAdmin, isSecretary, isLead, isOfficer, isPresident, isBroadcaster: _isBroadcaster, isHRAdmin,
+    isAttorney, isProsecutor, isPastor, isJournalist, isNewsCaster,
     isChiefNewsCaster, isCEOAssistant, isNoahAssistant: _isNoahAssistant, isAuctioneer, isEmployee: _isEmployee,
   } = useRoleChecks(profile, user?.email);
   const [search, setSearch] = useState('');
@@ -124,6 +125,7 @@ export function MorePagesPanel({ isOpen, onClose }: MorePagesPanelProps) {
         category: 'Discover',
         items: [
           { label: 'Leaderboard', icon: Trophy, path: '/leaderboard' },
+          { label: 'Calendar', icon: Calendar, path: '/calendar' },
           { label: 'Marketplace', icon: Store, path: '/marketplace' },
           { label: 'Inventory', icon: Package, path: '/inventory' },
           { label: 'MAI Pay', icon: DollarSign, path: '/mai-pay' },
@@ -139,11 +141,8 @@ export function MorePagesPanel({ isOpen, onClose }: MorePagesPanelProps) {
           { label: 'Community Forum', icon: MessageCircle, path: '/community' },
           { label: 'HydroGaming', icon: Gamepad2, path: '/hytrogaming' },
           { label: 'Live Auctions', icon: Gavel, path: '/auctions' },
-          { label: 'Agencies', icon: Building2, path: '/agencies' },
-          { label: 'Troll Family', icon: Users, path: '/family/home' },
           { label: 'Pool', icon: Waves, path: '/pool' },
           { label: 'Troll Church', icon: BookOpen, path: '/church' },
-          { label: 'Troll Match', icon: Heart, path: '/match' },
           { label: 'Podcast Central', icon: Mic, path: '/podcast' },
            { label: 'TCNN News', icon: Newspaper, path: '/tcnn' },
            { label: 'EPaper', icon: Newspaper, path: '/epaper' },
@@ -205,10 +204,7 @@ export function MorePagesPanel({ isOpen, onClose }: MorePagesPanelProps) {
          ...(isPastor || isAdmin
            ? [{ label: 'Pastor Dashboard', icon: Users as any, path: '/church/pastor' }]
            : []),
-         ...(isAgencyHR || isAgencyLeader || isAdmin
-           ? [{ label: 'Agency HR', icon: Briefcase as any, path: '/agency-hr-dashboard' }]
-           : []),
-         ...(isJournalist || isAdmin
+          ...(isJournalist || isAdmin
            ? [{ label: 'Journalist', icon: Newspaper as any, path: '/tcnn' }]
            : []),
          ...(isNewsCaster || isAdmin
@@ -275,7 +271,7 @@ export function MorePagesPanel({ isOpen, onClose }: MorePagesPanelProps) {
       ...cat,
       items: cat.items.filter((item) => item.show !== false),
     }));
-  }, [profile?.username, canSeeFounderHub, canSeeMarketingPage, isOfficer, isSecretary, isAdmin, isLead, isPresident, isAttorney, isProsecutor, isPastor, isAgencyHR, isAgencyLeader, isJournalist, isNewsCaster, isChiefNewsCaster, isCEOAssistant, isAuctioneer, isHRAdmin]);
+  }, [profile?.username, canSeeFounderHub, canSeeMarketingPage, isOfficer, isSecretary, isAdmin, isLead, isPresident, isAttorney, isProsecutor, isPastor, isJournalist, isNewsCaster, isChiefNewsCaster, isCEOAssistant, isAuctioneer, isHRAdmin]);
 
   const filteredPages = useMemo(() => {
     if (!search.trim()) return allPages;
@@ -467,7 +463,6 @@ function useRoleChecks(profile: any, userEmail?: string) {
     role === String(UserRole.ADMIN) ||
     trollRole === String(UserRole.ADMIN) ||
     role === String(UserRole.HR_ADMIN) ||
-    role === String(UserRole.AGENCY_HR_MANAGER) ||
     profile?.is_admin ||
     role === 'superadmin' ||
     role === 'owner' ||
@@ -505,12 +500,6 @@ function useRoleChecks(profile: any, userEmail?: string) {
     trollRole === 'broadcaster' ||
     !!(profile as any)?.is_broadcaster;
 
-  const isAgencyHR =
-    role === String(UserRole.AGENCY_HR_MANAGER) ||
-    trollRole === String(UserRole.AGENCY_HR_MANAGER) ||
-    !!(profile as any)?.is_agency_hr ||
-    !!(profile as any)?.is_agency_hr_manager
-
   const isHRAdmin =
     isAdmin ||
     role === String(UserRole.HR_ADMIN) ||
@@ -519,13 +508,6 @@ function useRoleChecks(profile: any, userEmail?: string) {
     trollRole === String(UserRole.HR_MANAGER) ||
     !!(profile as any)?.is_hr_admin ||
     !!(profile as any)?.is_hr_manager
-
-  const isAgencyLeader =
-    role === 'agency_leader' ||
-    trollRole === 'agency_leader' ||
-    !!(profile as any)?.is_agency_leader ||
-    isAgencyHR ||
-    isAdmin
 
   const isAttorney =
     role === 'attorney' ||
@@ -583,23 +565,22 @@ function useRoleChecks(profile: any, userEmail?: string) {
     isHRAdmin ||
     new Set([
       'troll_officer', 'lead_troll_officer', 'secretary', 'ceo_assistant',
-      'noah_assistant', 'hr_admin', 'hr_manager', 'agency_hr_manager',
-      'pastor', 'agency_leader', 'attorney', 'prosecutor', 'journalist',
-      'auctioneer', 'troller', 'agency_hr', 'president', 'vice_president',
+      'noah_assistant', 'hr_admin', 'hr_manager',
+      'pastor', 'attorney', 'prosecutor', 'journalist',
+      'auctioneer', 'troller', 'president', 'vice_president',
       'troll_city_secretary', 'troll_city_treasurer', 'executive_secretary',
       'employee',
     ]).has(role) ||
     new Set([
       'troll_officer', 'lead_troll_officer', 'secretary', 'ceo_assistant',
-      'noah_assistant', 'hr_admin', 'hr_manager', 'agency_hr_manager',
-      'pastor', 'agency_leader', 'attorney', 'prosecutor', 'journalist',
-      'auctioneer', 'troller', 'agency_hr', 'president', 'vice_president',
+      'noah_assistant', 'hr_admin', 'hr_manager',
+      'pastor', 'attorney', 'prosecutor', 'journalist',
+      'auctioneer', 'troller', 'president', 'vice_president',
       'troll_city_secretary', 'troll_city_treasurer', 'executive_secretary',
       'employee',
     ]).has(trollRole)
-    ;
 
-  return { isAdmin, isSecretary, isLead, isOfficer, isPresident, isBroadcaster, isAgencyHR, isHRAdmin, isAgencyLeader, isAttorney, isProsecutor, isPastor, isJournalist, isNewsCaster, isChiefNewsCaster, isCEOAssistant, isNoahAssistant, isAuctioneer, isEmployee, role, trollRole };
+  return { isAdmin, isSecretary, isLead, isOfficer, isPresident, isBroadcaster, isHRAdmin, isAttorney, isProsecutor, isPastor, isJournalist, isNewsCaster, isChiefNewsCaster, isCEOAssistant, isNoahAssistant, isAuctioneer, isEmployee, role, trollRole };
 }
 
 // We need useNavigate from react-router-dom

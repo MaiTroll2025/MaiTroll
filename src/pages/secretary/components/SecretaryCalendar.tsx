@@ -66,8 +66,8 @@ export default function SecretaryCalendar() {
   }, [fetchEvents]);
 
   // Build calendar grid
-  const calendarStart = startOfWeek(startOfMonth(currentMonth));
-  const calendarEnd = endOfWeek(endOfMonth(currentMonth));
+  const calendarStart = startOfWeek(startOfMonth(currentMonth), { weekStartsOn: 1 });
+  const calendarEnd = endOfWeek(endOfMonth(currentMonth), { weekStartsOn: 1 });
   const days: Date[] = [];
   let day = calendarStart;
   while (day <= calendarEnd) {
@@ -190,7 +190,7 @@ export default function SecretaryCalendar() {
 
           {/* Day Headers */}
           <div className="grid grid-cols-7 gap-1 mb-2">
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
+            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d) => (
               <div key={d} className="text-center text-xs font-medium text-slate-500 py-2">
                 {d}
               </div>

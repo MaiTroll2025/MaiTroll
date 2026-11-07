@@ -55,6 +55,7 @@ import PhoneGiftModal from '@/phone/components/PhoneGiftModal'
 import PinProductModal from '@/components/broadcast/PinProductModal'
 import GiftVideoOverlay from '@/components/broadcast/GiftVideoOverlay'
 import GiftFlyOverlay from '@/components/broadcast/GiftFlyOverlay'
+import LiveFeatureQuickAccess from '@/components/broadcast/LiveFeatureQuickAccess'
 import ShareModal from '@/components/broadcast/ShareModal'
 import { useFeaturedLive } from '@/hooks/useFeaturedLive'
 import { useBroadcastLifecycle, formatCountdown } from '@/hooks/useBroadcastLifecycle'
@@ -2357,6 +2358,7 @@ export default function PhoneBroadcastPage() {
       }
     >
       <GiftFlyOverlay streamId={streamId} />
+      <LiveFeatureQuickAccess />
       <div
         className="relative flex h-[100dvh] w-full flex-col overflow-hidden bg-[#0c0717] text-white"
       >

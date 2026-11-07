@@ -47,7 +47,6 @@ export const PERKS: Perk[] = [
   { id: 'emojis_pack_1', label: 'Emoji Pack #1', description: 'New chat emojis', tier: 'citizen', levelRequired: 6, icon: MessageCircle },
   { id: 'xp_boost_5', label: '+5% XP Boost', description: 'Level up faster', tier: 'citizen', levelRequired: 7, icon: Star },
   { id: 'boost_token', label: 'Boost Token', description: 'Boost a stream', tier: 'citizen', levelRequired: 8, icon: Zap },
-  { id: 'create_family', label: 'Create Family', description: 'Start your own Troll Family', tier: 'citizen', levelRequired: 9, icon: Crown },
   { id: 'rising_citizen_badge', label: 'Rising Citizen Badge', description: 'You are going places', tier: 'citizen', levelRequired: 10, icon: Shield },
 
   // Influencer Tier (11-25)

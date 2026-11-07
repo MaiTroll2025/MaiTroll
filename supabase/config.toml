@@ -486,3 +486,18 @@ entrypoint = "./functions/paypal-donation-cancel/index.ts"
 enabled = true
 verify_jwt = false
 entrypoint = "./functions/paypal-donation-webhook/index.ts"
+
+[functions.mai-calendar-reminders]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/mai-calendar-reminders/index.ts"
+
+[functions.official-events]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/official-events/index.ts"
+
+[functions.official-event-token]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/official-event-token/index.ts"

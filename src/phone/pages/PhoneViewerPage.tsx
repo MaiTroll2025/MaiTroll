@@ -23,6 +23,7 @@ import {
 } from '@/lib/store'
 import { useCreditActivityHeartbeat } from '@/lib/hooks/useCreditActivityHeartbeat'
 import UserMiniProfile from '@/components/user/UserMiniProfile'
+import LiveFeatureQuickAccess from '@/components/broadcast/LiveFeatureQuickAccess'
 import ChatMessageReportButton from '@/components/broadcast/ChatMessageReportButton'
 import { useChatBlockStatus } from '@/hooks/useChatBlockStatus'
 import ProtectionOrderGate from '@/components/ProtectionOrderGate'
@@ -4471,6 +4472,7 @@ useEffect(() => {
     return (
       <ErrorBoundary>
     <GiftSystemProvider streamId={resolvedStreamId} defaultReceiverId={stream.user_id}>
+      <LiveFeatureQuickAccess />
       <UndoRecentGiftBar />
       <div className="relative flex h-[100dvh] w-full flex-col overflow-hidden">
             <BattleView
@@ -4555,6 +4557,7 @@ useEffect(() => {
         }
       >
       <GiftFlyOverlay streamId={resolvedStreamId} />
+      <LiveFeatureQuickAccess />
       <UndoRecentGiftBar />
       {isFeaturedEvent && (
         <FeaturedBanner

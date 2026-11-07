@@ -4,8 +4,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { supabase, ensureSupabaseSession } from '@/lib/supabase'
 import { useAuthStore } from '@/lib/store'
-import { trackCoinEarning, updateFamilyGoalProgress } from './familyTasks'
-import { trackWarActivity } from './familyWars'
 import { sendNotification } from './sendNotification'
 
 const _safeNumber = (value: unknown): number | null => {
@@ -421,9 +419,7 @@ export async function addCoins(params: {
   liability?: number
   sourceId?: string
 }) {
-  const { userId, amount, type, coinType = 'troll_coins', description, metadata, supabaseClient, platformProfit: _platformProfit, liability: _liability, sourceId } = params
-  const finalCoinType = coinType || 'troll_coins'
-
+  const { userId, amount, type, description, metadata: _metadata, supabaseClient, platformProfit: _platformProfit, liability: _liability, sourceId } = params
   const sb = supabaseClient || supabase
   if (!sb) {
     console.error('addCoins: No supabase client available')
@@ -445,180 +441,30 @@ export async function addCoins(params: {
     }
 
     const currentBalance = profile.troll_coins ?? 0
-    const metadataPayload = sanitizeMetadata(metadata)
-
-    // Use Troll Bank RPC for centralized credit + repayment logic
-    const bucketMap: Record<string, string> = {
-      purchase: 'paid',
-      gift_received: 'gifted',
-      reward: 'promo',
-      admin_grant: 'promo',
-      lucky_gift_win: 'promo',
-      refund: 'paid',
-      cashout: 'paid',
-      insurance_purchase: 'paid',
-      entrance_effect: 'paid',
-      perk_purchase: 'paid',
-      gas_refill: 'paid',
-      troll_town_sale: 'paid',
-      academy_course: 'paid'
-    }
-
     // Special handling for Admin Grants (Secure RPC)
     if (type === 'admin_grant') {
-      const { data: _data, error } = await sb.rpc('admin_grant_coins', {
-        p_target_id: userId,
-        p_amount: amount,
-        p_reason: description || 'Admin Grant'
+      const { data, error } = await sb.functions.invoke('coin-admin', {
+        body: { userId, amount, reason: description || 'Admin Grant' }
       });
       
-      if (error) {
+      if (error || !data?.success) {
         console.error('addCoins: Admin grant failed', error);
-        return { success: false, newBalance: currentBalance, transaction: null, error: error.message };
+        return { success: false, newBalance: currentBalance, transaction: null, error: error?.message || data?.error || 'Failed to grant coins' };
       }
-      
-      // We don't get the exact new balance back easily, so we estimate
-      return { success: true, newBalance: currentBalance + amount, transaction: null };
+      return { success: true, newBalance: data.newBalance ?? currentBalance, transaction: data }
     }
 
-    const bucket = bucketMap[type] || 'promo' // Default to promo for safety
-    const transactionRefId = sourceId || null
-
-    const { data: bankResult, error: bankError } = await sb.rpc('troll_bank_credit_coins', {
-      p_user_id: userId,
-      p_coins: amount,
-      p_bucket: bucket,
-      p_source: type,
-      p_ref_id: transactionRefId,
-      p_metadata: metadataPayload || {}
+    console.error('addCoins: direct browser credits are disabled', {
+      userId,
+      amount,
+      type,
+      sourceId: sourceId || null,
     })
-
-    if (bankError) {
-      console.error('addCoins: Troll Bank credit failed', bankError)
-      return { success: false, newBalance: currentBalance, transaction: null, error: bankError.message }
-    }
-
-    // Parse bank result
-    const actualCredited = bankResult?.user_gets ?? amount
-    // const repaymentAmount = bankResult?.repay ?? 0
-    const finalBalance = currentBalance + actualCredited
-
-    // Update global store if the addition was for the current user
-    try {
-      const { profile, setProfile } = useAuthStore.getState()
-      if (profile && profile.id === userId) {
-        const updatedProfile = { ...profile }
-        
-        updatedProfile.troll_coins = finalBalance
-        
-        setProfile(updatedProfile)
-      }
-    } catch (e) {
-      console.warn('addCoins: Failed to update local store', e)
-    }
-
-    // Family token earning hook: Allocate 10% of earned coins to family stats
-    if (finalCoinType === 'troll_coins' && amount > 0) {
-      try {
-        // Check if user is in a family
-        const { data: familyMember } = await sb
-          .from('family_members')
-          .select('family_id')
-          .eq('user_id', userId)
-          .maybeSingle()
-
-        if (familyMember?.family_id) {
-          const familyBonus = Math.floor(amount * 0.10) // 10% of earned coins
-          if (familyBonus > 0) {
-            // Use RPC function to atomically update family stats
-            const { data: _familyResult, error: familyError } = await sb.rpc('increment_family_stats', {
-              p_family_id: familyMember.family_id,
-              p_coin_bonus: parseInt(String(familyBonus)),
-              p_xp_bonus: 0
-            })
-
-            if (familyError) {
-              console.warn('Failed to update family stats for coin earning:', familyError)
-            } else {
-              console.log(`Allocated ${familyBonus} family tokens to family ${familyMember.family_id}`)
-            }
-          }
-
-          try {
-            const dedupKey = `troll_coin_earned_${type}_${transactionRefId || 'unknown'}_${userId}_${Date.now()}`
-            const { error: familyRecordError } = await sb.rpc('record_troll_family_activity', {
-              p_user_id: userId,
-              p_event_type: 'troll_coin_earned',
-              p_amount: actualCredited,
-              p_metadata: {
-                source: type,
-                ref_id: transactionRefId,
-                dedup_key: dedupKey,
-              },
-            })
-
-            if (familyRecordError) {
-              console.warn('Failed to record family activity for coins earned:', familyRecordError)
-            }
-          } catch (e) {
-            console.warn('addCoins: Failed to record troll coin earned activity', e)
-          }
-
-          // Track coin earning for family tasks
-          try {
-            await trackCoinEarning(userId, amount)
-          } catch (taskErr) {
-            console.warn('Failed to track coin earning for tasks:', taskErr)
-          }
-
-          // Update family_goals progress (used by TrollFamilyHome)
-          try {
-            await updateFamilyGoalProgress(userId, amount)
-          } catch (goalErr) {
-            console.warn('Failed to update family goal progress:', goalErr)
-          }
-
-          // Track coin earning for active wars
-          try {
-            await trackWarActivity(userId, 'coin_earned', amount)
-          } catch (warErr) {
-            console.warn('Failed to track coin earning for wars:', warErr)
-          }
-        }
-      } catch (familyErr) {
-        console.warn('Family coin allocation failed:', familyErr)
-        // Don't fail the main transaction for family allocation errors
-      }
-    }
-
-    // Send notification
-    if (type === 'gift_received') {
-      sendNotification(
-        userId,
-        'coin_received',
-        'Coins Received',
-        `You received ${amount} coins!`,
-        { ...metadata, amount, type }
-      )
-    }
-
-    // Global event for large gifts
-    if (type === 'gift_received' && amount > 1000) {
-        void supabase.rpc('create_global_event', {
-            p_type: 'gift',
-            p_title: `Someone just received a gift of ${amount} coins!`,
-            p_icon: 'gift',
-            p_metadata: { ...metadata, amount, type }
-        }).then(({ error }) => {
-          if (error) console.error('Failed to announce gift event:', error)
-        })
-    }
-
     return {
-      success: true,
-      newBalance: finalBalance,
-      transaction: bankResult, // Return bank result as transaction info
-      error: null
+      success: false,
+      newBalance: currentBalance,
+      transaction: null,
+      error: 'Coin credits are temporarily unavailable',
     }
   } catch (err: any) {
     console.error('addCoins exception:', err)

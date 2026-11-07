@@ -147,7 +147,15 @@ export default function AuctioneerDashboard() {
 
   const getAgoraToken = useCallback(async (channelName: string, uid: number, role: 'publisher' | 'audience') => {
     const { data, error } = await supabase.functions.invoke('agora-token', {
-      body: { channelName, channel: channelName, uid, role, isPublisher: role === 'publisher' },
+      body: {
+        channelName,
+        channel: channelName,
+        uid,
+        role,
+        roomType: 'auction',
+        auctionId: showId,
+        isPublisher: role === 'publisher',
+      },
     })
     if (error) {
       // supabase.functions.invoke wraps edge function errors generically.
@@ -157,9 +165,9 @@ export default function AuctioneerDashboard() {
         || edgeError?.context?.error?.hint || edgeError?.message
       throw new Error(details || 'Agora token service unavailable. Make sure AGORA_APP_ID and AGORA_APP_CERTIFICATE are set in Supabase secrets.')
     }
-    if (!data?.token) throw new Error('No Agora token returned — check Supabase edge function logs')
-    return data.token as string
-  }, [])
+    if (!data?.token || !Number.isInteger(data.uid)) throw new Error('No valid Agora token returned — check Supabase edge function logs')
+    return { token: data.token as string, uid: data.uid as number }
+  }, [showId])
 
   const cleanupAgora = useCallback(async () => {
     try {
@@ -240,10 +248,10 @@ export default function AuctioneerDashboard() {
 
       console.log('[Agora] Requesting token...')
       const token = await getAgoraToken(channelName, uid, 'publisher')
-      console.log('[Agora] Token received:', token ? `${token.substring(0, 16)}...` : 'EMPTY')
+      console.log('[Agora] Token received:', token.token ? `${token.token.substring(0, 16)}...` : 'EMPTY')
 
       console.log('[Agora] Joining channel...')
-      await client.join(appId, channelName, token, uid)
+      await client.join(appId, channelName, token.token, token.uid)
       console.log('[Agora] Joined channel successfully')
 
       console.log('[Agora] Requesting camera + mic permissions...')

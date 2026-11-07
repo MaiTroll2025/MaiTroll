@@ -51,7 +51,6 @@ const CEOAssistantDashboard = () => {
     String(profile?.role) === 'admin' ||
     String(profile?.troll_role) === 'admin' ||
     String(profile?.role) === 'hr_admin' ||
-    String(profile?.role) === 'agency_hr_manager' ||
     profile?.is_admin ||
     String(profile?.role) === 'superadmin' ||
     String(profile?.troll_role) === 'ceo' ||

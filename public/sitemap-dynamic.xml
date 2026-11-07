@@ -4,12 +4,24 @@
         xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
         http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
   <!-- ============================================================ -->
-  <!-- DYNAMIC SITEMAP - Generated 2026-11-04                          -->
-  <!-- 22 URLs                                           -->
+  <!-- DYNAMIC SITEMAP - Generated 2026-11-06                          -->
+  <!-- 20 URLs                                           -->
   <!-- ============================================================ -->
   <url>
-    <loc>https://www.maitroll.com/profile/gufufu</loc>
-    <lastmod>2026-11-02</lastmod>
+    <loc>https://www.maitroll.com/profile/Bizzy83</loc>
+    <lastmod>2026-11-05</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.maitroll.com/profile/ceo</loc>
+    <lastmod>2026-11-06</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.maitroll.com/profile/cierransmith</loc>
+    <lastmod>2026-11-05</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
@@ -20,14 +32,8 @@
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://www.maitroll.com/profile/Misty7756</loc>
-    <lastmod>2026-10-25</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/profile/gdhhdbs</loc>
-    <lastmod>2026-11-02</lastmod>
+    <loc>https://www.maitroll.com/profile/gylfi3</loc>
+    <lastmod>2026-10-19</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
@@ -38,8 +44,8 @@
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://www.maitroll.com/profile/Smoke4k</loc>
-    <lastmod>2026-10-25</lastmod>
+    <loc>https://www.maitroll.com/profile/ImportD14G10</loc>
+    <lastmod>2026-10-19</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
@@ -50,8 +56,8 @@
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://www.maitroll.com/profile/joshuatucker95</loc>
-    <lastmod>2026-11-04</lastmod>
+    <loc>https://www.maitroll.com/profile/Misty7756</loc>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
@@ -62,26 +68,8 @@
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://www.maitroll.com/profile/ImportD14G10</loc>
-    <lastmod>2026-10-19</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/profile/gylfi3</loc>
-    <lastmod>2026-10-19</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/profile/cierransmith</loc>
-    <lastmod>2026-10-19</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.maitroll.com/profile/Bizzy83</loc>
-    <lastmod>2026-11-04</lastmod>
+    <loc>https://www.maitroll.com/profile/Smoke4k</loc>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>

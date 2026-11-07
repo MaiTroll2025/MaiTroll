@@ -7,7 +7,6 @@ export const PROFILE_TABS = [
   { key: 'marketplace', label: 'Marketplace', icon: ShoppingBag },
   { key: 'auctions', label: 'Auctions', icon: Gavel },
   { key: 'court', label: 'Court', icon: Scale },
-  { key: 'agency', label: 'Agency', icon: Shield },
   { key: 'church', label: 'Church', icon: BookOpen },
   { key: 'subscriptions', label: 'Subscriptions', icon: Crown },
   { key: 'maisub', label: 'MaiSub', icon: Coins },

@@ -156,14 +156,8 @@ export type NotificationType =
   | 'seller_rating_received'
   | 'buyer_rating_received'
 
-  // FAMILIES / NEIGHBORHOODS
-  | 'family_invite_received'
-  | 'family_invite_accepted'
-  | 'family_role_changed'
-  | 'family_xp_milestone'
+  // Neighborhoods
   | 'neighborhood_event_started'
-  | 'family_challenge_started'
-  | 'family_challenge_completed'
 
   // STORE / INVENTORY
   | 'purchase_successful'

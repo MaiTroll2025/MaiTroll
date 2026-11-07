@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 import { useAuthStore } from "../../../lib/store";
-import useTrollFamilyActivity from "../../../hooks/useTrollFamilyActivity";
 import { toast } from "sonner";
 import { ArrowUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -44,7 +43,6 @@ export default function MobileBattleFloatingChat({
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
   const { profile } = useAuthStore();
-  const { recordChatMessage } = useTrollFamilyActivity();
   const channelRef = useRef<any>(null);
   const profileUsername =
     (profile as any)?.username?.trim() ||
@@ -173,11 +171,6 @@ export default function MobileBattleFloatingChat({
         console.warn("[MobileBattleChat] Realtime broadcast failed; message is saved:", broadcastError);
       }
 
-      try {
-        await recordChatMessage(content.length, battleId);
-      } catch (activityError) {
-        console.error("[MobileBattleChat] Failed to record chat activity:", activityError);
-      }
     } catch (error) {
       console.error("Error sending battle message:", error);
       toast.error("Failed to send message");

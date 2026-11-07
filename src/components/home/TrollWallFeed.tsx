@@ -391,12 +391,12 @@ export default function TrollWallFeed({ onRequireAuth, feedClassName }: TrollWal
                   ? 'border-yellow-400/80 shadow-[0_0_24px_rgba(250,204,21,0.24)] hover:border-yellow-400/90 hover:shadow-[0_0_30px_rgba(250,204,21,0.32)]'
                   : 'border-white/[0.08] hover:border-cyan-400/30 hover:shadow-[0_0_24px_rgba(34,211,238,0.12)]'
 
-                return (
-                  <div key={post.id} className="flex h-[260px] w-[180px] shrink-0 flex-col gap-1">
-                    <button
-                    onClick={() => handlePostClick(post)}
-                    className={`group relative flex h-[220px] w-full flex-col overflow-hidden rounded-2xl border bg-[#080c1a]/95 text-left transition-all duration-200 ${borderClasses}`}
-                  >
+              return (
+                <div key={post.id} className="flex h-[180px] w-[140px] shrink-0 flex-col gap-1">
+                  <button
+                  onClick={() => handlePostClick(post)}
+                  className={`group relative flex h-[150px] w-full flex-col overflow-hidden rounded-xl border bg-[#080c1a]/95 text-left transition-all duration-200 ${borderClasses}`}
+                >
                     {boosted && (
                       <div className="absolute inset-x-0 top-0 z-10 h-[2px] bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-500 shadow-[0_0_18px_rgba(245,158,11,0.8)]" />
                     )}
@@ -410,7 +410,7 @@ export default function TrollWallFeed({ onRequireAuth, feedClassName }: TrollWal
                     )}
 
                     {hasImage && thumbnailUrl ? (
-                      <div className="relative h-[130px] w-full shrink-0 overflow-hidden">
+                      <div className="relative h-[80px] w-full shrink-0 overflow-hidden">
                         <img
                           src={thumbnailUrl}
                           alt=""
@@ -420,7 +420,7 @@ export default function TrollWallFeed({ onRequireAuth, feedClassName }: TrollWal
                         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-[#080c1a]/95" />
                       </div>
                     ) : (
-                      <div className="h-[6px] w-full shrink-0 bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-pink-500/20" />
+                      <div className="h-[5px] w-full shrink-0 bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-pink-500/20" />
                     )}
 
                     <div className="flex min-w-0 flex-1 flex-col gap-2 p-3">

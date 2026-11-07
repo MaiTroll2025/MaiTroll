@@ -4,7 +4,6 @@ import { useAuthStore } from '@/lib/store';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { ArrowLeft, Briefcase, CheckCircle2, Clock3, Gamepad2, Loader2, XCircle, AlertTriangle } from 'lucide-react';
-import GamingLoanModal from '@/components/broadcast/GamingLoanModal';
 import TromoCodeInput from '@/components/ui/TromoCodeInput';
 
 const REQUIRED_COINS = 5000;
@@ -32,7 +31,6 @@ export default function HytroGamingApply() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [existingApp, setExistingApp] = useState<any>(null);
-  const [showLoanModal, setShowLoanModal] = useState(false);
   const [hasLoan, setHasLoan] = useState(false);
   const [_insufficientBalance, setInsufficientBalance] = useState(false);
 
@@ -70,7 +68,7 @@ export default function HytroGamingApply() {
     if (!user) return;
     try {
       const { data } = await supabase
-        .from('agency_applications')
+        .from('applications')
         .select('id, status, created_at')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
@@ -86,7 +84,6 @@ export default function HytroGamingApply() {
     const balance = profile?.troll_coins ?? 0;
     if (balance < discountedFee) {
       setInsufficientBalance(true);
-      setShowLoanModal(true);
       return false;
     }
     setInsufficientBalance(false);
@@ -124,7 +121,6 @@ export default function HytroGamingApply() {
 
     if (!usingLoan && balance < discountedFee) {
       setInsufficientBalance(true);
-      setShowLoanModal(true);
       return;
     }
 
@@ -186,7 +182,7 @@ export default function HytroGamingApply() {
           <Clock3 className="mx-auto mb-4 h-16 w-16 text-amber-400" />
           <h2 className="text-2xl font-black text-amber-300">Application Pending</h2>
           <p className="mt-3 text-slate-400">
-            Your HytroGaming agency application is under review by Agency HR.
+            Your HytroGaming application is under review.
           </p>
           <p className="mt-2 text-sm text-slate-500">
             Submitted: {new Date(existingApp.created_at).toLocaleDateString()}
@@ -209,7 +205,7 @@ export default function HytroGamingApply() {
           <CheckCircle2 className="mx-auto mb-4 h-16 w-16 text-emerald-400" />
           <h2 className="text-2xl font-black text-emerald-300">Already Approved</h2>
           <p className="mt-3 text-slate-400">
-            Your HytroGaming agency application has been approved.
+            Your HytroGaming application has been approved.
           </p>
           <button
             onClick={() => navigate('/hytrogaming')}
@@ -409,15 +405,8 @@ export default function HytroGamingApply() {
                   <p className="mt-1 text-xs text-amber-300/80">
                     You need at least {discountedFee.toLocaleString()} Troll Coins to apply for HytroGaming Agency.
                     Your current balance is {(profile?.troll_coins ?? 0).toLocaleString()} TC.
-                    Shortfall: {(discountedFee - (profile?.troll_coins ?? 0)).toLocaleString()} TC.
+                    Shortfall: {(discountedFee - (profile?.troll_coins ?? 0)).toLocaleString()} TC. Insufficient balance.
                   </p>
-                  <button
-                    type="button"
-                    onClick={() => setShowLoanModal(true)}
-                    className="mt-3 inline-flex items-center gap-2 rounded-xl bg-amber-500/20 px-4 py-2 text-xs font-bold text-amber-100 transition hover:bg-amber-500/30"
-                  >
-                    Apply for Gaming Loan
-                  </button>
                 </div>
               </div>
             </div>
@@ -428,7 +417,7 @@ export default function HytroGamingApply() {
               <div>
                 <h3 className="text-sm font-black text-white">Need a Loan?</h3>
                 <p className="mt-1 text-xs text-slate-400">
-                  Apply for a loan to cover the agency startup fee. Monthly fee is 5,000 Troll Coins.
+                  Apply for a loan to cover the startup fee. Monthly fee is 5,000 Troll Coins.
                   Tips received while streaming go toward loan balance first.
                 </p>
               </div>
@@ -474,7 +463,7 @@ export default function HytroGamingApply() {
                 </div>
                 <div className="rounded-xl border border-amber-400/20 bg-amber-400/5 p-3">
                   <p className="text-[11px] text-amber-200">
-                    <strong>Loan Terms:</strong> Startup fee same as regular agencies. Monthly fee: 5,000 TC (vs 10,000 TC regular).
+                     <strong>Loan Terms:</strong> Startup fee same as regular applications. Monthly fee: 5,000 TC (vs 10,000 TC regular).
                     All tips go toward loan balance first. No cashouts allowed until loan is fully paid off.
                     Loan is restricted to Hytro Gaming Agency use only.
                   </p>
@@ -503,16 +492,6 @@ export default function HytroGamingApply() {
           </div>
         </div>
       </main>
-
-      <GamingLoanModal
-        isOpen={showLoanModal}
-        onClose={() => setShowLoanModal(false)}
-        currentBalance={profile?.troll_coins ?? 0}
-        onLoanApproved={() => {
-          setHasLoan(true);
-          setInsufficientBalance(false);
-        }}
-      />
     </div>
   );
 }

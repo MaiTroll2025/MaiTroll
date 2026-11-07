@@ -111,7 +111,7 @@ export default function HandbookPanel() {
       <div className="rounded-3xl border border-cyan-300/10 bg-cyan-500/5 p-4">
         <p className="text-xs text-cyan-200">
           <BookOpen className="mr-1 inline h-3.5 w-3.5" />
-          This handbook applies to all Mai Troll staff, contractors, agency members, moderators, creators, officers, court officials, pastors, and internal platform roles.
+          This handbook applies to all Mai Troll staff, contractors, moderators, creators, officers, court officials, pastors, and internal platform roles.
         </p>
       </div>
 

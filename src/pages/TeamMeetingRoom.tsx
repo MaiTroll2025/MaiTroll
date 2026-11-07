@@ -45,8 +45,6 @@ const checkStaffAccessFallback = (profileData: any): boolean => {
   const is_tcnn_news_caster = profileData?.is_tcnn_news_caster === true;
   const is_tcnn_chief_news_caster = profileData?.is_tcnn_chief_news_caster === true;
   const is_troller = profileData?.is_troller === true;
-  const is_troll_family_leader = profileData?.is_troll_family_leader === true;
-  const is_agency_leader = profileData?.is_agency_leader === true;
   const is_noah_admin = profileData?.is_noah_admin === true;
   const has_organization = !!profileData?.organization_id;
 
@@ -66,14 +64,10 @@ const checkStaffAccessFallback = (profileData: any): boolean => {
     role === 'moderator' ||
     role === 'ceo_assistant' ||
     role === 'noah_assistant' ||
-    role === 'agency_hr' ||
-    role === 'agency_hr_manager' ||
     role === 'journalist' ||
     role === 'tcnn_news_caster' ||
     role === 'tcnn_chief_news_caster' ||
     role === 'troller' ||
-    role === 'troll_family_leader' ||
-    role === 'agency_leader' ||
     role === 'noah_admin' ||
     // Boolean flag checks
     is_admin ||
@@ -89,14 +83,10 @@ const checkStaffAccessFallback = (profileData: any): boolean => {
     is_moderator ||
     is_ceo_assistant ||
     is_noah_assistant ||
-    is_agency_hr ||
-    is_agency_hr_manager ||
     is_journalist ||
     is_tcnn_news_caster ||
     is_tcnn_chief_news_caster ||
     is_troller ||
-    is_troll_family_leader ||
-    is_agency_leader ||
     is_noah_admin ||
     // Organization members
     has_organization
@@ -497,6 +487,8 @@ export const TeamMeetingRoom: React.FC = () => {
   } = useAgoraRoom({
     channelName: meeting?.room_name || '',
     userId: user?.id || '',
+    roomType: 'staff_meeting',
+    meetingId: meeting?.id,
     userName: userProfile?.username || 'User',
     role: 'publisher',
     onUserJoined: (user) => {

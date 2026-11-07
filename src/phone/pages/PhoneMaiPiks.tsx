@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowLeft, Bell, Camera, ChevronRight, Coins, Image as ImageIcon, Lock, Plus, Radio, RotateCcw, ShieldCheck, Sparkles, Trash2, User, Users, Video, X, RefreshCw, Zap, Eye, Heart, Send, Loader2 } from 'lucide-react';
+import { ArrowLeft, Bell, Camera, ChevronRight, Coins, Image as ImageIcon, Lock, Plus, Radio, RotateCcw, ShieldCheck, Sparkles, Trash2, User, Users, Video, X, RefreshCw, Zap, Eye, Heart, Send, Loader2, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { supabase } from '../../lib/supabase'
@@ -19,6 +19,7 @@ import {
   type StoryVisibility,
 } from '../components/maiPiksShared'
 import { formatRecordClock } from '../components/maiPiksUtils'
+import '../../styles/ios-maipiks.css'
 
 type PiksMode = 'feed' | 'camera' | 'story' | 'preview'
 
@@ -165,6 +166,7 @@ export default function PhoneMaiPiks() {
 
   const [cameraReady, setCameraReady] = useState(false)
   const [cameraError, setCameraError] = useState<string | null>(null)
+  const [cameraPermissionDenied, setCameraPermissionDenied] = useState(false)
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user')
   /* The camera that actually opened, which can differ from the requested one
      when a fallback constraint succeeds. */
@@ -208,6 +210,9 @@ export default function PhoneMaiPiks() {
      from an older render cannot see it. */
   const mediaStreamRef = useRef<MediaStream | null>(null)
   const cameraRequestRef = useRef(0)
+  const recorderAudioStreamRef = useRef<MediaStream | null>(null)
+  const recordingStartPendingRef = useRef(false)
+  const recordingStartCancelledRef = useRef(false)
 
   /* ---------------------------------------------------------------------- */
   /* Current user & profile                                                 */
@@ -578,6 +583,8 @@ export default function PhoneMaiPiks() {
     const stream = mediaStreamRef.current
     mediaStreamRef.current = null
     stream?.getTracks().forEach((track) => track.stop())
+    recorderAudioStreamRef.current?.getTracks().forEach((track) => track.stop())
+    recorderAudioStreamRef.current = null
     setMediaStream(null)
   }, [])
 
@@ -596,6 +603,18 @@ export default function PhoneMaiPiks() {
     setMode('camera')
   }
 
+  const openIosSettings = () => {
+    const isIosDevice =
+      /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+    if (!isIosDevice) {
+      toast.info('Open your device Settings and allow MaiTroll to use the camera and microphone.')
+      return
+    }
+
+    window.location.href = 'app-settings:'
+  }
+
   const openStory = () => {
     stopCamera()
     setCameraReady(false)
@@ -610,22 +629,16 @@ export default function PhoneMaiPiks() {
     stopCamera()
     const requestId = cameraRequestRef.current
     setActiveFacing(facingMode)
+    setCameraPermissionDenied(false)
 
     if (!navigator.mediaDevices?.getUserMedia) {
       setCameraError('Camera access is not available on this device.')
       return
     }
 
-    /*
-     * Android WebView throws NotReadableError when the requested camera is
-     * momentarily busy, and a front camera that is missing or reserved by the
-     * OS fails the constrained request outright. Walk down to less specific
-     * requests instead of giving up on the first refusal.
-     */
+    /* Open the camera without requesting microphone access until recording. */
     const attempts: MediaStreamConstraints[] = [
-      { video: { facingMode }, audio: true },
       { video: { facingMode }, audio: false },
-      { video: true, audio: true },
       { video: true, audio: false },
     ]
 
@@ -649,6 +662,7 @@ export default function PhoneMaiPiks() {
         mediaStreamRef.current = stream
         setMediaStream(stream)
         setCameraError(null)
+        setCameraPermissionDenied(false)
         setCameraReady(true)
         return
       } catch (error) {
@@ -688,6 +702,7 @@ export default function PhoneMaiPiks() {
 
     setCameraReady(false)
     const name = lastError instanceof DOMException ? lastError.name : ''
+    setCameraPermissionDenied(name === 'NotAllowedError' || name === 'SecurityError')
     setCameraError(
       videoInputs.length === 0 && name !== 'NotAllowedError'
         ? 'No camera is available to the app. Allow camera access, then reload.'
@@ -1139,27 +1154,64 @@ export default function PhoneMaiPiks() {
     }
   }
 
-  const beginRecording = () => {
-    if (!mediaStream || !cameraReady || recording) return
+  const beginRecording = async () => {
+    if (!mediaStream || !cameraReady || recording || recordingStartPendingRef.current) return
 
     if (typeof MediaRecorder === 'undefined') {
       toast.error('Video recording is not supported on this device')
       return
     }
 
+    const cameraRequestId = cameraRequestRef.current
+    recordingStartPendingRef.current = true
+    recordingStartCancelledRef.current = false
+    didRecordRef.current = true
+
+    let audioStream: MediaStream
+    try {
+      audioStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+    } catch (error) {
+      recordingStartPendingRef.current = false
+      if (error instanceof DOMException && ['NotAllowedError', 'SecurityError'].includes(error.name)) {
+        setCameraPermissionDenied(true)
+        setCameraError('Microphone access is required to record video with sound.')
+        toast.error('Allow MaiTroll to use the microphone to record video with sound.')
+      } else {
+        console.error('[MAIPiks] Microphone access failed:', error)
+        toast.error('Could not access the microphone')
+      }
+      return
+    }
+
+    recordingStartPendingRef.current = false
+    if (
+      recordingStartCancelledRef.current ||
+      cameraRequestId !== cameraRequestRef.current ||
+      !mediaStreamRef.current
+    ) {
+      audioStream.getTracks().forEach((track) => track.stop())
+      return
+    }
+
+    recorderAudioStreamRef.current = audioStream
+    const recordingStream = new MediaStream([
+      ...mediaStream.getVideoTracks(),
+      ...audioStream.getAudioTracks(),
+    ])
     const mimeType = pickRecorderMime()
 
     let recorder: MediaRecorder
     try {
-      recorder = mimeType ? new MediaRecorder(mediaStream, { mimeType }) : new MediaRecorder(mediaStream)
+      recorder = mimeType ? new MediaRecorder(recordingStream, { mimeType }) : new MediaRecorder(recordingStream)
     } catch (err) {
       console.error('[MAIPiks] MediaRecorder failed to start:', err)
+      audioStream.getTracks().forEach((track) => track.stop())
+      recorderAudioStreamRef.current = null
       toast.error('Video recording is not supported on this device')
       return
     }
 
     recordChunksRef.current = []
-    didRecordRef.current = true
     recordStartedAtRef.current = Date.now()
 
     recorder.ondataavailable = (event) => {
@@ -1168,6 +1220,8 @@ export default function PhoneMaiPiks() {
 
     recorder.onstop = async () => {
       clearRecordTimers()
+      recorderAudioStreamRef.current?.getTracks().forEach((track) => track.stop())
+      recorderAudioStreamRef.current = null
       setRecording(false)
       setRecordingLocked(false)
       recordingLockedRef.current = false
@@ -1196,7 +1250,15 @@ export default function PhoneMaiPiks() {
       setMode('preview')
     }
 
-    recorder.start(250)
+    try {
+      recorder.start(250)
+    } catch (err) {
+      console.error('[MAIPiks] MediaRecorder failed to start:', err)
+      audioStream.getTracks().forEach((track) => track.stop())
+      recorderAudioStreamRef.current = null
+      toast.error('Video recording could not start')
+      return
+    }
     recorderRef.current = recorder
     setRecording(true)
     setRecordMs(0)
@@ -1293,6 +1355,10 @@ export default function PhoneMaiPiks() {
 
     /* Latched: the recording keeps going until the shutter is tapped again. */
     if (recordingLockedRef.current) return
+    if (recordingStartPendingRef.current) {
+      recordingStartCancelledRef.current = true
+      return
+    }
 
     if (holdTimerRef.current) {
       window.clearTimeout(holdTimerRef.current)
@@ -1725,7 +1791,7 @@ export default function PhoneMaiPiks() {
   /* ---------------------------------------------------------------------- */
 
   return (
-    <div className="fixed inset-0 z-[70] flex flex-col overflow-hidden bg-[#03030a] text-white">
+    <div className="maipiks-camera-shell fixed inset-0 z-[70] flex flex-col overflow-hidden bg-[#03030a] text-white">
 
       {/* ------------------------------------------------------------------ */}
       {/* GLOBAL NEON ATMOSPHERE                                             */}
@@ -1787,6 +1853,16 @@ export default function PhoneMaiPiks() {
             onClick={() => setShowNotifications((value) => !value)}
           />
         </div>
+
+        {cameraReady && cameraPermissionDenied && (
+          <div className="absolute left-1/2 top-16 z-30 flex max-w-[90%] -translate-x-1/2 flex-col items-center gap-2 rounded-xl border border-amber-300/30 bg-black/75 px-4 py-2 text-center text-xs font-bold text-amber-100 backdrop-blur">
+            <span>{cameraError || 'Review MaiTroll camera and microphone permissions.'}</span>
+            <button type="button" onClick={openIosSettings} className="flex min-h-11 items-center gap-2 px-2">
+              <Settings size={15} />
+              Open iOS Settings
+            </button>
+          </div>
+        )}
       </header>
 
       {/* ------------------------------------------------------------------ */}
@@ -1900,6 +1976,16 @@ export default function PhoneMaiPiks() {
                   <Camera size={16} />
                   Enable Camera
                 </button>
+                {cameraPermissionDenied && (
+                  <button
+                    type="button"
+                    onClick={openIosSettings}
+                    className="relative mt-3 flex min-h-11 items-center gap-2 rounded-xl border border-white/15 bg-black/40 px-4 text-xs font-bold text-white"
+                  >
+                    <Settings size={15} />
+                    Open iOS Settings
+                  </button>
+                )}
               </div>
             )}
 

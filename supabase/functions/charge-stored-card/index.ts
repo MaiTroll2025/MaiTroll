@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
 
     if (paymentMethodId) {
       const cardRes = await fetch(
-        `${supabaseUrl}/rest/v1/user_payment_methods?id=eq.${paymentMethodId}&select=*`,
+        `${supabaseUrl}/rest/v1/user_payment_methods?id=eq.${paymentMethodId}&user_id=eq.${userId}&select=*`,
         { headers: { 'apikey': supabaseKey!, 'Authorization': `Bearer ${supabaseKey}` } }
       )
       const paymentMethods = await cardRes.json()

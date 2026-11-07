@@ -14,6 +14,7 @@ import { requiresWebRenderer } from '../../lib/seo/seoRoutes'
 import { useLiveContent } from '../../hooks/useLiveContent'
 import { usePresidentSystem } from '../../hooks/usePresidentSystem'
 import { useWallNotifications } from '../../hooks/useWallNotifications'
+import { usePagePresenceTracker, useAdminPagePresenceCounts } from '../../lib/hooks/usePagePresence'
 import type { TabType } from '../../types/homeTabs'
 
 interface AppLayoutProps {
@@ -87,6 +88,11 @@ export default function AppLayout({
    const { currentElection, currentPresident } = usePresidentSystem(!isLowActivityPage)
    const { newPostCount: wallNotificationCount } = useWallNotifications(false, !isLowActivityPage)
 
+   // Track this page's presence via Supabase Realtime (signed-in + anonymous)
+   usePagePresenceTracker()
+   // Admin-only real-time page presence counts for the sidebar
+   const { counts: pagePresenceCounts, isAdmin: _sidebarAdmin } = useAdminPagePresenceCounts()
+
    const presidentTabLabel = currentElection?.status === 'open'
      ? 'President Candidates'
      : currentPresident
@@ -98,17 +104,19 @@ export default function AppLayout({
    const params = new URLSearchParams(location.search)
    const homeTab = params.get('tab')
    let activeTab: TabType = 'home'
-   if (path.startsWith('/live') || path.startsWith('/watch/')) activeTab = 'live'
-   else if (path === '/universe') activeTab = 'universe'
-   else if (path === '/leagues') activeTab = 'leagues'
-   else if (path === '/laws-fees' || (path === '/home' && homeTab === 'laws-fees')) activeTab = 'laws-fees'
-    else if (path === '/' || path === '/home') activeTab = 'home'
+    if (path.startsWith('/live') || path.startsWith('/watch/')) activeTab = 'live'
+    else if (path === '/universe') activeTab = 'universe'
+    else if (path === '/calendar') activeTab = 'calendar'
+    else if (path === '/leagues') activeTab = 'leagues'
+    else if (path === '/laws-fees' || (path === '/home' && homeTab === 'laws-fees')) activeTab = 'laws-fees'
+     else if (path === '/' || path === '/home') activeTab = 'home'
 
    const showLeftNav = !isAuthPage && !isLivePage && !isTreelzPage && !isSingOffPage && !isHytroGamingSetupLivePage && !isJailed && !isPublicWebOnlyPage && !isMobileLayout && activeTab !== 'home'
 
    const navigate = useNavigate()
    const handleSetActiveTab = useCallback((tab: TabType) => {
      if (tab === 'home') navigate('/')
+     else if (tab === 'calendar') navigate('/calendar')
      else navigate(`/home?tab=${tab}`)
    }, [navigate])
 
@@ -269,6 +277,7 @@ export default function AppLayout({
                   showPresidentTab={showPresidentTab}
                   wallNotificationCount={wallNotificationCount}
                   onMoreClick={() => setMorePagesOpen(true)}
+                  pagePresenceCounts={pagePresenceCounts}
                 />
               </div>
             )}

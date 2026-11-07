@@ -51,7 +51,6 @@ const FEE_TYPE_LABELS: Record<string, string> = {
   cashout_processing: 'Cashout Processing Fees',
   treelz_tip: 'Treelz Tips',
   epaper_tip: 'ePaper Tips',
-  agency_split: 'Agency Splits',
   kick_ban_revenue: 'Kick / Ban Revenue',
   broadcast_stream_fee: 'Broadcast Stream Fees',
 }

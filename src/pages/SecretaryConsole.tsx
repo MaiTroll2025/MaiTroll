@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../lib/store'
 import { toast } from 'sonner'
-import { LayoutDashboard, Inbox, DollarSign, Gift, Bell, FileText, LogOut, ShieldAlert, Home, Calendar, CreditCard, Scale } from 'lucide-react';
+import { LayoutDashboard, Inbox, DollarSign, Gift, Bell, FileText, LogOut, ShieldAlert, Home, Calendar, CreditCard, Scale, Users, RefreshCw } from 'lucide-react';
 import OfficerShiftCalendar from '../components/officer/OfficerShiftCalendar'
 import ExecutiveIntakeList from './admin/components/shared/ExecutiveIntakeList'
 import CashoutRequestsList from './admin/components/shared/CashoutRequestsList'
@@ -12,7 +12,7 @@ import CriticalAlertsList from './admin/components/shared/CriticalAlertsList'
 import ExecutiveReportsList from './admin/components/shared/ExecutiveReportsList'
 import ManualCoinOrdersList from './admin/components/shared/ManualCoinOrdersList'
 
-type TabId = 'intake' | 'cashouts' | 'giftcards' | 'alerts' | 'reports' | 'troll_town' | 'shifts' | 'manual_payments' | 'coin_sales' | 'appeals'
+type TabId = 'intake' | 'cashouts' | 'giftcards' | 'alerts' | 'reports' | 'troll_town' | 'shifts' | 'manual_payments' | 'coin_sales' | 'appeals' | 'squad_economy'
 
 export default function SecretaryConsole() {
   const { user, profile } = useAuthStore()
@@ -26,16 +26,18 @@ export default function SecretaryConsole() {
     alerts: 0,
     manual_orders: 0,
     coin_sales: 0,
+    squad_payouts: 0,
   })
 
   const fetchCounts = useCallback(async () => {
     try {
-        const [intakeRes, cashoutRes, alertsRes, manualRes, coinSalesRes] = await Promise.all([
+        const [intakeRes, cashoutRes, alertsRes, manualRes, coinSalesRes, squadPayoutRes] = await Promise.all([
             supabase.from('executive_intake').select('id', { count: 'exact', head: true }).in('status', ['open', 'in_review']),
             supabase.from('payout_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
             supabase.from('critical_alerts').select('id', { count: 'exact', head: true }).eq('resolved', false),
             supabase.from('manual_coin_orders').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-            supabase.from('coin_transactions').select('id', { count: 'exact', head: true }).eq('type', 'store_purchase')
+            supabase.from('coin_transactions').select('id', { count: 'exact', head: true }).eq('type', 'store_purchase'),
+            supabase.from('squad_payouts').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
         ])
         
         setCounts({
@@ -44,6 +46,7 @@ export default function SecretaryConsole() {
             alerts: alertsRes.count || 0,
             manual_orders: manualRes.count || 0,
             coin_sales: coinSalesRes.count || 0,
+            squad_payouts: squadPayoutRes.count || 0,
         })
     } catch (e) {
         console.error("Error fetching counts", e)
@@ -193,6 +196,14 @@ export default function SecretaryConsole() {
             icon={<Home className="w-5 h-5" />}
             label="Troll Town Deeds"
           />
+          <NavButton 
+            active={activeTab === 'squad_economy'} 
+            onClick={() => setActiveTab('squad_economy')}
+            icon={<Users className="w-5 h-5" />}
+            label="Squad Economy"
+            alert={counts.squad_payouts > 0}
+            count={counts.squad_payouts}
+          />
         </nav>
 
         <div className="p-4 border-t border-slate-800">
@@ -235,6 +246,7 @@ export default function SecretaryConsole() {
             {activeTab === 'reports' && <ExecutiveReportsList viewMode="secretary" />}
             {activeTab === 'shifts' && <OfficerShiftCalendar title="All Officer Shifts" />}
             {activeTab === 'troll_town' && <SecretaryTrollTownDeeds />}
+            {activeTab === 'squad_economy' && <SquadEconomyPanel />}
         </div>
       </div>
     </div>
@@ -617,6 +629,110 @@ const SecretaryTrollTownDeeds: React.FC = () => {
     </div>
   )
 }
+
+const SquadEconomyPanel: React.FC = () => {
+  const [config, setConfig] = useState<any>({})
+  const [stats, setStats] = useState<any>({})
+  const [loading, setLoading] = useState(true)
+
+  const load = async () => {
+    try {
+      const [cfgRes, squadsRes, membersRes, payoutsRes, ledgerRes] = await Promise.all([
+        supabase.from('squad_config').select('*'),
+        supabase.from('squads').select('id', { count: 'exact', head: true }).eq('status', 'active'),
+        supabase.from('squad_memberships').select('id', { count: 'exact', head: true }).is('left_at', null),
+        supabase.from('squad_payouts').select('eligible_cents, fee_cents, net_cents, status'),
+        supabase.from('squad_cash_ledger').select('amount_cents, status, type'),
+      ])
+      const cfgMap: Record<string, any> = {}
+      ;(cfgRes.data || []).forEach((row: any) => { cfgMap[row.key] = row.value })
+      setConfig(cfgMap)
+
+      const pendingPayouts = (payoutsRes.data || []).filter((p: any) => p.status === 'pending')
+      const paidPayouts = (payoutsRes.data || []).filter((p: any) => p.status === 'paid')
+      setStats({
+        activeSquads: squadsRes.count || 0,
+        activeMembers: membersRes.count || 0,
+        pendingPayouts: pendingPayouts.length,
+        pendingPayoutUsd: pendingPayouts.reduce((a: number, p: any) => a + Number(p.net_cents), 0) / 100,
+        paidPayouts: paidPayouts.length,
+        paidPayoutUsd: paidPayouts.reduce((a: number, p: any) => a + Number(p.net_cents), 0) / 100,
+        squadFeesUsd: (payoutsRes.data || []).reduce((a: number, p: any) => a + Number(p.fee_cents), 0) / 100,
+        totalSquadCashCents: (ledgerRes.data || []).reduce((a: number, l: any) => a + Number(l.amount_cents), 0),
+      })
+    } catch (e: any) {
+      console.error('SquadEconomy load', e)
+      toast.error('Failed to load squad economy data')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  React.useEffect(() => { void load() }, [])
+
+  const money = (n: number) => `$${n.toFixed(2)}`
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold">Squad Economy, Bank & Weekly Cashout Control</h2>
+          <p className="text-sm text-slate-400">Configure and monitor Squad Cash, Bank cashout activity, and weekly payouts.</p>
+        </div>
+        <button
+          onClick={() => void load()}
+          className="flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-bold text-cyan-400 border border-cyan-400/30 bg-cyan-900/20 hover:bg-cyan-800/30"
+        >
+          <RefreshCw className="w-4 h-4" /> Refresh
+        </button>
+      </div>
+
+      {loading ? (
+        <p className="text-slate-400 text-center py-8">Loading squad economy data…</p>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <StatCard label="Active Squads" value={String(stats.activeSquads)} color="text-cyan-300" />
+            <StatCard label="Active Squad Members" value={String(stats.activeMembers)} color="text-white" />
+            <StatCard label="Pending Squad Cash" value={money(stats.pendingPayoutUsd)} color="text-yellow-300" sub={`${stats.pendingPayouts} payouts`} />
+            <StatCard label="Paid Squad Cash (USD)" value={money(stats.paidPayoutUsd)} color="text-emerald-300" sub={`${stats.paidPayouts} payouts`} />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+            <StatCard label="Squad Fees Collected" value={money(stats.squadFeesUsd)} color="text-purple-300" />
+            <StatCard label="Total Squad Cash Ledger" value={money(stats.totalSquadCashCents / 100)} color="text-white" />
+          </div>
+
+          <div className="mt-6 rounded-xl border border-white/10 bg-[#0f1018]/60 p-4">
+            <h3 className="text-sm font-bold text-slate-300 mb-3">Configured Weekly Payout Rules</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-400">
+              <div className="flex justify-between"><span>Squad Creation Fee</span><span className="text-white">{config.creation_fee_coins?.coins ?? 3000} TC</span></div>
+              <div className="flex justify-between"><span>Squad Joining Fee</span><span className="text-white">{config.join_fee_coins?.coins ?? 100} TC</span></div>
+              <div className="flex justify-between"><span>Leader Share / Platform Share</span><span className="text-white">50% / 50%</span></div>
+              <div className="flex justify-between"><span>Member Stimulus</span><span className="text-white">{config.stimulus_pct?.basis_points ?? 250 / 100}%</span></div>
+              <div className="flex justify-between"><span>Leader Cashout Reward</span><span className="text-white">{config.leader_reward_pct?.basis_points ?? 500 / 100}%</span></div>
+              <div className="flex justify-between"><span>Squad Payout Fee</span><span className="text-white">{config.squad_payout_fee_pct?.basis_points ?? 200 / 100}%</span></div>
+              <div className="flex justify-between"><span>Minimum Cashout Tier</span><span className="text-white">{config.min_cashout_tier_coins?.coins ?? 3500} TC</span></div>
+              <div className="flex justify-between"><span>Payout Day of Week</span><span className="text-white">{config.payout_day_of_week?.day ?? 1}</span></div>
+              <div className="flex justify-between"><span>Settlement Timezone</span><span className="text-white">{config.settlement_timezone?.timezone ?? 'UTC'}</span></div>
+            </div>
+            <p className="mt-3 text-[10px] text-slate-500">
+              Changes are recorded with the responsible administrator and timestamps. Configuration never overrides the weekly payout hold or allows duplicate payouts.
+            </p>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+const StatCard = ({ label, value, color, sub }: { label: string; value: string; color: string; sub?: string }) => (
+  <div className={`rounded-xl border border-white/10 bg-[#0f1018]/60 p-3`}>
+    <p className="text-[10px] font-bold text-slate-400 uppercase">{label}</p>
+    <p className={`mt-1 font-black ${color}`}>{value}</p>
+    {sub && <p className="text-[10px] text-slate-500">{sub}</p>}
+  </div>
+)
 
 const NavButton = ({ active, onClick, icon, label, alert, count }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string; alert?: boolean; count?: number }) => (
   <button

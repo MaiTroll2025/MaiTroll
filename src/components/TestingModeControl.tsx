@@ -170,7 +170,6 @@ export function TestingModeControl() {
       <div className="bg-purple-500/10 rounded-lg p-4 border border-purple-500/30 purple-neon mb-6">
         <h3 className="text-sm font-semibold text-purple-400 mb-2">Test User Benefits:</h3>
         <ul className="text-sm text-gray-300 space-y-1">
-          <li>• {benefits.bypass_family_fee ? 'No fee' : 'Fee required'} for Troll Family applications</li>
           <li>• {benefits.bypass_admin_message_fee ? 'Free' : 'Paid'} admin messaging</li>
           <li>• Admin searchable by @admin username</li>
         </ul>

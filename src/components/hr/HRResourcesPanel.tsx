@@ -32,25 +32,11 @@ const RESOURCES: ResourceItem[] = [
     category: 'Time Off',
   },
   {
-    id: 'free-agency-rules',
-    title: 'Free Agency Rules',
-    description: 'Rules governing agency membership, contracts, fees, and creator representation.',
-    icon: BookOpen,
-    category: 'Agency',
-  },
-  {
     id: 'staff-code-of-conduct',
     title: 'Staff Code of Conduct',
     description: 'The official code of conduct for all Mai Troll staff and role holders.',
     icon: BookOpen,
     category: 'Conduct',
-  },
-  {
-    id: 'creator-agency-onboarding',
-    title: 'Creator/Agency Onboarding',
-    description: 'Step-by-step guide for joining or creating an agency on Mai Troll.',
-    icon: UserPlus,
-    category: 'Onboarding',
   },
   {
     id: 'support-contact',
@@ -71,7 +57,7 @@ const RESOURCES: ResourceItem[] = [
 const RESOURCE_CONTENT: Record<string, string[]> = {
   'role-expectations': [
     'Fulfill the duties outlined in your role description on the Jobs page.',
-    'Maintain regular availability as expected by your department or agency.',
+    'Maintain regular availability as expected by your department.',
     'Follow all Mai Troll rules, safety guidelines, and code of conduct.',
     'Participate in required training, meetings, or briefings.',
     'Escalate issues to HR/Admin when they exceed your authority.',
@@ -90,28 +76,7 @@ const RESOURCE_CONTENT: Record<string, string[]> = {
     'Plan ahead — last-minute requests may not be guaranteed approval.',
     'Excessive unapproved absences may affect your role status.',
   ],
-  'free-agency-rules': [
-    'Agencies operate under the oversight of Agency HR Managers and Mai Troll Admin.',
-    'Agency fees and platform fees are set in agency settings and contracts.',
-    'Creators are free to leave agencies according to their contract terms.',
-    'Disputes between creators and agencies are mediated by Agency HR or Mai Troll Admin.',
-    'All agency operations must comply with Mai Troll platform rules.',
-  ],
   'staff-code-of-conduct': [
-    'Treat all users, colleagues, and community members with respect.',
-    'Do not abuse role powers, moderation tools, or access privileges.',
-    'Maintain confidentiality of sensitive information encountered in your role.',
-    'Report violations, concerns, or conflicts of interest to HR.',
-    'Represent Mai Troll with integrity in all official interactions.',
-  ],
-  'creator-agency-onboarding': [
-    'Apply to an agency through the Agencies page or receive an invitation from an Agency Leader.',
-    'Review and sign the agency contract outlining fees, responsibilities, and terms.',
-    'Complete any required onboarding steps set by the agency leader.',
-    'Once onboarded, you gain access to agency tools, roster, and collaborative features.',
-    'Contact Agency HR for onboarding questions or issues.',
-  ],
-  'support-contact': [
     'For HR questions, payroll disputes, or role issues, contact the HR team.',
     'Use the official support channels — do not share sensitive information publicly.',
     'Include your user ID, a clear description, and any relevant evidence in your message.',

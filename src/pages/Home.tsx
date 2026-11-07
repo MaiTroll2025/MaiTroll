@@ -2,7 +2,7 @@ import React, { Suspense, useCallback, useEffect, useMemo, useState } from 'reac
 import { lazyWithRetry } from '@/utils/lazyImport'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import { BookOpen, Crown, FileText, MessageCircle, PenSquare, Play, Radio, Sparkles, Sun, Trophy, Users, X } from 'lucide-react';
+import { BookOpen, Calendar, Crown, FileText, MessageCircle, PenSquare, Play, Radio, Sparkles, Sun, Trophy, Users, X } from 'lucide-react';
 
 import { useAuthStore } from '@/lib/store'
 import useSEO from '@/hooks/useSEO'
@@ -13,6 +13,7 @@ import { useLiveContent } from '@/hooks/useLiveContent'
 import type { LiveItem } from '@/contexts/LiveContentContext'
 import { usePresenceStore } from '@/lib/presenceStore'
 import { supabase } from '@/lib/supabase'
+import { usePagePresenceTracker, useAdminPagePresenceCounts } from '@/lib/hooks/usePagePresence'
 import { MaiTrollOperatingHoursWrapper } from '@/components/maitroll/MaiTrollOperatingHoursWrapper'
 import useGlobalActivity from '@/hooks/useGlobalActivity'
 import { useRandomFreeSeat } from '@/hooks/useRandomFreeSeat'
@@ -27,7 +28,6 @@ import { usePresidentSystem } from '@/hooks/usePresidentSystem'
 import { useWallNotifications } from '@/hooks/useWallNotifications'
 import LeftNavSidebar from '@/components/home/LeftNavSidebar'
 import UniverseBattlesPage from '@/pages/UniverseBattlesPage'
-import HowToVideosPage from '@/pages/JobsHowToPage'
 import DynamicWeatherBackground from '@/components/home/DynamicWeatherBackground'
 import FeaturedBroadcastersRow from '@/components/home/FeaturedBroadcastersRow'
 import HyTroGamingRow from '@/components/home/HyTroGamingRow'
@@ -38,6 +38,7 @@ import NewStreamersRow from '@/components/home/NewStreamersRow'
 import BestTrollersRow from '@/components/home/BestTrollersRow'
 import PromoSlot from '@/components/promo/PromoSlot'
 import PodcastCentral from '@/pages/PodcastCentral'
+import ActiveOfficialEventTiles from '@/components/maiCalendar/ActiveOfficialEventTiles'
 import { HOME_PAGE_PROMO_PLACEMENTS } from '@/types/cityAds'
 import LearnAboutMaiTrollBanner from '@/components/learn-about/LearnAboutMaiTrollBanner'
 import type { TabType } from '@/types/homeTabs'
@@ -148,6 +149,10 @@ const LiveGrid = React.memo(function LiveGrid({
               {visible ? 'Hide Broadcasts' : 'Show Broadcasts'}
             </button>
           )}
+        </div>
+
+        <div className="mt-4">
+          <ActiveOfficialEventTiles />
         </div>
 
         <Suspense fallback={<div className="mt-4 aspect-video rounded-xl bg-white/5" />}>
@@ -483,6 +488,7 @@ const MobileTabBar = React.memo(function MobileTabBar({
   const tabs: Array<{ id: TabType; label: string; icon: React.ElementType; count?: number; onClick?: () => void }> = [
     { id: 'home', label: 'Home', icon: MessageCircle },
     { id: 'live', label: 'Live', icon: Radio, count: liveCount + battleCount },
+    { id: 'calendar', label: 'Calendar', icon: Calendar },
     { id: 'universe', label: 'Battles', icon: Sparkles, count: battleCount },
     { id: 'leagues', label: 'Leagues', icon: Trophy },
     { id: 'laws-fees', label: 'Laws', icon: FileText },
@@ -548,6 +554,13 @@ export default function Home() {
   })
 
   const [activeTab, setActiveTab] = useState<TabType>('home')
+  const handleHomeTabChange = useCallback((tab: TabType) => {
+    if (tab === 'calendar') {
+      navigate('/calendar')
+      return
+    }
+    setActiveTab(tab)
+  }, [navigate])
   const { newPostCount: wallNotificationCount } = useWallNotifications(false)
   const [showLiveGrid, setShowLiveGrid] = useState<boolean | null>(null)
   const [kickedReason, setKickedReason] = useState<string | null>(null)
@@ -555,10 +568,14 @@ export default function Home() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const tabParam = params.get('tab')
-    if (tabParam && ['home', 'live', 'universe', 'jobs', 'laws-fees', 'leagues', 'president', 'academy', 'wall'].includes(tabParam)) {
+    if (tabParam === 'calendar') {
+      navigate('/calendar')
+      return
+    }
+    if (tabParam && ['home', 'live', 'universe', 'laws-fees', 'leagues', 'president', 'academy', 'wall'].includes(tabParam)) {
       setActiveTab(tabParam as TabType)
     }
-  }, [])
+  }, [navigate])
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -571,6 +588,12 @@ export default function Home() {
   }, [])
 
   const { liveItems, totalViewers, onlineUsers, loadingLive } = useLiveContent()
+
+  // Track this page's presence via Supabase Realtime (signed-in + anonymous)
+  usePagePresenceTracker()
+  // Admin-only real-time page presence counts for the sidebar
+  const { counts: pagePresenceCounts } = useAdminPagePresenceCounts()
+
   const [supportGoalReminder, setSupportGoalReminder] = useState<any>(null)
   const [reminderLoading, setReminderLoading] = useState(false)
   const [totalUsers, setTotalUsers] = useState(1)
@@ -702,13 +725,14 @@ export default function Home() {
       <div className="relative z-10 flex w-full">
         <LeftNavSidebar
           activeTab={activeTab}
-          setActiveTab={setActiveTab}
+          setActiveTab={handleHomeTabChange}
           liveCount={allLiveItems.length}
           battleCount={battleItems.length}
           followersLiveCount={0}
           presidentTabLabel={presidentTabLabel}
           showPresidentTab={showPresidentTab}
           wallNotificationCount={wallNotificationCount}
+          pagePresenceCounts={pagePresenceCounts}
         />
         
         <main className="flex-1 min-w-0">
@@ -731,7 +755,7 @@ export default function Home() {
             {isMobile && activeTab !== 'home' && (
               <MobileTabBar
                 activeTab={activeTab}
-                setActiveTab={setActiveTab}
+                setActiveTab={handleHomeTabChange}
                 liveCount={allLiveItems.length}
                 battleCount={battleItems.length}
                 wallNotificationCount={wallNotificationCount}
@@ -832,18 +856,6 @@ export default function Home() {
               </div>
             )}
 
-            {activeTab === 'jobs' && (
-              <div className="flex gap-4">
-                <div className="min-w-0 flex-1">
-                  <section className={`${glass} rounded-2xl p-4`}>
-                    <Suspense fallback={<div className="flex justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-2 border-cyan-300 border-t-transparent" /></div>}>
-                      <HowToVideosPage />
-                    </Suspense>
-                  </section>
-                </div>
-              </div>
-            )}
-
             {activeTab === 'podcast' && (
               <div className="flex gap-4">
                 <div className="min-w-0 flex-1">
@@ -922,6 +934,26 @@ export default function Home() {
           <PromoSlot placement={HOME_PAGE_PROMO_PLACEMENTS[0]} variant="featured" />
           <LearnAboutMaiTrollBanner />
           <PromoSlot placement={HOME_PAGE_PROMO_PLACEMENTS[1]} variant="featured" />
+          <button
+            onClick={() => navigate('/squads')}
+            className="mt-4 w-full group relative overflow-hidden rounded-2xl border border-purple-500/20 bg-gradient-to-r from-purple-900/60 via-slate-900 to-pink-900/60 px-4 py-3 sm:px-5 sm:py-4 text-left transition-all duration-300 hover:border-purple-400/40 hover:shadow-[0_8px_32px_rgba(147,51,234,0.15)]"
+          >
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(147,51,234,0.12),transparent_40%)]" />
+            <div className="relative flex items-center gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-purple-600/20 text-purple-300">
+                <Users className="h-5 w-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-bold text-white sm:text-base">Squads</p>
+                <p className="text-xs text-slate-400 sm:text-sm">
+                  Join or create a broadcasting Squad. Weekly Squad Cash, Squad Flame, and private Squad chat.
+                </p>
+              </div>
+              <div className="shrink-0 rounded-full bg-purple-600/20 px-3 py-1.5 text-xs font-semibold text-purple-300 transition-colors group-hover:bg-purple-600/30">
+                →
+              </div>
+            </div>
+          </button>
         </aside>
       </div>
 

@@ -32,6 +32,7 @@ Allow: /features/broadcasting-app
 Allow: /features/social-media
 Allow: /updates
 Allow: /blog
+Allow: /calendar
 
 # Sitemaps Reference
 Sitemap: https://www.maitroll.com/sitemap.xml

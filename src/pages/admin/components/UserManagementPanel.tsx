@@ -625,8 +625,6 @@ export default function UserManagementPanel({
                   <option value="guest">Guest</option>
                   <option value="member">Member</option>
                   <option value="broadcaster">Broadcaster</option>
-                  <option value="family_leader">Family Leader</option>
-                  <option value="troll_family">Troll Family</option>
                   <option value="secretary">Secretary</option>
                   <option value="moderator">Moderator</option>
                   <option value="troll_officer">Troll Officer</option>

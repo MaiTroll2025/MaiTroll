@@ -448,6 +448,57 @@ try {
 }
 
 // ============================================================
+// Calendar events (public, published)
+// ============================================================
+urls.push(urlEntry(`${BASE_URL}/events`, today, 'weekly', '0.8'))
+console.log('📊 Fetching public calendar events...')
+try {
+  const { data: events, error } = await supabase
+    .from('mai_calendar_events')
+    .select('slug, updated_at, created_at, published_at')
+    .eq('visibility', 'public')
+    .order('updated_at', { ascending: false })
+    .limit(5000)
+  if (error) throw error
+
+  for (const event of (events || [])) {
+    urls.push(urlEntry(
+      `${BASE_URL}/calendar/events/${encodeURIComponent(event.slug)}`,
+      (event.updated_at || event.published_at || event.created_at || today).split('T')[0],
+      'weekly',
+      '0.7'
+    ))
+  }
+  console.log(`  ✅ ${events?.length || 0} calendar events`)
+} catch (err) {
+  console.warn(`  ⚠️ Skipping calendar events: ${err.message}`)
+}
+
+console.log('📊 Fetching public official events...')
+try {
+  const { data: events, error } = await supabase
+    .from('mai_calendar_events')
+    .select('slug, updated_at, created_at, published_at')
+    .eq('visibility', 'public')
+    .eq('is_official', true)
+    .order('updated_at', { ascending: false })
+    .limit(5000)
+  if (error) throw error
+
+  for (const event of (events || [])) {
+    urls.push(urlEntry(
+      `${BASE_URL}/events/${encodeURIComponent(event.slug)}`,
+      (event.updated_at || event.published_at || event.created_at || today).split('T')[0],
+      'weekly',
+      '0.8'
+    ))
+  }
+  console.log(`  ✅ ${events?.length || 0} official events`)
+} catch (err) {
+  console.warn(`  ⚠️ Skipping official events: ${err.message}`)
+}
+
+// ============================================================
 // Generate sitemap XML
 // ============================================================
 console.log(`\n📝 Generating sitemap with ${urls.length} URLs...`)

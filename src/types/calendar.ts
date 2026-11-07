@@ -41,7 +41,7 @@ export interface CalendarEvent {
   registration_closes_at?: string
 
   visibility: 'public' | 'private' | 'invite_only'
-  access_level: 'everyone' | 'verified_users' | 'founding_officers' | 'staff' | 'creators' | 'agencies' | 'specific_levels' | 'specific_users' | 'invite_only'
+  access_level: 'everyone' | 'verified_users' | 'founding_officers' | 'staff' | 'creators' | 'specific_levels' | 'specific_users' | 'invite_only'
   min_level: number
 
   requirements: string[]
@@ -152,7 +152,7 @@ export interface CreateEventFormData {
   event_color: string
   max_participants?: number
   visibility: 'public' | 'private' | 'invite_only'
-  access_level: 'everyone' | 'verified_users' | 'founding_officers' | 'staff' | 'creators' | 'agencies' | 'specific_levels' | 'specific_users' | 'invite_only'
+  access_level: 'everyone' | 'verified_users' | 'founding_officers' | 'staff' | 'creators' | 'specific_levels' | 'specific_users' | 'invite_only'
   min_level: number
   requirements: string[]
   rules: string
@@ -165,7 +165,6 @@ export const EVENT_CATEGORIES: EventCategory[] = [
   { id: '', slug: 'trollathon', name: 'Trollathon', icon: '🎮', color: '#8B5CF6', is_active: true, sort_order: 2, created_at: '', updated_at: '', description: 'Extended streaming marathon events' },
   { id: '', slug: 'auction_event', name: 'Auction Event', icon: '🔨', color: '#F59E0B', is_active: true, sort_order: 3, created_at: '', updated_at: '', description: 'Live auction events' },
   { id: '', slug: 'gaming_tournament', name: 'Gaming Tournament', icon: '🎯', color: '#10B981', is_active: true, sort_order: 4, created_at: '', updated_at: '', description: 'Competitive gaming events' },
-  { id: '', slug: 'family_war', name: 'Family War', icon: '⚔️', color: '#EF4444', is_active: true, sort_order: 5, created_at: '', updated_at: '', description: 'Troll Family battles' },
   { id: '', slug: 'community_meeting', name: 'Community Meeting', icon: '🏛️', color: '#3B82F6', is_active: true, sort_order: 6, created_at: '', updated_at: '', description: 'Town hall and community gatherings' },
   { id: '', slug: 'president_town_hall', name: 'President Town Hall', icon: '🎤', color: '#F97316', is_active: true, sort_order: 7, created_at: '', updated_at: '', description: 'Presidential addresses' },
   { id: '', slug: 'church_service', name: 'Church Service', icon: '⛪', color: '#A855F7', is_active: true, sort_order: 8, created_at: '', updated_at: '', description: 'Religious services' },
@@ -183,7 +182,6 @@ export const EVENT_ACCESS_LEVELS = [
   { value: 'founding_officers', label: 'Founding Officers', description: 'Founding officers only' },
   { value: 'staff', label: 'Staff', description: 'Staff members only' },
   { value: 'creators', label: 'Creators', description: 'Verified creators' },
-  { value: 'agencies', label: 'Agencies', description: 'Agency members' },
   { value: 'specific_levels', label: 'Specific Levels', description: 'Users above a certain level' },
   { value: 'specific_users', label: 'Specific Users', description: 'Manually selected users' },
   { value: 'invite_only', label: 'Invite Only', description: 'Invitation required' },

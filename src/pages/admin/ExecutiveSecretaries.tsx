@@ -1,18 +1,16 @@
 import React, { useState } from 'react'
 import ExecutiveSecretariesTab from './components/ExecutiveSecretariesTab'
-import FounderRewardsTab from './components/FounderRewardsTab'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, Users, Award } from 'lucide-react'
+import { ArrowLeft, Users } from 'lucide-react'
 
-type TabId = 'assignments' | 'rewards'
+type TabId = 'assignments'
 
 const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
   { id: 'assignments', label: 'Secretary Assignments', icon: <Users className="w-4 h-4" /> },
-  { id: 'rewards', label: 'Founder Rewards', icon: <Award className="w-4 h-4" /> },
 ]
 
 export default function ExecutiveSecretaries() {
-  const [activeTab, setActiveTab] = useState<TabId>('rewards')
+  const [activeTab, setActiveTab] = useState<TabId>('assignments')
 
   return (
     <div className="min-h-screen bg-slate-950 p-6">
@@ -45,8 +43,7 @@ export default function ExecutiveSecretaries() {
         </div>
 
         {/* Tab Content */}
-        {activeTab === 'assignments' && <ExecutiveSecretariesTab />}
-        {activeTab === 'rewards' && <FounderRewardsTab />}
+        <ExecutiveSecretariesTab />
       </div>
     </div>
   )

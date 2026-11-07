@@ -27,7 +27,6 @@ import CoverPhotoUpload, {
   CoverPhotoUploadRef,
 } from '../../components/profile/CoverPhotoUpload'
 
-import FamilyMinorSettings from '../../components/profile/FamilyMinorSettings'
 import BatterySaverToggle from '../../components/BatterySaverToggle'
 import UserInventory from '../../pages/UserInventory'
 import ProfileFeed from '../../components/profile/ProfileFeed'
@@ -35,7 +34,6 @@ import ProfileMaiPiks from '../../components/profile/ProfileMaiPiks'
 import ProfileBroadcasts from '../../components/profile/ProfileBroadcasts'
 import ProfileMarketplace from '../../components/profile/ProfileMarketplace'
 import ProfileCourt from '../../components/profile/ProfileCourt'
-import ProfileAgency from '../../components/profile/ProfileAgency'
 import ProfileChurch from '../../components/profile/ProfileChurch'
 import ProfilePurchases from '../../components/profile/ProfilePurchases'
 import ProfileWatchlist from '../../components/profile/ProfileWatchlist'
@@ -126,7 +124,6 @@ const PROFILE_TABS: ProfileTab[] = [
   { id: 'marketplace', label: 'Marketplace', icon: ShoppingBag },
   { id: 'auctions', label: 'Auctions', icon: Gavel },
   { id: 'court', label: 'Court', icon: Scale },
-  { id: 'agency', label: 'Agency', icon: Shield },
   { id: 'church', label: 'Church', icon: BookOpen },
   { id: 'subscriptions', label: 'Subscriptions', icon: Crown },
   { id: 'maisub', label: 'MaiSub', icon: Coins },
@@ -1589,18 +1586,6 @@ export default function PhoneProfile() {
             </div>
           </section>
 
-          {/* Family */}
-          {storeProfile && (
-            <section className="rounded-[24px] border border-white/10 bg-white/[0.025] p-4">
-              <FamilyMinorSettings
-                profile={storeProfile as any}
-                onUpdate={() =>
-                  refreshProfile(true)
-                }
-              />
-            </section>
-          )}
-
           {/* Inventory */}
           <section className="rounded-[24px] border border-white/10 bg-white/[0.025] p-4">
             <div className="mb-4 flex items-center gap-3">
@@ -2142,10 +2127,6 @@ export default function PhoneProfile() {
             <ProfileCourt userId={profileTargetId} />
           )}
 
-          {activeTab === 'agency' && profileTargetId && (
-            <ProfileAgency userId={profileTargetId} />
-          )}
-
           {activeTab === 'church' && profileTargetId && (
             <ProfileChurch userId={profileTargetId} />
           )}
@@ -2186,7 +2167,7 @@ export default function PhoneProfile() {
             </div>
           )}
 
-          {activeTab !== 'social' && activeTab !== 'maipiks' && activeTab !== 'broadcasts' && activeTab !== 'marketplace' && activeTab !== 'auctions' && activeTab !== 'court' && activeTab !== 'agency' && activeTab !== 'church' && activeTab !== 'inventory' && activeTab !== 'purchases' && activeTab !== 'subscriptions' && activeTab !== 'badges' && activeTab !== 'keys' && activeTab !== 'settings' && (
+          {activeTab !== 'social' && activeTab !== 'maipiks' && activeTab !== 'broadcasts' && activeTab !== 'marketplace' && activeTab !== 'auctions' && activeTab !== 'court' && activeTab !== 'church' && activeTab !== 'inventory' && activeTab !== 'purchases' && activeTab !== 'subscriptions' && activeTab !== 'badges' && activeTab !== 'keys' && activeTab !== 'settings' && (
             <div className="text-center">
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-[#00BFFF]/20 bg-[#00BFFF]/10">
                 {(() => {

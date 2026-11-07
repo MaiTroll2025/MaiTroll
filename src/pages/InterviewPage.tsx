@@ -125,7 +125,7 @@ export default function InterviewPage() {
         </p>
         <button
           type="button"
-          onClick={() => navigate('/jobs')}
+          onClick={() => navigate('/careers')}
           className="mt-2 inline-flex items-center gap-2 rounded-xl bg-cyan-400 px-4 py-2 text-sm font-black text-slate-950"
         >
           <XCircle className="h-4 w-4" /> Back
@@ -149,7 +149,7 @@ export default function InterviewPage() {
       interviewerId={data.interviewer_id ?? ''}
       isInterviewer={isInterviewer}
       roomName={data.room_name}
-      onClose={() => navigate(isInterviewer ? '/Employees?tab=hiring' : '/jobs')}
+      onClose={() => navigate(isInterviewer ? '/Employees?tab=hiring' : '/careers')}
     />
   )
 }

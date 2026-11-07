@@ -19,6 +19,7 @@ import UserNameWithAge from '../../components/UserNameWithAge'
 import { neonCard, neonTextGradient } from '../phoneTheme'
 import FacebookPublishButton from '@/components/marketing/FacebookPublishButton'
 import { calculatePulseScore, normalizeFeatures } from '@/lib/signalEngine'
+import ActiveOfficialEventTiles from '@/components/maiCalendar/ActiveOfficialEventTiles'
 
 interface Broadcast {
   id: string
@@ -591,6 +592,10 @@ export default function PhoneLiveNow() {
             </div>
           </div>
         </section>
+
+        <div className="mt-4">
+          <ActiveOfficialEventTiles compact />
+        </div>
 
         {/* Filters */}
         <div className="mt-4 flex gap-2 overflow-x-auto pb-1 scrollbar-none">

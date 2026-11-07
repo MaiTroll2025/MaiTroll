@@ -61,14 +61,12 @@ export default function RolesManager() {
     { id: 'admin', label: 'Admin' },
     { id: 'troll_officer', label: 'Troll Officer' },
     { id: 'broadcaster', label: 'Broadcaster' },
-    { id: 'family_leader', label: 'Family Leader' },
     { id: 'member', label: 'Member' }
   ]
 
   const roleBonusesConfig = {
     'troll_officer': 10,
     'broadcaster': 5,
-    'family_leader': 8,
     'member': 0
   }
 

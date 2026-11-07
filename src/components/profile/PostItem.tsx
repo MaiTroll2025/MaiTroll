@@ -52,6 +52,9 @@ export default function PostItem({ post, onDelete }: PostItemProps) {
   const [showShareModal, setShowShareModal] = useState(false);
   const [showActionMenu, setShowActionMenu] = useState(false);
   const [_gifting, setGifting] = useState(false);
+  const _autoOpenedRef = useRef(false);
+
+  const commentsCount = post.comments_count || comments.length;
 
   const _inputRef = useRef<HTMLInputElement>(null);
 
@@ -171,6 +174,14 @@ export default function PostItem({ post, onDelete }: PostItemProps) {
     }
   };
 
+  // Auto show comments when a post has comments (Facebook-style)
+  useEffect(() => {
+    if (!post.comments_count || post.comments_count <= 0) return;
+    if (_autoOpenedRef.current) return;
+    _autoOpenedRef.current = true;
+    loadComments();
+  }, [post.comments_count]);
+
   const handlePostComment = async () => {
     if (!commentText.trim()) return;
     if (!user) {
@@ -276,7 +287,11 @@ export default function PostItem({ post, onDelete }: PostItemProps) {
     }
   };
 
-  const CommentNode = ({ comment, depth = 0, onDeleteComment }: { comment: Comment, depth?: number, onDeleteComment?: (id: string, userId: string) => void }) => (
+  const CommentNode = ({ comment, depth = 0, onDeleteComment }: { comment: Comment, depth?: number, onDeleteComment?: (id: string, userId: string) => void }) => {
+    const [showReplies, setShowReplies] = useState(false);
+    const replyCount = comment.replies?.length || 0;
+
+    return (
     <div className={`flex gap-3 mb-4 ${depth > 0 ? 'ml-8 relative' : ''}`}>
       {depth > 0 && (
          <div className="absolute -left-4 top-0 bottom-0 w-0.5 bg-white/10 rounded-full" />
@@ -319,7 +334,6 @@ export default function PostItem({ post, onDelete }: PostItemProps) {
         </div>
         <div className="flex items-center gap-4 mt-1 ml-2 text-xs text-gray-400 font-medium">
             <span>{new Date(comment.created_at).toLocaleDateString()}</span>
-            {/* <button className="hover:text-white">Like</button> */}
             <button 
                 onClick={() => {
                     setReplyingTo(comment);
@@ -330,10 +344,18 @@ export default function PostItem({ post, onDelete }: PostItemProps) {
             >
                 Reply
             </button>
+            {replyCount > 0 && (
+                <button
+                    onClick={() => setShowReplies(!showReplies)}
+                    className="hover:text-white text-gray-400"
+                >
+                    {showReplies ? `Hide ${replyCount} replies` : `View ${replyCount} replies`}
+                </button>
+            )}
         </div>
 
-        {/* Nested Replies */}
-        {comment.replies && comment.replies.length > 0 && (
+        {/* Nested Replies (collapsed by default, Facebook-style) */}
+        {showReplies && comment.replies && comment.replies.length > 0 && (
             <div className="mt-3">
                 {comment.replies.map(reply => (
                     <CommentNode key={reply.id} comment={reply} depth={depth + 1} onDeleteComment={onDeleteComment} />
@@ -342,7 +364,8 @@ export default function PostItem({ post, onDelete }: PostItemProps) {
         )}
       </div>
     </div>
-  );
+    );
+  };
 
   const isAnnouncement = post.post_type === 'announcement';
 
@@ -429,7 +452,7 @@ export default function PostItem({ post, onDelete }: PostItemProps) {
             onClick={loadComments}
         >
             <MessageCircle className="w-5 h-5" />
-            <span className="text-sm">Comment</span>
+            <span className="text-sm">{commentsCount > 0 ? `${commentsCount} Comments` : 'Comment'}</span>
         </button>
 
         <div className="relative">

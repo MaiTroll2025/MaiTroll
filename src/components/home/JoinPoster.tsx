@@ -63,7 +63,6 @@ export default function JoinPoster() {
             <ul className="mt-3 space-y-2 text-sm text-slate-200">
               <li>• Daily payouts — 97% retained in cashouts</li>
               <li>• 100% coins are yours to keep</li>
-              <li>• Create agencies without high level requirements</li>
               <li>• Work for Mai Troll and earn real rewards</li>
               <li>• Battle from day one — jump in immediately</li>
               <li>• Goo Live by Clicking Go live in sidebar</li>

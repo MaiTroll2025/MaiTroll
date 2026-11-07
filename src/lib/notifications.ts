@@ -1057,30 +1057,6 @@ export async function notifyDisputeResolved(userId: string, orderId: string, out
   )
 }
 
-// ==========================================
-// FAMILIES / NEIGHBORHOODS NOTIFICATIONS
-// ==========================================
-
-export async function notifyFamilyInviteReceived(userId: string, familyName: string) {
-  return createNotification(
-    userId,
-    'family_invite_received',
-    '👨‍👩‍👧‍👦 Family Invite',
-    `You've been invited to join ${familyName}.`,
-    { family_name: familyName, action_url: '/families' }
-  )
-}
-
-export async function notifyFamilyRoleChanged(userId: string, newRole: string) {
-  return createNotification(
-    userId,
-    'family_role_changed',
-    '🔄 Role Changed',
-    `Your family role has been changed to ${newRole}.`,
-    { new_role: newRole, action_url: '/families' }
-  )
-}
-
 export async function notifyRoleInviteReceived(userId: string, inviterUsername: string, role: string, inviteId: string) {
   return createNotification(
     userId,
@@ -1108,36 +1084,6 @@ export async function notifyRoleInviteDeclined(userId: string, targetUsername: s
     '❌ Role Invite Declined',
     `@${targetUsername} declined your invitation to become ${role}.`,
     { target_username: targetUsername, role }
-  )
-}
-
-export async function notifyFamilyXPMilestone(userId: string, xp: number) {
-  return createNotification(
-    userId,
-    'family_xp_milestone',
-    '🎉 Family XP Milestone!',
-    `Your family reached ${xp.toLocaleString()} XP!`,
-    { xp, action_url: '/families' }
-  )
-}
-
-export async function notifyFamilyChallengeStarted(userId: string, challengeName: string) {
-  return createNotification(
-    userId,
-    'family_challenge_started',
-    '🏆 Family Challenge Started',
-    `${challengeName} challenge has begun!`,
-    { challenge_name: challengeName, action_url: '/families' }
-  )
-}
-
-export async function notifyFamilyChallengeCompleted(userId: string, challengeName: string, reward: string) {
-  return createNotification(
-    userId,
-    'family_challenge_completed',
-    '✅ Challenge Complete!',
-    `Challenge "${challengeName}" completed! Reward: ${reward}`,
-    { challenge_name: challengeName, reward, action_url: '/families' }
   )
 }
 
@@ -1255,7 +1201,7 @@ export async function notifyCareerApplicationSubmitted(
     {
       position_id: positionId,
       position_title: positionTitle,
-      action_url: '/jobs'
+      action_url: '/careers'
     }
   )
 }
@@ -1315,7 +1261,7 @@ export async function notifyInterviewStarted(
     '🔴 Interview Starting Now',
     'Your interview is starting now. Join the live room.',
     {
-      action_url: '/jobs',
+      action_url: '/careers',
     }
   )
 

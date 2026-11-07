@@ -14,9 +14,6 @@ interface EmployeeRow {
   is_troll_officer?: boolean
   is_lead_officer?: boolean
   is_pastor?: boolean
-  is_agency_hr?: boolean
-  is_agency_hr_manager?: boolean
-  is_agency_leader?: boolean
   is_secretary?: boolean
   is_attorney?: boolean
   is_prosecutor?: boolean
@@ -36,8 +33,7 @@ interface EmployeeProfilePanelProps {
 }
 
 const STAFF_ROLES = [
-  'troll_officer', 'lead_troll_officer', 'pastor', 'agency_hr', 'agency_hr_manager',
-  'agency_leader', 'secretary', 'attorney', 'prosecutor', 'journalist', 'tcnn_news_caster',
+  'troll_officer', 'lead_troll_officer', 'pastor', 'secretary', 'attorney', 'prosecutor', 'journalist', 'tcnn_news_caster',
   'tcnn_chief_news_caster', 'auctioneer', 'troller', 'ceo_assistant', 'noah_assistant',
   'hr_manager', 'hr_admin',
 ]
@@ -46,9 +42,6 @@ const ROLE_LABELS: Record<string, string> = {
   troll_officer: 'Troll Officer',
   lead_troll_officer: 'Lead Troll Officer',
   pastor: 'Pastor',
-  agency_hr: 'Agency HR',
-  agency_hr_manager: 'Agency HR Manager',
-  agency_leader: 'Agency Leader',
   secretary: 'Secretary',
   attorney: 'Attorney',
   prosecutor: 'Prosecutor',
@@ -71,9 +64,6 @@ const resolveRole = (row: EmployeeRow): string | null => {
     ['troll_officer', row.is_troll_officer],
     ['lead_troll_officer', row.is_lead_officer],
     ['pastor', row.is_pastor],
-    ['agency_hr', row.is_agency_hr],
-    ['agency_hr_manager', row.is_agency_hr_manager],
-    ['agency_leader', row.is_agency_leader],
     ['secretary', row.is_secretary],
     ['attorney', row.is_attorney],
     ['prosecutor', row.is_prosecutor],
@@ -108,7 +98,7 @@ export default function EmployeeProfilePanel({ isHRAdmin, currentUserId: _curren
 
       const { data, error } = await supabase
         .from('user_profiles')
-        .select('id, username, avatar_url, role, troll_role, created_at, updated_at, is_troll_officer, is_lead_officer, is_pastor, is_agency_hr, is_agency_hr_manager, is_agency_leader, is_secretary, is_attorney, is_prosecutor, is_journalist, is_news_caster, is_chief_news_caster, is_troller, is_ceo_assistant, is_noah_assistant, is_hr_admin, is_officer_active')
+        .select('id, username, avatar_url, role, troll_role, created_at, updated_at, is_troll_officer, is_lead_officer, is_pastor, is_secretary, is_attorney, is_prosecutor, is_journalist, is_news_caster, is_chief_news_caster, is_troller, is_ceo_assistant, is_noah_assistant, is_hr_admin, is_officer_active')
         .or(orFilter)
         .order('updated_at', { ascending: false })
         .limit(500)

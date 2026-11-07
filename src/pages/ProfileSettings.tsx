@@ -1,13 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Ban, Boxes, CreditCard, KeyRound, Lock, Mail, Save, Settings, Trash2, UserRound, Image as ImageIcon, CheckCircle } from "lucide-react";
+import { Ban, Boxes, CreditCard, KeyRound, Lock, Mail, Save, Settings, Trash2, UserRound, Image as ImageIcon, CheckCircle, DollarSign, Shield, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/lib/supabase";
 import { useAuthStore } from "../lib/store";
 import { MaiTrollTheme } from "../styles/trollCityTheme";
 import UserInventory from "./UserInventory";
-import FamilyMinorSettings from "../components/profile/FamilyMinorSettings";
 import BatterySaverToggle from "@/components/BatterySaverToggle";
 import AvatarUpload from "../components/profile/AvatarUpload";
 import CoverPhotoUpload, { CoverPhotoUploadRef } from "../components/profile/CoverPhotoUpload";
@@ -75,6 +74,11 @@ export default function ProfileSettings() {
   const [creatorSubscriptionPrice, setCreatorSubscriptionPrice] = useState(100);
   const [savingSubscription, setSavingSubscription] = useState(false);
 
+  // Cash Balance Privacy
+  const [showSquadCash, setShowSquadCash] = useState(true);
+  const [showBankCash, setShowBankCash] = useState(false);
+  const [savingPrivacy, setSavingPrivacy] = useState(false);
+
   // Email change flow state
   const [emailChangeStep, setEmailChangeStep] = useState<
     "idle" | "verify" | "update" | "pending"
@@ -117,6 +121,43 @@ export default function ProfileSettings() {
       }, 300);
     }
   }, [location.state]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    void supabase
+      .from('user_financial_privacy')
+      .select('show_squad_cash_to_squad_members, show_bank_cash')
+      .eq('user_id', user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          setShowSquadCash(!!(data as any).show_squad_cash_to_squad_members);
+          setShowBankCash(!!(data as any).show_bank_cash);
+        }
+      });
+  }, [user?.id]);
+
+  const handleSavePrivacy = async () => {
+    if (!user) return;
+    setSavingPrivacy(true);
+    try {
+      const { error } = await supabase
+        .from('user_financial_privacy')
+        .upsert({
+          user_id: user.id,
+          show_squad_cash_to_squad_members: showSquadCash,
+          show_bank_cash: showBankCash,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'user_id' });
+      if (error) throw error;
+      toast.success('Cash balance privacy updated.');
+    } catch (error) {
+      console.error('[ProfileSettings] Failed to save cash privacy:', error);
+      toast.error('Failed to update cash balance privacy.');
+    } finally {
+      setSavingPrivacy(false);
+    }
+  };
 
   const handleSaveProfile = async () => {
     if (!user) return;
@@ -634,14 +675,65 @@ export default function ProfileSettings() {
 
         </section>
 
-        {profile && (
-          <section className={MaiTrollTheme.components.card}>
-            <FamilyMinorSettings
-              profile={profile as any}
-              onUpdate={() => refreshProfile(true)}
-            />
-          </section>
-        )}
+        <section className={MaiTrollTheme.components.card}>
+          <div className="mb-4 flex items-center gap-2">
+            <DollarSign className="h-5 w-5 text-cyan-400" />
+            <div>
+              <h2 className="text-xl font-semibold">Cash Balance Privacy</h2>
+              <p className={`text-xs ${MaiTrollTheme.text.muted}`}>
+                Control who can see your Bank and Squad Cash balances on your profile.
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div
+              className={`flex items-center justify-between gap-4 rounded-xl border p-4 ${MaiTrollTheme.backgrounds.glass} ${MaiTrollTheme.borders.glass}`}
+            >
+              <div>
+                <p className="font-medium">Show My Squad Cash to Squad Members</p>
+                <p className={`text-xs ${MaiTrollTheme.text.muted}`}>
+                  Active members of your Squad can view your Squad Cash amount when viewing your profile.
+                  Squad Leaders cannot override this setting. You always see your own balance.
+                </p>
+              </div>
+              <Toggle
+                checked={showSquadCash}
+                onChange={() => setShowSquadCash((current) => !current)}
+                label="Show my Squad Cash to squad members"
+              />
+            </div>
+
+            <div
+              className={`flex items-center justify-between gap-4 rounded-xl border p-4 ${MaiTrollTheme.backgrounds.glass} ${MaiTrollTheme.borders.glass} border-red-500/20`}
+            >
+              <div>
+                <p className="font-medium">Show My Bank Cash Balance</p>
+                <p className={`text-xs ${MaiTrollTheme.text.muted}`}>
+                  Controls whether other users can see your Bank cash value on your profile.
+                  Default is private. You always see your own Bank balance.
+                </p>
+              </div>
+              <Toggle
+                checked={showBankCash}
+                onChange={() => setShowBankCash((current) => !current)}
+                label="Show my Bank cash balance"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={handleSavePrivacy}
+              disabled={savingPrivacy}
+              className={`flex items-center gap-2 rounded-xl px-6 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50 ${MaiTrollTheme.gradients.button}`}
+            >
+              <Save className="h-4 w-4" />
+              {savingPrivacy ? "Saving..." : "Save Privacy Settings"}
+            </button>
+          </div>
+        </section>
 
         <section className={MaiTrollTheme.components.card}>
           <div className="mb-4 flex items-center gap-2">

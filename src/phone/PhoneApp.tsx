@@ -14,6 +14,7 @@ import PhoneHytroGameStreams from './pages/PhoneHytroGameStreams'
 import PhoneHytroGameViewer from './pages/PhoneHytroGameViewer'
 import PhoneViewerPage from './pages/PhoneViewerPage'
 import PhoneWebPage from './pages/PhoneWebPage'
+import OfficialEventsPage from '../pages/officialEvents/OfficialEventsPage'
 // ⭐ Founder Hub is intentionally SHARED with the web app so every Founder
 // perk (chat, broadcasts, reports, court tools, audit) is identical on phone.
 import FounderHub from '../pages/FounderHub'
@@ -47,11 +48,9 @@ import PhoneAdminApplications from './pages/PhoneAdminApplications'
 import PhoneAdminPage from './pages/PhoneAdminPage'
 import PhoneRtcAdminMonitor from './pages/PhoneRtcAdminMonitor'
 import PhoneSearch from './pages/PhoneSearch'
-import PhoneFamily from './pages/PhoneFamily'
 import PhoneGovernment from './pages/PhoneGovernment'
 import PhonePresident from './pages/PhonePresident'
-import PhoneAgency from './pages/PhoneAgency'
-import PhoneAgencyApply from './pages/PhoneAgencyApply'
+import InsurancePage from '../pages/InsurancePage'
 import PhoneCeoDashboard from './pages/PhoneCeoDashboard'
 import PhoneSupport from './pages/PhoneSupport'
 import PhoneSafety from './pages/PhoneSafety'
@@ -219,6 +218,8 @@ export default function PhoneApp() {
             <Route path="/broadcast" element={<PhoneBroadcastPage />} />
             <Route path="/broadcast/setup" element={<PhoneGoLive />} />
             <Route path="/broadcast/summary/:id" element={<PhoneBroadcastSummaryPage />} />
+            <Route path="/events" element={<OfficialEventsPage />} />
+            <Route path="/events/:eventSlug" element={<OfficialEventsPage />} />
             <Route path="/auctions" element={<PhoneAuctions />} />
             <Route path="/troll-court" element={<PhoneTrollCourt />} />
             <Route path="/founder" element={<FounderHub />} />
@@ -316,11 +317,9 @@ export default function PhoneApp() {
             <Route path="/podcast/:id" element={<PhonePodcast />} />
             <Route path="/troll-court/:id" element={<PhoneTrollCourt />} />
             <Route path="/court/:id" element={<PhoneTrollCourt />} />
-            <Route path="/agency/:id" element={<PhoneAgency />} />
-            <Route path="/agency-apply/:id" element={<PhoneAgencyApply />} />
             <Route path="/tromail" element={<TromailPage />} />
             <Route path="/tromail/:threadId" element={<TromailPage />} />
-            <Route path="/family/:id" element={<PhoneFamily />} />
+            <Route path="/insurance" element={<InsurancePage />} />
             <Route path="/government/:id" element={<PhoneGovernment />} />
             <Route path="/president/:id" element={<PhonePresident />} />
             <Route path="/secretary/:id" element={<PhoneSecretary />} />

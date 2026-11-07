@@ -62,7 +62,6 @@ export default function NavBubble() {
   const isAdmin =
     profile?.role === UserRole.ADMIN ||
     profile?.role === UserRole.HR_ADMIN ||
-    profile?.role === UserRole.AGENCY_HR_MANAGER ||
     String(profile?.role ?? '') === 'admin' ||
     String(profile?.role ?? '') === 'superadmin' ||
     String(profile?.troll_role ?? '') === 'admin' ||
@@ -147,11 +146,6 @@ export default function NavBubble() {
         title: 'Careers + Work',
         items: [
           {
-            label: 'Jobs',
-            path: '/jobs',
-            icon: Briefcase,
-          },
-          {
             label: 'Organization',
             path: '/organization/dashboard',
             icon: Building2,
@@ -215,12 +209,6 @@ export default function NavBubble() {
         title: 'Community',
         items: [
           {
-            label: 'Agencies',
-            path: '/agencies',
-            icon: Building2,
-            requiresAuth: true,
-          },
-          {
             label: 'Insurance',
             path: '/insurance',
             icon: Shield,
@@ -232,25 +220,7 @@ export default function NavBubble() {
             icon: Package,
             requiresAuth: true,
           },
-          {
-            label: 'Living',
-            path: '/living',
-            icon: Building2,
-            requiresAuth: true,
-          },
 
-          {
-            label: 'My Agency',
-            path: '/agency-dashboard',
-            icon: Users,
-            requiresAuth: true,
-          },
-          {
-            label: 'My Family',
-            path: '/family/home',
-            icon: Users,
-            requiresAuth: true,
-          },
           {
             label: 'Pool',
             path: '/pool',
@@ -280,17 +250,6 @@ export default function NavBubble() {
       {
         title: 'Control Room',
         items: [
-          {
-            label: 'Agency HR',
-            path: '/agency-hr-dashboard',
-            icon: Briefcase,
-            requiresAuth: true,
-            show:
-              isAdmin ||
-              profile?.role === UserRole.AGENCY_HR_MANAGER ||
-              String(profile?.role ?? '') === 'agency_hr_manager' ||
-              String(profile?.role ?? '') === 'agency_hr',
-          },
           {
             label: 'Government',
             path: '/government',

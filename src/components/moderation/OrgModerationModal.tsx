@@ -12,7 +12,7 @@ import {
   Loader2,
 } from 'lucide-react';
 
-export type OrgType = 'family' | 'agency';
+export type OrgType = 'family';
 
 type OrgModAction =
   | 'warn'

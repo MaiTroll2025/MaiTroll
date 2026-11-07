@@ -94,9 +94,6 @@ export const canAccessTromail = (profile: any): boolean => {
     profile?.is_lead_officer ||
     role === 'troller' ||
     profile?.is_troller ||
-    role === 'agency_hr_manager' ||
-    role === 'agency_hr' ||
-    role === 'agency_leader' ||
     role === 'troll_family_leader' ||
     role === 'ceo_assistant' ||
     role === 'noah_assistant' ||

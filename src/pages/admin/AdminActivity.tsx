@@ -109,7 +109,7 @@ function getPageLabel(path: string | null): string {
     /^broadcast$/i,
     /^live$/i,
     /^stream$/i,
-    /^agency$/i,
+    /^stream$/i,
     /^shop$/i,
     /^watch$/i,
   ]

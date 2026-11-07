@@ -15,6 +15,7 @@ import type { LiveItem } from '@/contexts/LiveContentContext'
 import { useRandomFreeSeat } from '@/hooks/useRandomFreeSeat'
 import MaiTrollRulesPopup from '@/components/MaiTrollRulesPopup'
 import UniversalButton from '@/components/ui/UniversalButton'
+import ActiveOfficialEventTiles from '@/components/maiCalendar/ActiveOfficialEventTiles'
 
 interface PhoneHomepageProps {
   onNavigate?: (path: string) => void
@@ -38,7 +39,7 @@ const PHONE_CITY_BUILDINGS = [
   { title: 'City Church', path: '/church', icon: Church, kind: 'court' },
   { title: 'Game Center', path: '/games', icon: Gamepad2, kind: 'cinema' },
   { title: 'City Treasury', path: '/president/treasury', icon: Coins, kind: 'court' },
-  { title: 'Employment Office', path: '/jobs/opportunities', icon: BriefcaseBusiness, kind: 'post' },
+  { title: 'Employment Office', path: '/careers', icon: BriefcaseBusiness, kind: 'post' },
 ] as const
 
 const panel = 'mai-neon-panel relative overflow-hidden rounded-[22px] bg-[#100b25]'
@@ -392,7 +393,7 @@ export default function PhoneHomepage({ onNavigate }: PhoneHomepageProps) {
   const citizenAvatar = profile?.avatar_url || ''
   const links = [
     { label: 'Live', icon: Radio, path: '/live' },
-    { label: 'People', icon: Users, path: '/explore' },
+    { label: 'Squads', icon: Users, path: '/squads' },
     { label: 'Treelz', icon: Play, path: '/treelz' },
     { label: 'Battles', icon: Trophy, path: '/battles' },
     { label: 'Podcasts', icon: Mic, path: '/podcast' },
@@ -488,6 +489,8 @@ export default function PhoneHomepage({ onNavigate }: PhoneHomepageProps) {
             </div>
           )}
         </section>
+
+        <ActiveOfficialEventTiles compact />
 
         {/* Gaming and podcast discovery */}
         <div className="grid grid-cols-2 gap-3">

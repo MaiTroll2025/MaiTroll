@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { Radio, Gamepad2, Gavel, ShoppingCart, Mic, Landmark, Users, Church, Car, Sparkles, Trophy, DollarSign, Building2, Swords, Headphones, Home } from 'lucide-react';
+import { Radio, Gamepad2, Gavel, ShoppingCart, Mic, Landmark, Church, Car, Sparkles, Trophy, DollarSign, Building2, Swords, Headphones, Home } from 'lucide-react';
 
 const platformLinks = [
   { path: '/explore', label: 'Explore Live Streams', icon: Radio, description: 'Discover trending content' },
@@ -11,13 +11,11 @@ const platformLinks = [
   { path: '/podcast', label: 'Podcasts', icon: Mic, description: 'Listen to creator podcasts' },
   { path: '/troll-court', label: 'Troll Court', icon: Landmark, description: 'Community justice system' },
   { path: '/government', label: 'Government', icon: Building2, description: 'Digital democracy' },
-  { path: '/family/city', label: 'Families', icon: Users, description: 'Join social communities' },
   { path: '/garage', label: 'Garage', icon: Car, description: 'Virtual vehicle collection' },
   { path: '/church', label: 'Troll Church', icon: Church, description: 'Faith community' },
 ]
 
 const creatorLinks = [
-  { path: '/jobs', label: 'Jobs', icon: DollarSign, description: 'Make money online' },
   { path: '/sell', label: 'Sell on Mai Troll', icon: ShoppingCart, description: 'Become a seller' },
   { path: '/creators', label: 'Become a Creator', icon: Trophy, description: 'Start your journey' },
   { path: '/go-live', label: 'Go Live', icon: Radio, description: 'Start streaming now' },
@@ -160,7 +158,6 @@ export function SEOFooter() {
               <li><Link to="/podcast" className="text-slate-400 hover:text-purple-300 transition-colors text-sm">Podcasts</Link></li>
               <li><Link to="/troll-court" className="text-slate-400 hover:text-purple-300 transition-colors text-sm">Troll Court</Link></li>
               <li><Link to="/government" className="text-slate-400 hover:text-purple-300 transition-colors text-sm">Government</Link></li>
-              <li><Link to="/family/city" className="text-slate-400 hover:text-purple-300 transition-colors text-sm">Families</Link></li>
                           </ul>
           </div>
           <div>
@@ -169,7 +166,6 @@ export function SEOFooter() {
               <li><Link to="/creators" className="text-slate-400 hover:text-purple-300 transition-colors text-sm">Become a Creator</Link></li>
               <li><Link to="/go-live" className="text-slate-400 hover:text-purple-300 transition-colors text-sm">Go Live</Link></li>
               <li><Link to="/sell" className="text-slate-400 hover:text-purple-300 transition-colors text-sm">Sell on Mai Troll</Link></li>
-              <li><Link to="/jobs" className="text-slate-400 hover:text-purple-300 transition-colors text-sm">Jobs</Link></li>
               <li><Link to="/legal/creator-earnings" className="text-slate-400 hover:text-purple-300 transition-colors text-sm">Earnings</Link></li>
             </ul>
           </div>
@@ -209,5 +205,3 @@ export function SEOFooter() {
     </footer>
   )
 }
-
-

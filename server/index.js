@@ -1391,7 +1391,7 @@ async function renderSeoIndex(req, res, next) {
       '/profile/settings', '/profile/setup', '/profile/delete', '/search', '/tromail', '/utromail',
       '/notifications', '/following', '/messages', '/blocked-users', '/trollifications', '/trollifieds',
       '/jail', '/inmates', '/onboarding', '/creator-onboarding', '/broadcast/setup',
-      '/live/command-center', '/live/overlay', '/officer', '/president', '/agency-dashboard',
+      '/live/command-center', '/live/overlay', '/officer', '/president',
     ];
     const shouldNoindex = statusCode >= 400
       || noindexPathPrefixes.some((prefix) => normalizedPath === prefix || normalizedPath.startsWith(`${prefix}/`));

@@ -51,8 +51,7 @@ const STAFF_ROLES_REQUIRING_LEVEL_10 = new Set([
   'troll_officer',
   'lead_troll_officer',
   'secretary',
-  'agency_hr',
-  'agency_hr_manager',
+  'broadofficer',
 ])
 
 const CEO_ADMIN_ROLES = new Set(['admin', 'ceo'])

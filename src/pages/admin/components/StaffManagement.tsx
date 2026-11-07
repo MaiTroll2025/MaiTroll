@@ -45,7 +45,6 @@ const ROLE_LABELS: Record<string, string> = {
   noah_assistant: 'Noah Assistant',
   president: 'President',
   vice_president: 'Vice President',
-  troll_family: 'Troll Family',
   user: 'User',
 };
 
@@ -68,7 +67,6 @@ const ROLE_COLORS: Record<string, string> = {
   noah_assistant: 'bg-amber-900/50 text-amber-300 border-amber-500/30',
   president: 'bg-yellow-900/50 text-yellow-300 border-yellow-500/30',
   vice_president: 'bg-yellow-900/50 text-yellow-200 border-yellow-500/30',
-  troll_family: 'bg-emerald-900/50 text-emerald-300 border-emerald-500/30',
   user: 'bg-gray-900/50 text-gray-300 border-gray-500/30',
 };
 

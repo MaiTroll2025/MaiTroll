@@ -1,0 +1,2 @@
+export const TROLL_COIN_COST_PER_ANSWER = 1;
+export const TROLL_COIN_CORRECT_REWARD = 10;

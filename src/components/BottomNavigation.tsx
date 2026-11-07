@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { SafeLink } from '@/hooks/useSafeNavigate'
 import ProfileFrame from '@/components/profile/ProfileFrame'
-import { Home, MessageSquare, Video, Shield, Gavel, LogOut, FileText, ShoppingBag, Banknote, Menu, X, LogIn, UserPlus, Trash2, Building2, Landmark, Warehouse, Package, Store, Coins, TrendingUp, Scale, Crown, LifeBuoy, Waves, Gamepad2, Lock, BookOpen, Mic, Radio, LayoutDashboard, Newspaper, DollarSign, Users, AlertTriangle, Settings, Star, Eye, Siren, ClipboardList, BarChart3, MonitorDot, ScrollText, Calendar, Wallet, Trophy, Bell, Megaphone, Database, Heart, User, Search, Mail, Briefcase, Sparkles, Smartphone, Wrench, Scan } from 'lucide-react';
+import { Home, MessageSquare, Video, Shield, Gavel, LogOut, FileText, ShoppingBag, Banknote, Menu, X, LogIn, UserPlus, Trash2, Building2, Landmark, Warehouse, Package, Store, Coins, TrendingUp, Scale, Crown, LifeBuoy, Waves, Gamepad2, Lock, BookOpen, Mic, Radio, LayoutDashboard, Newspaper, DollarSign, Users, AlertTriangle, Settings, Star, Eye, Siren, ClipboardList, BarChart3, MonitorDot, ScrollText, Calendar, Wallet, Trophy, Bell, Megaphone, Database, User, Search, Mail, Briefcase, Sparkles, Smartphone, Wrench, Scan } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
 
@@ -75,7 +75,6 @@ export default function BottomNavigation() {
   const isAdmin =
     profileRole === UserRole.ADMIN ||
     profileRole === UserRole.HR_ADMIN ||
-    profileRole === UserRole.AGENCY_HR_MANAGER ||
     profileRole === 'admin' ||
     profileRole === 'superadmin' ||
     profileRole === 'ceo' ||
@@ -137,21 +136,6 @@ export default function BottomNavigation() {
   const isAuctioneer =
     profileRole === 'auctioneer' ||
     profileTrollRole === 'auctioneer'
-
-  const isAgencyHR =
-    profileRole === 'agency_hr' ||
-    profileRole === String(UserRole.AGENCY_HR_MANAGER) ||
-    profileTrollRole === 'agency_hr' ||
-    profileTrollRole === 'agency_hr_manager' ||
-    !!(profile as any)?.is_agency_hr ||
-    !!(profile as any)?.is_agency_hr_manager
-
-  const isAgencyLeader =
-    profileRole === 'agency_leader' ||
-    profileTrollRole === 'agency_leader' ||
-    !!(profile as any)?.is_agency_leader ||
-    isAgencyHR ||
-    isAdmin
 
   const isCEOAssistant =
     profileRole === 'ceo_assistant' ||
@@ -584,14 +568,9 @@ export default function BottomNavigation() {
       { category: 'City Center', label: 'Troll Court', icon: Scale, path: '/troll-court', show: !!user },
       { category: 'City Center', label: 'Wallet', icon: Banknote, path: '/wallet', show: !!user },
 
-      { category: 'Community', label: 'Agencies', icon: Building2, path: '/agencies' },
       { category: 'Community', label: 'Inventory', icon: Package, path: '/inventory' },
-      { category: 'Community', label: 'Living', icon: Warehouse, path: '/living' },
-      { category: 'Community', label: 'My Agency', icon: Users, path: '/agency-dashboard' },
-      { category: 'Community', label: 'My Family', icon: Users, path: '/family/home' },
       { category: 'Community', label: 'Pool', icon: Waves, path: '/pool' },
       { category: 'Community', label: 'Troll Church', icon: BookOpen, path: '/church' },
-      { category: 'Community', label: 'Troll Match', icon: Heart, path: '/match' },
       { category: 'Community', label: 'Troll Wheel', icon: Gamepad2, path: '/troll-wheel' },
 
       { category: 'News + Ads', label: 'Advertise', icon: Megaphone, path: '/city-registry/advertise' },
@@ -725,14 +704,6 @@ export default function BottomNavigation() {
     ]
   }, [isBroadcaster, isAdmin])
 
-  const agencyHRPages: MenuOption[] = useMemo(() => {
-    if (!isAgencyHR && !isAgencyLeader && !isAdmin) return []
-    return [
-      { category: 'Agency HR', label: 'HR Dashboard', icon: Users, path: '/agency-hr-dashboard' },
-      { category: 'Agency HR', label: 'My Agency', icon: Building2, path: '/agency-dashboard' },
-    ]
-  }, [isAgencyHR, isAgencyLeader, isAdmin])
-
   const ceoAssistantPages: MenuOption[] = useMemo(() => {
     const pages: MenuOption[] = []
     if (isCEOAssistant || isAdmin) {
@@ -806,7 +777,7 @@ export default function BottomNavigation() {
   const menuOptions = useMemo(() => {
     const seen = new Set<string>()
 
-    return [...basePages, ...governmentPages, ...auctioneerPages, ...attorneyPages, ...broadcasterPages, ...agencyHRPages, ...ceoAssistantPages, ...journalistPages, ...adminPages]
+    return [...basePages, ...governmentPages, ...auctioneerPages, ...attorneyPages, ...broadcasterPages, ...ceoAssistantPages, ...journalistPages, ...adminPages]
       .filter((item) => item.show !== false)
       .filter((item) => {
         const key = `${item.category}:${item.label}:${item.path}`
@@ -814,7 +785,7 @@ export default function BottomNavigation() {
         seen.add(key)
         return true
       })
-  }, [basePages, governmentPages, auctioneerPages, attorneyPages, broadcasterPages, agencyHRPages, ceoAssistantPages, journalistPages, adminPages])
+  }, [basePages, governmentPages, auctioneerPages, attorneyPages, broadcasterPages, ceoAssistantPages, journalistPages, adminPages])
 
   const groupedOptions = useMemo(() => {
     const normalizedSearch = pageSearch.trim().toLowerCase()

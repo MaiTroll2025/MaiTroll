@@ -3,8 +3,16 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import { useAuthStore } from '@/lib/store'
-import { getAvailableDashboardRoles, getRoleLabel, resolveDashboardComponent } from '@/lib/departmentDashboardMap';
 import { hasRole } from '@/lib/supabase'
+import AttorneyDashboard from '@/pages/attorney/AttorneyDashboard'
+import ProsecutorDashboard from '@/pages/prosecutor/ProsecutorDashboard'
+import OfficerDashboard from '@/pages/officer/OfficerDashboard'
+import LeadOfficerDashboard from '@/pages/lead-officer/LeadOfficerDashboard'
+import SecretaryConsole from '@/pages/secretary/SecretaryConsole'
+import PastorDashboard from '@/pages/church/PastorDashboard'
+import AuctioneerDashboard from '@/pages/auction/AuctioneerDashboard'
+import AdminDashboard from '@/pages/admin/AdminDashboard'
+import CeoAssistantDashboard from '@/pages/ceo-assistant-dashboard'
 
 const ROLE_SWITCHER_ROLES = [
   'troll_officer',
@@ -16,12 +24,53 @@ const ROLE_SWITCHER_ROLES = [
   'attorney',
   'prosecutor',
   'moderator',
-  'agency_hr_manager',
   'hr_admin',
   'journalist',
   'auctioneer',
   'admin',
 ]
+
+const DASHBOARD_COMPONENTS: Record<string, React.ComponentType<any>> = {
+  attorney: AttorneyDashboard,
+  prosecutor: ProsecutorDashboard,
+  'troll-officer': OfficerDashboard,
+  'lead-troll-officer': LeadOfficerDashboard,
+  secretary: SecretaryConsole,
+  'ceo-assistant': CeoAssistantDashboard,
+  'noah-assistant': CeoAssistantDashboard,
+  pastor: PastorDashboard,
+  'hr-admin': CeoAssistantDashboard,
+  journalist: CeoAssistantDashboard,
+  auctioneer: AuctioneerDashboard,
+  admin: AdminDashboard,
+}
+
+const ROLE_LABELS: Record<string, string> = {
+  attorney: 'Attorney',
+  prosecutor: 'Prosecutor',
+  'troll-officer': 'Troll Officer',
+  'lead-troll-officer': 'Lead Troll Officer',
+  secretary: 'Secretary',
+  'ceo-assistant': 'CEO Assistant',
+  'noah-assistant': 'Noah Assistant',
+  pastor: 'Pastor',
+  'hr-admin': 'HR Admin',
+  journalist: 'Journalist',
+  auctioneer: 'Auctioneer',
+  admin: 'Admin',
+}
+
+function getAvailableDashboardRoles(userRoles: string[]): string[] {
+  return userRoles.filter((r) => r in DASHBOARD_COMPONENTS)
+}
+
+function getRoleLabel(role: string): string {
+  return ROLE_LABELS[role] || role
+}
+
+function resolveDashboardComponent(role: string) {
+  return DASHBOARD_COMPONENTS[role] || null
+}
 
 function RoleSwitcher({ currentRole, availableRoles, onSwitch }: { currentRole: string; availableRoles: string[]; onSwitch: (role: string) => void }) {
   const validOptions = availableRoles.filter((r) => ROLE_SWITCHER_ROLES.includes(r))
@@ -71,17 +120,12 @@ export default function DepartmentToolsPage() {
     if (profile.is_journalist) roles.push('journalist')
     if (profile.is_news_caster) roles.push('tcnn_news_caster')
     if (profile.is_chief_news_caster) roles.push('tcnn_chief_news_caster')
-    if (profile.is_agency_hr) roles.push('agency_hr')
-    if (profile.is_agency_hr_manager) roles.push('agency_hr_manager')
-    if (profile.is_agency_leader) roles.push('agency_leader')
+    if (profile.is_hr_admin) roles.push('hr_admin')
     if (profile.is_admin) roles.push('admin')
     if (profile.is_superadmin) roles.push('superadmin')
     if (profile.is_ceo) roles.push('ceo')
     if (profile.is_owner) roles.push('owner')
-    if (profile.is_troll_family) roles.push('troll_family')
 
-    // God-mode users (CEO / Owner / Admin / Superadmin) can switch into the
-    // executive support dashboards from the Active Role dropdown.
     const isGodMode =
       profile.is_admin === true ||
       profile.is_superadmin === true ||

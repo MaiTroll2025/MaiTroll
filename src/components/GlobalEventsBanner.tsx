@@ -8,7 +8,7 @@ interface GlobalEvent {
   id: string;
   title: string;
   description: string;
-  type: 'double_gift' | 'court_night' | 'family_war_finale' | 'bonus_hour' | 'special_event';
+  type: 'double_gift' | 'court_night' | 'bonus_hour' | 'special_event';
   startTime: Date;
   endTime: Date;
   isActive: boolean;
@@ -138,8 +138,6 @@ const GlobalEventsBanner: React.FC = () => {
         return <Gift className="w-5 h-5 text-yellow-400" />;
       case 'court_night':
         return <Crown className="w-5 h-5 text-purple-400" />;
-      case 'family_war_finale':
-        return <Trophy className="w-5 h-5 text-orange-400" />;
       case 'bonus_hour':
         return <Zap className="w-5 h-5 text-blue-400" />;
       default:
@@ -153,8 +151,6 @@ const GlobalEventsBanner: React.FC = () => {
         return 'from-yellow-600 to-orange-600 border-yellow-500';
       case 'court_night':
         return 'from-purple-600 to-pink-600 border-purple-500';
-      case 'family_war_finale':
-        return 'from-orange-600 to-red-600 border-orange-500';
       case 'bonus_hour':
         return 'from-blue-600 to-cyan-600 border-blue-500';
       default:

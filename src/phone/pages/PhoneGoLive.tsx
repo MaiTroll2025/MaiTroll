@@ -4,7 +4,7 @@ import React, {
   useRef,
   useState,
 } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   ArrowLeft,
   Camera,
@@ -41,6 +41,7 @@ import CameraOffImageUpload from '@/components/broadcast/CameraOffImageUpload'
 import { MAX_GUEST_SEATS } from '@/config/broadcastCategories'
 import { isStaffProfile } from '@/lib/staff'
 import { applyCameraVideoPresentation } from '@/lib/cameraVideoPresentation'
+import OfficialEventBroadcastSetup from '@/components/maiCalendar/OfficialEventBroadcastSetup'
 
 type BroadcastCategory =
   | 'general'
@@ -70,6 +71,15 @@ const CATEGORIES: Array<{
 ]
 
 export default function PhoneGoLive() {
+  const [searchParams] = useSearchParams()
+  const eventSlug = searchParams.get('event')
+  if (eventSlug) {
+    return <OfficialEventBroadcastSetup eventSlug={eventSlug} />
+  }
+  return <StandardPhoneGoLive />
+}
+
+function StandardPhoneGoLive() {
   const navigate = useNavigate()
 
   const { user, profile } = useAuthStore()
@@ -690,9 +700,13 @@ export default function PhoneGoLive() {
                 is_key_to_city: !!result.is_key_to_city,
                 cashout_available_at: result.cashout_available_at || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
               })
+            } else if (result?.error === 'DAILY_LIMIT_REACHED') {
+              toast.info(result.message || 'You already received a key today. Try again next time.')
+            } else if (result?.error) {
+              console.warn('[Broadcast] Key award failed:', result.error, result.message)
             }
-          } catch {
-            // non-blocking
+          } catch (err) {
+            console.warn('[Broadcast] Key award threw:', err)
           }
         })()
       }

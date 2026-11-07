@@ -6,7 +6,6 @@ import { generateUUID } from '../lib/uuid';
 import { OFFICIAL_GIFTS } from '../lib/giftConstants';
 import { notifyGiftReceived } from '../lib/notifications';
 import { useMissionProgress } from './useMissionProgress';
-import useTrollFamilyActivity from './useTrollFamilyActivity';
 import { TROLLMOND_CASHBACK_ENABLED } from '../config/featureFlags';
 import { createCityActivityEvent } from '../lib/events/createCityActivityEvent';
 import { queueSideEffect } from '../lib/events/queueSideEffects';
@@ -174,7 +173,6 @@ export function useGiftSystem(
   const [giftsDisabledReason, setGiftsDisabledReason] = useState<string | null>(null);
   const { user } = useAuthStore();
   const { trackGiftSent } = useMissionProgress(streamId || '');
-  const { recordGiftSent, recordGiftEarned } = useTrollFamilyActivity();
 
   // Simple client-side circuit breaker
   const circuitRef = useRef<{ openUntil: number }>({ openUntil: 0 });
@@ -390,21 +388,6 @@ const sendGift = useCallback(async (gift: GiftItem, options?: SendGiftOptions): 
       if (error) throw error;
 
       if (data && data.success) {
-        // Record family activity for gift sent/earned
-        const giftCoins = gift.coinCost * quantity;
-        try {
-          // Record gift sent by the sender
-          await recordGiftSent(giftCoins, finalRecipientId, streamId || undefined, gift.id);
-          
-          // Record gift earned by the receiver (only if not self-send)
-          if (finalRecipientId !== user?.id) {
-            await recordGiftEarned(giftCoins, streamId || undefined, gift.id, user?.id);
-          }
-        } catch (recordErr) {
-          console.warn('[GiftSystem] Failed to record family activity:', recordErr);
-          // Don't fail the gift transaction if recording fails
-        }
-
         // ── Battle score realtime broadcast ────────────────────────────────
         // When a gift is sent during a battle, the RPC updates the battle score
         // in the database. We broadcast a score_update on the battle channel so
@@ -676,7 +659,7 @@ const sendGift = useCallback(async (gift: GiftItem, options?: SendGiftOptions): 
     } finally {
       setIsSending(false);
     }
-  }, [recipientId, _battleId, giftsDisabled, user, streamId, giftsDisabledReason, recordGiftSent, recordGiftEarned, sharedChannel, trackGiftSent]);
+  }, [recipientId, _battleId, giftsDisabled, user, streamId, giftsDisabledReason, sharedChannel, trackGiftSent]);
 
   if (!hasStreamId) {
     return stableEmptyGiftState;

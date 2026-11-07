@@ -165,32 +165,14 @@ export const earnCoins = async (
     return { success: false, error: validation.errors.join(', ') }
   }
 
-  try {
-    // Use database transaction for atomicity
-    // earn_coins RPC created in supabase/migrations migration to alias troll_bank_credit_coins
-    const { data, error } = await supabase.rpc('earn_coins', {
-      p_user_id: userId,
-      p_amount: amount,
-      p_source: transaction.source || 'app',
-      p_description: transaction.description,
-    })
-
-    if (error) {
-      console.error('Earn coins error:', error)
-      return { success: false, error: error.message }
-    }
-
-    if (!data?.success) {
-      return { success: false, error: data?.error || 'Transaction failed' }
-    }
-
-    return {
-      success: true,
-      newBalance: data.new_balance
-    }
-  } catch (error: any) {
-    console.error('Earn coins exception:', error)
-    return { success: false, error: error.message || 'Transaction failed' }
+  console.error('Earn coins is unavailable until an authenticated server workflow is configured', {
+    userId,
+    amount,
+    source: transaction.source || 'app',
+  })
+  return {
+    success: false,
+    error: 'Coin rewards are temporarily unavailable',
   }
 }
 

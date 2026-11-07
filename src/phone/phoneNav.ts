@@ -1,4 +1,4 @@
-import { Home, Coins, Gavel, Scale, Building2, Gamepad2, Trophy, Music, Users, FileText, Wallet, TrendingUp, Megaphone, Briefcase, Package, PawPrint, Store, List, Waves, ShoppingBag, Shuffle, Banknote, Landmark, Radio, Crown, Church, Shield, Wrench, LayoutDashboard, Lock, Database, Settings, Zap, Calendar, Mail, Newspaper, Video, LifeBuoy, Image, Warehouse, DollarSign, Sparkles, Star, Smartphone, type LucideIcon } from 'lucide-react';
+import { Home, Coins, Gavel, Scale, Building2, Gamepad2, Trophy, Music, Users, FileText, Wallet, TrendingUp, Megaphone, Briefcase, Package, PawPrint, Store, List, Waves, ShoppingBag, Shuffle, Banknote, Landmark, Radio, Crown, Church, Shield, Wrench, LayoutDashboard, Lock, Database, Settings, Zap, Calendar, Mail, Newspaper, Video, LifeBuoy, Image, DollarSign, Sparkles, Star, Smartphone, type LucideIcon } from 'lucide-react';
 import { UserRole } from '../lib/supabase'
 import type { PhoneRoleAccess } from './usePhoneRoleAccess'
 
@@ -26,6 +26,7 @@ export function getPhoneNavSections(a: PhoneRoleAccess): PhoneNavSection[] {
     add('Menu', [
     { label: 'Home', path: '/', icon: Home },
     { label: 'Community', path: '/community', icon: Users },
+    { label: 'Calendar', path: '/calendar', icon: Calendar },
     { label: 'Coins', path: '/store', icon: Coins, show: a.isAuthenticated },
     { label: 'Mai Pay', path: '/wallet', icon: Wallet, show: a.isAuthenticated },
     { label: 'Mai Piks', path: '/mai-piks', icon: Image, show: a.isAuthenticated },
@@ -117,15 +118,7 @@ export function getPhoneNavSections(a: PhoneRoleAccess): PhoneNavSection[] {
     },
     { label: 'Insurance', path: '/insurance', icon: Shield },
     { label: 'Inventory', path: '/inventory', icon: Package },
-    { label: 'Troll Family', path: '/family/browse', icon: Users },
-    {
-      label: 'My Families',
-      path: a.isFamilyMember ? '/family/home' : '/family/browse',
-      icon: Crown,
-      show: a.canSeeTrollFamily || a.role === 'troll_family',
-    },
     { label: 'Leaderboard', path: '/leaderboard', icon: Trophy },
-    { label: 'Living', path: '/living', icon: Warehouse },
     { label: 'Marketplace', path: '/marketplace', icon: Store },
     {
       label: 'My Shows',
@@ -216,33 +209,6 @@ export function getPhoneNavSections(a: PhoneRoleAccess): PhoneNavSection[] {
       path: '/admin/night-watch',
       icon: Radio,
       show: a.canAccessNightWatch,
-    },
-  ])
-
-  add('Talent Offices', [
-    { label: 'Agencies', path: '/agencies', icon: Building2 },
-    { label: 'My Agency', path: '/agency-dashboard', icon: Users },
-    {
-      label: 'Attorney',
-      path: '/attorney',
-      icon: Briefcase,
-      show:
-        a.isAttorney ||
-        !!(a as any).is_attorney ||
-        a.role === 'attorney' ||
-        a.trollRole === 'attorney',
-    },
-    {
-      label: 'Auction Studio',
-      path: '/auctions/studio',
-      icon: Gavel,
-      show: a.canSeeAuctionStudio,
-    },
-    {
-      label: 'Agency HR',
-      path: '/agency-hr-dashboard',
-      icon: Briefcase,
-      show: a.canSeeAgencyHR,
     },
   ])
 
@@ -348,7 +314,6 @@ if (a.isAdmin) {
     { label: 'Attorney', path: '/attorney', icon: Briefcase },
     { label: 'Prosecutor Dashboard', path: '/prosecutor', icon: Gavel },
     { label: 'Pastor Dashboard', path: '/church/pastor', icon: Church },
-    { label: 'Agency HR Dashboard', path: '/agency-hr-dashboard', icon: Briefcase },
 { label: 'CEO Assistant Dashboard', path: '/ceo-assistant-dashboard', icon: LayoutDashboard },
     ])
 

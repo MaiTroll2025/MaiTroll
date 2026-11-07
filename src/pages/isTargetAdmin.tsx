@@ -173,7 +173,7 @@ const { profile } = useAuthStore();
     canAccessWalkieTalkie: contextCanAccessWalkieTalkie,
   } = useStaffWalkieTalkieContext();
 
-const staffRoles = ['admin', 'moderator', 'troll_officer', 'lead_troll_officer', 'secretary', 'officer', 'hr_admin', 'agency_hr_manager', 'ceo', 'superadmin', 'empire_partner', 'auctioneer', 'attorney', 'prosecutor', 'pastor', 'journalist', 'tcnn_news_caster', 'tcnn_chief_news_caster', 'agency_hr', 'agency_leader', 'ceo_assistant', 'noah_assistant', 'academy_teacher', 'academy_director', 'admissions_officer'];
+const staffRoles = ['admin', 'moderator', 'troll_officer', 'lead_troll_officer', 'secretary', 'officer', 'hr_admin', 'ceo', 'superadmin', 'empire_partner', 'auctioneer', 'attorney', 'prosecutor', 'pastor', 'journalist', 'tcnn_news_caster', 'tcnn_chief_news_caster', 'ceo_assistant', 'noah_assistant', 'academy_teacher', 'academy_director', 'admissions_officer'];
    const isStaff = profile?.is_admin === true || staffRoles.includes(profile?.role || '');
   const isFullAdmin = profile?.is_admin === true || ['admin', 'ceo', 'superadmin'].includes(profile?.role || '');
   const canUseWalkieTalkie = contextCanAccessWalkieTalkie;
@@ -268,7 +268,7 @@ const [analyticsRange, setAnalyticsRange] = useState<1 | 7 | 30>(7);
     const _WALKIE_TALKIE_ALLOWED_ROLES = [
       'admin', 'ceo', 'staff', 'officer', 'broadofficer',
       'troll_officer', 'lead_troll_officer', 'secretary', 'president',
-      'agency_hr', 'agency_hr_manager', 'agency_leader', 'attorney',
+      'attorney',
       'prosecutor', 'journalist', 'tcnn_news_caster', 'tcnn_chief_news_caster',
       'auctioneer', 'pastor', 'org_admin', 'empire_partner',
       'ceo_assistant', 'noah_assistant',
@@ -728,12 +728,15 @@ const openAction = useCallback((user: UserListItem, action: string) => {
          if (activeAction === 'grant') {
              const amount = parseInt(actionAmount, 10);
              if (!amount || amount <= 0) throw new Error('Enter a valid amount');
-             const { error } = await supabase.rpc('admin_grant_coins', {
-                 p_user_id: actionTarget.id,
-                 p_amount: amount,
-                 p_reason: actionReason || 'Admin grant via RTC Monitor',
+             const { data, error } = await supabase.functions.invoke('coin-admin', {
+               body: {
+                 userId: actionTarget.id,
+                 amount,
+                 reason: actionReason || 'Admin grant via RTC Monitor',
+               },
              });
              if (error) throw error;
+             if (!data?.success) throw new Error(data?.error || 'Failed to grant coins');
              toast.success(`Granted ${amount.toLocaleString()} coins`);
          }
 

@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../lib/store'
-import { addCoins } from '../../lib/coinTransactions'
 import { toast } from 'sonner'
 import { User, Search, Coins, Shield, AlertTriangle, CheckCircle, Loader2, Clock, ExternalLink } from 'lucide-react'
 
@@ -155,60 +154,19 @@ const GrantCoins: React.FC = () => {
     }
 
     const amount = Number(amountInput)
-    if (!Number.isFinite(amount) || amount <= 0) {
-      toast.error('Enter a positive coin amount')
+    if (!Number.isSafeInteger(amount) || amount <= 0) {
+      toast.error('Enter a positive whole-number coin amount')
       return
     }
 
     setSubmitting(true)
     try {
-      if (grantType === 'paid') {
-        const result = await addCoins({
-          userId: targetUser.id,
-          amount: Math.round(amount),
-          type: 'admin_grant',
-          coinType: 'troll_coins',
-          description: trimmedReason,
-          metadata: {
-            admin_reason: trimmedReason,
-            admin_username: profile.username,
-            admin_id: profile.id,
-            source: 'grant_coins_panel'
-          }
-        })
-
-        if (!result.success) {
-          throw new Error(result.error || 'Failed to grant coins')
-        }
-
-        setTargetUser({
-          ...targetUser,
-          troll_coins: result.newBalance as number
-        })
-      } else {
-        const { error } = await supabase.rpc('add_free_coins', {
-          p_user_id: targetUser.id,
-          p_amount: Math.round(amount).toString(),
-          p_description: trimmedReason
-        })
-
-        if (error) {
-          throw error
-        }
-
-        const { data, error: reloadError } = await supabase
-          .from('user_profiles')
-          .select('troll_coins')
-          .eq('id', targetUser.id)
-          .single()
-
-        if (!reloadError && data) {
-          setTargetUser({
-            ...targetUser,
-            troll_coins: data.troll_coins || 0
-          })
-        }
-      }
+      const { data: grantResult, error: grantError } = await supabase.functions.invoke('coin-admin', {
+        body: { userId: targetUser.id, amount, reason: trimmedReason }
+      })
+      if (grantError) throw grantError
+      if (!grantResult?.success) throw new Error(grantResult?.error || 'Failed to grant coins')
+      setTargetUser({ ...targetUser, troll_coins: grantResult.newBalance })
 
       toast.success('Coins granted successfully')
       setAmountInput('')

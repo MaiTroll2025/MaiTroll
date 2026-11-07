@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../lib/store';
 import { isStaffProfile } from '../../lib/staff';
-import useTrollFamilyActivity from '../../hooks/useTrollFamilyActivity';
 import ModActionsPopup from './ModActionsPopup';
 import { toast } from 'sonner';
 
@@ -54,7 +53,6 @@ export default function BattleChat({
    const [nowMs, setNowMs] = useState(Date.now());
    const [newMessage, setNewMessage] = useState('');
    const { profile } = useAuthStore();
-   const { recordChatMessage } = useTrollFamilyActivity();
    const isOfficer = isStaffProfile(profile);
    const [showModActions, setShowModActions] = useState(false);
    const [modActionTargetUser, setModActionTargetUser] = useState<{ id: string; username: string; avatar_url?: string; role?: string; troll_role?: string } | null>(null);
@@ -369,11 +367,6 @@ export default function BattleChat({
         presentation: 'chat',
       }).catch(() => undefined);
 
-      try {
-        await recordChatMessage(content.length, battleId);
-      } catch (activityError) {
-        console.error('[BattleChat] Failed to record chat activity:', activityError);
-      }
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error('Failed to send message');

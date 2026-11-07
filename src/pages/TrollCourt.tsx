@@ -1247,14 +1247,14 @@ function CalendarBlock({
       </div>
 
       <div className="grid grid-cols-7 gap-1">
-        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
           <div key={day} className="py-2 text-center text-xs font-black text-amber-100/45">
             {day}
           </div>
         ))}
 
         {(() => {
-          const firstDay = new Date(calendarYear, calendarMonth, 1).getDay()
+          const firstDay = (new Date(calendarYear, calendarMonth, 1).getDay() + 6) % 7
           const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate()
           const days = []
 

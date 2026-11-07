@@ -114,11 +114,6 @@ export default function NotaryDashboard() {
           setDocuments(docs)
           break
         }
-        case 'agency': {
-          const { documents: docs } = await fetchDocuments({ documentType: 'agency_agreement', ...(isAdmin ? {} : { submittedBy: userId }) })
-          setDocuments(docs)
-          break
-        }
         case 'staff_apps': {
           const { documents: docs } = await fetchDocuments({ documentType: 'staff_application', ...(isAdmin ? {} : { submittedBy: userId }) })
           setDocuments(docs)
@@ -305,7 +300,6 @@ export default function NotaryDashboard() {
     { id: 'approval_logs', label: 'Approval Logs', icon: <FileSignature size={14} />, adminOnly: !isStaff },
     { id: 'payroll', label: 'Payroll Docs', icon: <Briefcase size={14} />, adminOnly: !isStaff },
     { id: 'loans', label: 'Loan Docs', icon: <FileCheck size={14} />, adminOnly: !isStaff },
-    { id: 'agency', label: 'Agency Contracts', icon: <Shield size={14} />, adminOnly: !isStaff },
     { id: 'staff_apps', label: 'Staff Applications', icon: <Users size={14} />, adminOnly: !isStaff },
     { id: 'create', label: 'New Document', icon: <Plus size={14} /> },
   ]

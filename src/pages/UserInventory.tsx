@@ -893,7 +893,7 @@ export default function UserInventory({ embedded = false }: { embedded?: boolean
                 <h2 className="text-2xl font-bold mb-2">No Property Deeds</h2>
                 <p className={`${MaiTrollTheme.text.muted} mb-6`}>Visit the Living section to buy properties.</p>
                 <button
-                  onClick={() => navigate('/living')}
+                  onClick={() => navigate('/inventory')}
                   className={`px-6 py-3 bg-amber-600 hover:bg-amber-700 rounded-lg font-semibold`}
                 >
                   Find a Home
@@ -901,7 +901,7 @@ export default function UserInventory({ embedded = false }: { embedded?: boolean
               </div>
             ) : (
               userDeeds.map((deed) => (
-                <div key={deed.id} className={`${MaiTrollTheme.components.card} border-amber-500/20 hover:border-amber-500/40 transition-all cursor-pointer`} onClick={() => navigate('/living')}>
+                <div key={deed.id} className={`${MaiTrollTheme.components.card} border-amber-500/20 hover:border-amber-500/40 transition-all cursor-pointer`} onClick={() => navigate('/inventory')}>
                   <div className="flex items-center gap-2 mb-4">
                     <Home className="w-5 h-5 text-amber-400" />
                     <span className="text-sm text-amber-400 font-bold uppercase tracking-wider">Deed</span>

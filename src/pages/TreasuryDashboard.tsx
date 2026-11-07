@@ -65,10 +65,7 @@ const roleOptions = [
     { value: 'troll_officer', label: 'Troll Officer', pricingModel: 'week' as const },
     { value: 'journalist', label: 'Journalist', pricingModel: 'week' as const },
     { value: 'lead_troll_officer', label: 'Lead Troll Officer', pricingModel: 'week' as const },
-    { value: 'agency_hr_manager', label: 'Agency HR Manager', pricingModel: 'week' as const },
-    { value: 'agency_hr', label: 'Agency HR', pricingModel: 'week' as const },
-    { value: 'agency_leader', label: 'Agency Leader', pricingModel: 'week' as const },
-    { value: 'troll_family_leader', label: 'Troll Family Leader', pricingModel: 'week' as const },
+    { value: 'hr_admin', label: 'HR Admin', pricingModel: 'week' as const },
     { value: 'ceo_assistant', label: 'CEO Assistant', pricingModel: 'week' as const },
     { value: 'noah_assistant', label: 'Noah Assistant', pricingModel: 'week' as const },
 ];

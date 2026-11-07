@@ -24,7 +24,6 @@ const SWIPE_DESTINATIONS: SwipeDestination[] = [
   { path: '/leaderboard', label: 'Leaderboard' },
   { path: '/notifications', label: 'Alerts' },
   { path: '/search', label: 'Search' },
-  { path: '/family/home', label: 'Family' },
   { path: '/marketplace', label: 'Shop' },
   { path: '/inventory', label: 'Inventory' },
   { path: '/church', label: 'Church' },

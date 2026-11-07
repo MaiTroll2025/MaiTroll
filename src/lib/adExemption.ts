@@ -36,14 +36,11 @@ const CAREER_ROLES: string[] = [
   'journalist',
   'tcnn_news_caster',
   'tcnn_chief_news_caster',
-  'agency_hr_manager',
-  'agency_leader',
   'hr_manager',
   'hr_admin',
   'ceo_assistant',
   'noah_assistant',
   'troller',
-  'troll_family',
 ];
 
 export function isAdExemptUser(profile: UserProfile | null): boolean {

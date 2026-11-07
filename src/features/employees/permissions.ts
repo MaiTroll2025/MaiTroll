@@ -71,8 +71,8 @@ export function isSecretary(p?: EmployeeProfileLike | null): boolean {
 // Approved employee roles allowed into /Employees (mirrors HRCenter hasApprovedRole).
 const APPROVED_ROLES = new Set([
   'troll_officer', 'lead_troll_officer', 'secretary', 'ceo_assistant', 'noah_assistant',
-  'hr_admin', 'hr_manager', 'agency_hr_manager', 'pastor', 'agency_leader', 'attorney',
-  'prosecutor', 'journalist', 'auctioneer', 'troller', 'agency_hr', 'president',
+  'hr_admin', 'hr_manager', 'pastor', 'attorney',
+  'prosecutor', 'journalist', 'auctioneer', 'troller', 'president',
   'vice_president', 'troll_city_secretary', 'troll_city_treasurer', 'executive_secretary',
 ])
 

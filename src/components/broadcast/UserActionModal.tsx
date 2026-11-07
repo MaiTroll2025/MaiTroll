@@ -1059,9 +1059,6 @@ const handleViewProfile = () => {
                   <option value="lead_troll_officer">Lead Troll Officer</option>
                   <option value="moderator">Moderator</option>
                   <option value="secretary">Secretary</option>
-                  <option value="agency_hr">Agency HR</option>
-                  <option value="agency_hr_manager">Agency HR Manager</option>
-                  <option value="agency_leader">Agency Leader</option>
                   <option value="attorney">Attorney</option>
                   <option value="prosecutor">Prosecutor</option>
                   <option value="pastor">Pastor</option>

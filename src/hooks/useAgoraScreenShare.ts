@@ -150,15 +150,26 @@ export function useAgoraScreenShare(): AgoraScreenShareState & AgoraScreenShareA
   const getAgoraAppId = () => import.meta.env.VITE_AGORA_APP_ID;
   const debug = (...args: unknown[]) => { if (import.meta.env.DEV) console.log('[AgoraScreenShare]', ...args); };
 
-  const fetchToken = useCallback(async (channel: string, uid: UID): Promise<string> => {
+  const fetchToken = useCallback(async (
+    channel: string,
+    uid: UID,
+    activeStreamId: string | null = streamId,
+  ): Promise<{ token: string; uid: UID }> => {
     const response = await supabase.functions.invoke('agora-token', {
-      body: { channel, userId: uid.toString(), tokenType: 'rtc', role: 'publisher' },
+      body: {
+        channel,
+        userId: uid.toString(),
+        tokenType: 'rtc',
+        role: 'publisher',
+        roomType: 'gaming',
+        streamId: activeStreamId,
+      },
     });
     const { data, error: err } = response as any;
     if (err) throw new Error(`Token error: ${err.message}`);
-    if (!data?.token) throw new Error('No token received');
-    return data.token;
-  }, []);
+    if (!data?.token || !Number.isInteger(data.uid)) throw new Error('No valid token received');
+    return { token: data.token, uid: data.uid as UID };
+  }, [streamId]);
 
   // ── Camera layout normalization ──
   const normalizeCameraLayout = useCallback((layout: {
@@ -273,9 +284,9 @@ export function useAgoraScreenShare(): AgoraScreenShareState & AgoraScreenShareA
       clientRef.current = client;
 
       const uid = getUserUid(chName);
-      const token = await fetchToken(chName, uid);
+      const token = await fetchToken(chName, uid, streamIdArg);
       debug('Joining Agora:', chName, 'uid:', uid);
-      await client.join(appId, chName, token, uid);
+      await client.join(appId, chName, token.token, token.uid);
       joinedRef.current = true;
 
       // Track A: Screen share VIDEO from display stream
@@ -328,10 +339,10 @@ export function useAgoraScreenShare(): AgoraScreenShareState & AgoraScreenShareA
       // If camera is enabled, create a secondary Agora client to publish it separately.
       if (camAgoraTrack) {
         const cameraUid = getCameraUid(chName);
-        const cameraToken = await fetchToken(chName, cameraUid);
+        const cameraToken = await fetchToken(chName, cameraUid, streamIdArg);
         const cameraClient = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
         cameraClientRef.current = cameraClient;
-        await cameraClient.join(getAgoraAppId()!, chName, cameraToken, cameraUid);
+        await cameraClient.join(getAgoraAppId()!, chName, cameraToken.token, cameraToken.uid);
         cameraJoinedRef.current = true;
         await cameraClient.publish([camAgoraTrack]);
         debug('Published camera track on secondary client');
@@ -534,10 +545,10 @@ export function useAgoraScreenShare(): AgoraScreenShareState & AgoraScreenShareA
             } else {
               try {
                 const cameraUid = getCameraUid(channelName);
-                const cameraToken = await fetchToken(channelName, cameraUid);
+                const cameraToken = await fetchToken(channelName, cameraUid, streamId);
                 const cameraClient = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
                 cameraClientRef.current = cameraClient;
-                await cameraClient.join(getAgoraAppId()!, channelName, cameraToken, cameraUid);
+                await cameraClient.join(getAgoraAppId()!, channelName, cameraToken.token, cameraToken.uid);
                 cameraJoinedRef.current = true;
                 const ct = AgoraRTC.createCustomVideoTrack({ mediaStreamTrack: cs.getVideoTracks()[0] });
                 cameraTrackRef.current = ct;
@@ -585,7 +596,7 @@ export function useAgoraScreenShare(): AgoraScreenShareState & AgoraScreenShareA
       setCameraEnabled(false);
       toast.info('Camera disabled');
     }
-  }, [cameraEnabled, channelName, fetchToken]);
+  }, [cameraEnabled, channelName, fetchToken, streamId]);
 
   // ── Update camera layout (debounced persist) ──
   const updateCameraLayout = useCallback((updates: Partial<{

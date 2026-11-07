@@ -50,7 +50,6 @@ export const logSecurityEvent = async (payload: {
   actor_id?: string;
   target_user_id?: string;
   stream_id?: string;
-  agency_id?: string;
   cashout_id?: string;
   route?: string;
   source?: 'frontend' | 'backend';
@@ -74,7 +73,6 @@ export const logSecurityEvent = async (payload: {
         actor_id: payload.actor_id,
         target_user_id: payload.target_user_id,
         stream_id: payload.stream_id,
-        agency_id: payload.agency_id,
         cashout_id: payload.cashout_id,
         route: payload.route,
         source: payload.source || 'frontend',
@@ -83,7 +81,6 @@ export const logSecurityEvent = async (payload: {
       actor_id: payload.actor_id || null,
       target_user_id: payload.target_user_id || null,
       stream_id: payload.stream_id || null,
-      agency_id: payload.agency_id || null,
       cashout_id: payload.cashout_id || null,
       ip_address: payload.metadata?.ip_address || null,
       user_agent: payload.metadata?.userAgent || null,
@@ -100,7 +97,6 @@ export const logSecurityEvent = async (payload: {
       p_actor_id: eventData.actor_id,
       p_target_user_id: eventData.target_user_id,
       p_stream_id: eventData.stream_id,
-      p_agency_id: eventData.agency_id,
       p_cashout_id: eventData.cashout_id,
       p_route: eventData.route,
       p_source: eventData.source,

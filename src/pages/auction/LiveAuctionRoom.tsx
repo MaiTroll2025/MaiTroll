@@ -292,6 +292,7 @@ export default function LiveAuctionRoom() {
   const agoraJoinedRef = useRef(false)
   const agoraConnectingRef = useRef(false)
   const activeAgoraKeyRef = useRef<string | null>(null)
+  const agoraUidNonceRef = useRef<number | null>(null)
   const retryTimerRef = useRef<number | null>(null)
 
   const presenceKey = user?.id || `anon-auction-${showId || 'unknown'}`
@@ -494,6 +495,7 @@ export default function LiveAuctionRoom() {
       agoraJoinedRef.current = false
       agoraConnectingRef.current = false
       activeAgoraKeyRef.current = null
+      agoraUidNonceRef.current = null
       setAgoraConnected(false)
       setRemoteReady(false)
       setAgoraReadyToRetry(false)
@@ -662,6 +664,8 @@ export default function LiveAuctionRoom() {
           channel: channelName,
           uid,
           role,
+          roomType: 'auction',
+          auctionId: showId,
           isPublisher: role === 'publisher',
         },
       })
@@ -672,11 +676,11 @@ export default function LiveAuctionRoom() {
           || edgeError?.context?.error?.hint || edgeError?.message
         throw new Error(details || 'Agora token service unavailable. Make sure AGORA_APP_ID and AGORA_APP_CERTIFICATE are set in Supabase secrets.')
       }
-      if (!data?.token) throw new Error('No Agora token returned — check Supabase edge function logs')
+      if (!data?.token || !Number.isInteger(data.uid)) throw new Error('No valid Agora token returned — check Supabase edge function logs')
 
-      return data.token as string
+      return { token: data.token as string, uid: data.uid as number }
     },
-    []
+    [showId]
   )
 
   const subscribeAndPlay = useCallback(async (remoteUser: IAgoraRTCRemoteUser, mediaType: 'audio' | 'video' | 'datachannel') => {
@@ -761,16 +765,16 @@ export default function LiveAuctionRoom() {
       try {
         if (!show) return
         const channelName = getAgoraChannelName(show)
-        const uid = makeAgoraUid(user?.id || '', 'viewer')
-        const token = await getAgoraToken(channelName, uid, 'audience')
-        await client.renewToken(token)
+        const uid = agoraUidNonceRef.current ?? makeAgoraUid(user?.id || '', isAuctioneer ? 'auctioneer' : 'viewer')
+        const token = await getAgoraToken(channelName, uid, isAuctioneer ? 'publisher' : 'audience')
+        await client.renewToken(token.token)
       } catch (err) {
         logAgoraError('token renewal failed', err)
       }
     })
 
     return client
-  }, [getAgoraToken, scheduleViewerReconnect, show, subscribeAndPlay, user?.id])
+  }, [getAgoraToken, isAuctioneer, scheduleViewerReconnect, show, subscribeAndPlay, user?.id])
 
   const connectViewerAgora = useCallback(async () => {
     if (!showId || !user?.id || isAuctioneer) return
@@ -796,6 +800,7 @@ export default function LiveAuctionRoom() {
 
     GLOBAL_AGORA_JOIN_LOCKS.add(agoraKey)
     activeAgoraKeyRef.current = agoraKey
+    agoraUidNonceRef.current = uid
     agoraConnectingRef.current = true
 
     try {
@@ -804,7 +809,7 @@ export default function LiveAuctionRoom() {
       await client.setClientRole('audience')
 
       const token = await getAgoraToken(channelName, uid, 'audience')
-      await client.join(appId, channelName, token, uid)
+      await client.join(appId, channelName, token.token, token.uid)
 
       agoraJoinedRef.current = true
       setAgoraConnected(true)
@@ -875,6 +880,7 @@ export default function LiveAuctionRoom() {
 
     GLOBAL_AGORA_JOIN_LOCKS.add(agoraKey)
     activeAgoraKeyRef.current = agoraKey
+    agoraUidNonceRef.current = uid
     agoraConnectingRef.current = true
     setAuctioneerConnecting(true)
 
@@ -884,7 +890,7 @@ export default function LiveAuctionRoom() {
       await client.setClientRole('host')
 
       const token = await getAgoraToken(channelName, uid, 'publisher')
-      await client.join(appId, channelName, token, uid)
+      await client.join(appId, channelName, token.token, token.uid)
 
       const [micTrack, camTrack] = await AgoraRTC.createMicrophoneAndCameraTracks(
         { AEC: true, ANS: true, AGC: true },

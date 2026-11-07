@@ -82,7 +82,7 @@ function WallPostCard({
 
   return (
     <div
-      className={`${glass} rounded-2xl overflow-hidden transition-all duration-200 hover:border-white/20`}
+      className={`${glass} rounded-xl overflow-hidden transition-all duration-200 hover:border-white/20`}
     >
       {/* Boosted indicator */}
       {boosted && (
@@ -93,9 +93,9 @@ function WallPostCard({
       )}
 
       {/* Post Header */}
-      <div className="p-4 pb-0">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 shrink-0 rounded-full ring-1 ring-white/10" style={{ overflow: 'visible' }}>
+      <div className="p-2 pb-0">
+        <div className="flex items-center gap-2">
+          <div className="h-6 w-6 shrink-0 rounded-full ring-1 ring-white/10" style={{ overflow: 'visible' }}>
             <ProfileFrame
               frame={frame}
               avatarUrl={avatarUrl}
@@ -105,34 +105,34 @@ function WallPostCard({
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <span
+                <span
                 onClick={() => navigate(`/profile/id/${post.user_id}`)}
-                className="text-sm font-bold text-white hover:text-cyan-300 transition-colors cursor-pointer"
+                className="text-xs font-bold text-white hover:text-cyan-300 transition-colors cursor-pointer"
               >
                 {post.username || 'Unknown'}
               </span>
               {post.is_pinned && (
-                <Pin className="h-3 w-3 text-yellow-400" />
+                <Pin className="h-2 w-2 text-yellow-400" />
               )}
               {boosted && (
-                <span className="rounded-full bg-amber-400/20 px-2 py-0.5 text-[10px] font-black text-amber-300">
+                <span className="rounded-full bg-amber-400/20 px-1 py-0 text-[9px] font-black text-amber-300">
                   ⚡ Boosted
                 </span>
               )}
               {post.is_system_generated && (
-                <span className="rounded-full bg-cyan-400/20 px-2 py-0.5 text-[10px] font-black text-cyan-300">
+                <span className="rounded-full bg-cyan-400/20 px-1 py-0 text-[9px] font-black text-cyan-300">
                   ⚡ System
                 </span>
               )}
             </div>
-            <span className="text-xs text-white/40">{timeAgo(post.created_at)}</span>
+            <span className="text-[9px] text-white/40">{timeAgo(post.created_at)}</span>
           </div>
         </div>
       </div>
 
       {/* Post Content */}
-      <div className="px-4 pt-3">
-        <p className="text-sm leading-relaxed text-white/80 whitespace-pre-wrap break-words">
+      <div className="px-2 pt-1">
+        <p className="text-xs leading-relaxed text-white/80 whitespace-pre-wrap break-words">
           {parseTextWithLinks(displayContent)}
         </p>
         {isLongPost && (
@@ -141,7 +141,7 @@ function WallPostCard({
               e.stopPropagation()
               onClick(post)
             }}
-            className="mt-1 text-xs font-bold text-cyan-400 hover:text-cyan-300 transition-colors"
+            className="mt-1 text-[9px] font-bold text-cyan-400 hover:text-cyan-300 transition-colors"
           >
             more
           </button>
@@ -150,54 +150,54 @@ function WallPostCard({
 
       {/* Media */}
       {hasImage && (
-        <div className="mt-3 px-4">
+        <div className="mt-2 px-2">
           <img
             src={post.metadata!.image_url}
             alt=""
-            className="max-h-96 w-full rounded-xl object-cover"
+            className="max-h-48 w-full rounded-xl object-cover"
           />
         </div>
       )}
       {hasVideo && (
-        <div className="mt-3 px-4">
+        <div className="mt-2 px-2">
           <video
             src={post.metadata!.video_url}
             controls
-            className="max-h-96 w-full rounded-xl"
+            className="max-h-48 w-full rounded-xl"
           />
         </div>
       )}
 
       {/* Actions */}
-      <div className="mt-3 flex items-center gap-1 border-t border-white/5 px-2 py-1">
+      <div className="mt-2 flex items-center gap-0.5 border-t border-white/5 px-2 py-1">
         <button
           onClick={(e) => onLike(post, e)}
-          className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold transition-colors ${
+          className={`flex items-center gap-0.5 rounded px-2 py-1 text-[9px] font-bold transition-colors ${
             post.user_liked
               ? 'text-pink-400 bg-pink-500/10'
               : 'text-white/50 hover:bg-white/5 hover:text-white/80'
           }`}
         >
-          <Heart className={`h-4 w-4 ${post.user_liked ? 'fill-pink-400' : ''}`} />
+          <Heart className={`h-3 w-3 ${post.user_liked ? 'fill-pink-400' : ''}`} />
           {post.likes || 0}
         </button>
         <button
           onClick={() => onClick(post)}
-          className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold text-white/50 hover:bg-white/5 hover:text-white/80 transition-colors"
+          className="flex items-center gap-0.5 rounded px-2 py-1 text-[9px] font-bold text-white/50 hover:bg-white/5 hover:text-white/80 transition-colors"
         >
-          <MessageCircle className="h-4 w-4" />
+          <MessageCircle className="h-3 w-3" />
           {commentCount}
         </button>
         {giftCount > 0 && (
-          <span className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold text-white/50">
-            <Gift className="h-4 w-4" />
+          <span className="flex items-center gap-0.5 rounded px-2 py-1 text-[9px] font-bold text-white/50">
+            <Gift className="h-3 w-3" />
             {giftCount}
           </span>
         )}
         <div className="flex-1" />
         <button
           onClick={() => onClick(post)}
-          className="rounded-lg px-3 py-2 text-xs font-bold text-white/40 hover:bg-white/5 hover:text-white/70 transition-colors"
+          className="rounded px-2 py-1 text-[9px] font-bold text-white/40 hover:bg-white/5 hover:text-white/70 transition-colors"
         >
           View
         </button>
@@ -225,7 +225,7 @@ export default function WallPage() {
   const [showEmoji, setShowEmoji] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
-  const POSTS_PER_PAGE = 15
+  const POSTS_PER_PAGE = 30
 
   const fetchPosts = useCallback(async (pageNum: number = 1, append: boolean = false) => {
     try {
@@ -609,7 +609,7 @@ export default function WallPage() {
         </div>
 
         {/* Posts Feed - Tile Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
           {loading ? (
             Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className={`${glass} rounded-2xl p-4 animate-pulse`}>

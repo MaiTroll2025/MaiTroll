@@ -1,0 +1,183 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+
+  body {
+    @apply bg-arena-950 text-slate-100 font-sans antialiased;
+    line-height: 1.5;
+  }
+
+  h1,
+  h2,
+  h3 {
+    line-height: 1.2;
+  }
+}
+
+@layer components {
+  .arena-backdrop {
+    background-color: #05060f;
+    background-image:
+      radial-gradient(circle at 15% 10%, rgba(0, 212, 255, 0.18), transparent 40%),
+      radial-gradient(circle at 85% 20%, rgba(178, 107, 255, 0.16), transparent 42%),
+      radial-gradient(circle at 50% 100%, rgba(57, 255, 136, 0.12), transparent 45%),
+      linear-gradient(rgba(0, 212, 255, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 212, 255, 0.05) 1px, transparent 1px);
+    background-size: auto, auto, auto, 48px 48px, 48px 48px;
+  }
+
+  .neon-panel {
+    @apply rounded-2xl border border-neon-blue/25 bg-arena-900/75 backdrop-blur-md;
+    box-shadow: 0 0 40px -18px rgba(0, 212, 255, 0.6);
+  }
+
+  .neon-title {
+    @apply font-display text-transparent bg-clip-text;
+    background-image: linear-gradient(90deg, #00d4ff, #39ff88 50%, #b26bff);
+    text-shadow: 0 0 30px rgba(0, 212, 255, 0.25);
+  }
+
+  .neon-button {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 font-semibold text-arena-950 transition duration-200;
+    @apply hover:-translate-y-0.5 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0;
+    background: linear-gradient(90deg, #00d4ff, #39ff88);
+    box-shadow: 0 0 22px -6px rgba(0, 212, 255, 0.8);
+  }
+
+  .neon-button-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-neon-blue/40 px-5 py-3 font-semibold text-neon-blue transition duration-200;
+    @apply hover:bg-neon-blue/10 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .field {
+    @apply w-full rounded-xl border border-arena-600 bg-arena-950/80 px-4 py-3 text-slate-100 placeholder:text-slate-500 outline-none transition;
+    @apply focus:border-neon-blue focus:shadow-neon-blue;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@keyframes pop-in {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes rise-podium {
+  0% {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+  100% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+@keyframes bar-grow {
+  from {
+    width: 0;
+  }
+  to {
+    width: var(--w);
+  }
+}
+
+@keyframes glow-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 18px -6px var(--glow);
+  }
+  50% {
+    box-shadow: 0 0 36px 2px var(--glow);
+  }
+}
+
+@keyframes float-slow {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-6px);
+  }
+  75% {
+    transform: translateX(6px);
+  }
+}
+
+@keyframes count-pulse {
+  0% {
+    transform: scale(1.25);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-pop-in {
+  animation: pop-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.animate-rise {
+  animation: rise-podium 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  transform-origin: bottom;
+}
+
+.animate-bar {
+  animation: bar-grow 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.animate-glow {
+  animation: glow-pulse 2.4s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float-slow 4s ease-in-out infinite;
+}
+
+.animate-shake {
+  animation: shake 0.4s ease-in-out;
+}
+
+.animate-count {
+  animation: count-pulse 0.3s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

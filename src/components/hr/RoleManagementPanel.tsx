@@ -30,7 +30,6 @@ export default function RoleManagementPanel({ isHRAdmin, currentUserId: _current
       const roles = [
         UserRole.HR_MANAGER,
         UserRole.HR_ADMIN,
-        UserRole.AGENCY_HR_MANAGER,
         UserRole.ADMIN,
       ]
 
@@ -38,7 +37,6 @@ export default function RoleManagementPanel({ isHRAdmin, currentUserId: _current
         ...roles.map(r => `role.eq.${r}`),
         ...roles.map(r => `troll_role.eq.${r}`),
         'is_hr_admin.eq.true',
-        'is_agency_hr_manager.eq.true',
         'is_admin.eq.true',
       ].join(',')
 

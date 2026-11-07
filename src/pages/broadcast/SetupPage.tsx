@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { PreflightStore, usePreflightStore } from '@/lib/preflightStore';
@@ -42,6 +42,7 @@ import {
 } from '../../config/broadcastCategories';
 import { awardKeyToUser } from '../../services/keyService';
 import { useKeyDiscoveryStore } from '../../stores/useKeyDiscoveryStore';
+import OfficialEventBroadcastSetup from '@/components/maiCalendar/OfficialEventBroadcastSetup';
 
 
 /* ============================================================================
@@ -170,6 +171,15 @@ async function publishSetupTracksToRoom(
 
 
 export default function SetupPage() {
+  const [searchParams] = useSearchParams();
+  const eventSlug = searchParams.get('event');
+  if (eventSlug) {
+    return <OfficialEventBroadcastSetup eventSlug={eventSlug} />;
+  }
+  return <StandardSetupPage />;
+}
+
+function StandardSetupPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, profile } = useAuthStore();
@@ -547,8 +557,7 @@ const [randomBattleQueueEnabled, setRandomBattleQueueEnabled] = useState(false);
         p?.role === 'superadmin' || p?.is_superadmin ||
         p?.role === 'lead_troll_officer' || p?.is_lead_officer ||
         p?.role === 'troll_officer' || p?.is_troll_officer ||
-        p?.role === 'secretary' || p?.role === 'moderator' ||
-        p?.role === 'agency_hr' || p?.role === 'agency_hr_manager' || p?.role === 'agency_leader';
+        p?.role === 'secretary' || p?.role === 'moderator';
 
       if (isStaffOrAdmin) {
         setBroadcasterLimitInfo({
@@ -1856,9 +1865,13 @@ const handleStartStream = async () => {
                 is_key_to_city: !!result.is_key_to_city,
                 cashout_available_at: result.cashout_available_at || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
               })
+            } else if (result?.error === 'DAILY_LIMIT_REACHED') {
+              toast.info(result.message || 'You already received a key today. Try again next time.')
+            } else if (result?.error) {
+              console.warn('[Broadcast] Key award failed:', result.error, result.message)
             }
-          } catch {
-            // non-blocking
+          } catch (err) {
+            console.warn('[Broadcast] Key award threw:', err)
           }
         })()
       }

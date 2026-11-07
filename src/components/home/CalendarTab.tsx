@@ -64,8 +64,8 @@ export default function CalendarTab({ onCreateEvent, isAdmin, refreshKey }: Cale
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
-  const calendarStart = startOfWeek(monthStart);
-  const calendarEnd = endOfWeek(monthEnd);
+  const calendarStart = startOfWeek(monthStart, { weekStartsOn: 1 });
+  const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
 
   const days = useMemo(() => {
     const result: Date[] = [];
@@ -244,7 +244,7 @@ export default function CalendarTab({ onCreateEvent, isAdmin, refreshKey }: Cale
             <span className="min-w-[140px] text-center text-sm font-bold text-white">
               {activeView === 'month'
                 ? format(currentDate, 'MMMM yyyy')
-                : `Week of ${format(startOfWeek(currentDate), 'MMM d, yyyy')}`
+                : `Week of ${format(startOfWeek(currentDate, { weekStartsOn: 1 }), 'MMM d, yyyy')}`
               }
             </span>
             <button
@@ -274,7 +274,7 @@ export default function CalendarTab({ onCreateEvent, isAdmin, refreshKey }: Cale
       {!loading && activeView === 'month' && (
         <section className={`${glass} rounded-2xl p-4`}>
           <div className="mb-2 grid grid-cols-7 gap-1">
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
               <div key={day} className="py-2 text-center text-xs font-black uppercase tracking-wider text-slate-500">
                 {day}
               </div>

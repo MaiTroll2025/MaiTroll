@@ -39,7 +39,6 @@ export function useBroadcastViewerCap() {
     profile?.role === UserRole.ADMIN ||
     profile?.troll_role === UserRole.ADMIN ||
     profile?.role === UserRole.HR_ADMIN ||
-    profile?.role === UserRole.AGENCY_HR_MANAGER ||
     profile?.is_admin ||
     profile?.role === UserRole.OWNER ||
     profile?.role === UserRole.PRESIDENT ||

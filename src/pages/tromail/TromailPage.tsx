@@ -956,7 +956,7 @@ export default function TromailPage() {
   const renderCalendarGrid = () => (
     <div className={`${panelClass} p-4`}>
       <div className="mb-2 grid grid-cols-7 gap-1">
-        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
           <div key={day} className="py-2 text-center text-xs font-semibold text-slate-400">
             {day}
           </div>
@@ -966,7 +966,7 @@ export default function TromailPage() {
       <div className="grid grid-cols-7 gap-1">
         {Array.from({ length: 42 }).map((_, i) => {
           const monthStart = startOfMonth(calendarMonth)
-          const startDate = startOfWeek(monthStart)
+          const startDate = startOfWeek(monthStart, { weekStartsOn: 1 })
           const day = addDays(startDate, i)
           const dayMeetings = meetings.filter((meeting) => isSameDay(new Date(meeting.scheduled_at), day))
 

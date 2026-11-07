@@ -3,7 +3,7 @@
 //
 // Responsibilities:
 //   - Deducts Troll Coins from the sender via the secure `try_pay_coins_secure` RPC.
-//   - Credits the broadcaster via `troll_bank_credit_coins`.
+//   - Uses the authenticated server settlement boundary for broadcaster credits.
 //   - Inserts a `stream_gifts` row for audit + paid-chat qualification.
 //   - Broadcasts a `broadcast:tip_sent` realtime event so viewers see the
 //     flying-chat overlay instantly.

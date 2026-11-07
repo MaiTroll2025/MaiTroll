@@ -4,7 +4,6 @@ import { useXPStore } from '@/stores/useXPStore'
 import { toast } from 'sonner'
 import { BattleSounds } from '../battleSounds';
 import { useAuthStore } from '../../lib/store'
-import { useTrollFamilyActivity } from '@/hooks/useTrollFamilyActivity'
 import { unlockGiftAudio } from '../giftAudio';
 
 import { sendStreamBroadcast } from '@/lib/realtime/streamRealtimeManager'
@@ -120,7 +119,6 @@ function GiftSystemProviderInner({
     children?: React.ReactNode
 }) {
   const { user, profile } = useAuthStore()
-  const { recordGiftSent } = useTrollFamilyActivity()
   const [isSending, setIsSending] = useState(false)
   const [lastSentGiftId, setLastSentGiftId] = useState<string | null>(null)
 
@@ -278,15 +276,7 @@ function GiftSystemProviderInner({
             if (xpState.xpTotal > 0) await xpState.fetchXP(user?.id)
           } catch (e) { if (import.meta.env.DEV) console.warn('[GiftSystem] fetchXP failed:', e) }
           try {
-            const dedupKey = `gift_${effectiveStreamId}_${gift.id}_${user.id}_${targetReceiverId}_${Date.now()}`
-            await recordGiftSent(totalCost, targetReceiverId, effectiveStreamId, gift.id)
-            await supabase.rpc('record_troll_family_activity', {
-              p_user_id: targetReceiverId,
-              p_event_type: 'broadcast_gift_earned',
-              p_amount: totalCost,
-              p_metadata: { stream_id: effectiveStreamId, gift_id: gift.id, sender_id: user.id, dedup_key: dedupKey },
-            })
-          } catch (e) { if (import.meta.env.DEV) console.warn('[GiftSystem] activity record failed:', e) }
+          } catch (e) { if (import.meta.env.DEV) console.warn('[GiftSystem] post-send refresh failed:', e) }
 
           const giftId = result?.stream_gift_id || result?.gift_transaction_id || result?.transaction_id
           if (giftId) setLastSentGiftId(giftId)
@@ -376,7 +366,7 @@ function GiftSystemProviderInner({
         setIsSending(false)
       }
     },
-    [defaultReceiverId, profile, streamId, user, recordGiftSent]
+    [defaultReceiverId, profile, streamId, user]
   )
 
   const contextValue = useMemo(

@@ -273,7 +273,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   let canonicalPath = pathname
   let bodyHtml: string | undefined
   let statusCode = 200
-  let noindex = /^\/(admin|account|settings|wallet|bank|coins|earnings|cashout|payouts|search|tromail|utromail|notifications|following|messages|blocked-users|trollifications|trollifieds|jail|inmates|onboarding|creator-onboarding|broadcast\/setup|live\/command-center|live\/overlay|officer|lead-officer|president|agency-dashboard)(\/|$)/i.test(pathname)
+  let noindex = /^\/(admin|account|settings|wallet|bank|coins|earnings|cashout|payouts|search|tromail|utromail|notifications|following|messages|blocked-users|trollifications|trollifieds|jail|inmates|onboarding|creator-onboarding|broadcast\/setup|live\/command-center|live\/overlay|officer|lead-officer|president)(\/|$)/i.test(pathname)
   let articleStructuredData: Record<string, unknown> | null = null
 
   const staticPage = STATIC_PAGES[pathname]

@@ -4,7 +4,7 @@ import PhoneDrawer from '../PhoneDrawer'
 import { useAuthStore } from '../../lib/store'
 
 const PUBLIC_ROUTES = new Set([
-  '/', '/home', '/auth', '/login', '/support', '/legal', '/jobs', '/careers',
+  '/', '/home', '/auth', '/login', '/support', '/legal', '/careers',
   '/auctions', '/troll-court', '/court', '/hytrogaming', '/podcast', '/safety',
   '/profile', '/search', '/state-rankings', '/verified-badge',
 ])
@@ -20,14 +20,11 @@ function isPublicRoute(pathname: string): boolean {
   if (pathname.startsWith('/podcast/')) return true
   if (pathname.startsWith('/troll-court/')) return true
   if (pathname.startsWith('/court/')) return true
-  if (pathname.startsWith('/agency/')) return true
-  if (pathname.startsWith('/agency-apply/')) return true
   if (pathname.startsWith('/music/')) return true
   if (pathname.startsWith('/utromail/')) return true
   if (pathname.startsWith('/tromail/')) return true
   if (pathname.startsWith('/legal/')) return true
   if (pathname.startsWith('/mai-business')) return true
-  if (pathname.startsWith('/family/')) return true
   if (pathname.startsWith('/government/')) return true
   if (pathname.startsWith('/president/')) return true
   if (pathname.startsWith('/secretary/')) return true

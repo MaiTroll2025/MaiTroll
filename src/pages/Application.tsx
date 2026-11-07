@@ -30,8 +30,6 @@ const JOB_POSITIONS: Record<string, JobPositionMeta> = {
   lead_officer: { id: 'lead_officer', title: 'Lead Troll Officer', department: 'Utromail Leadership', icon: Shield, isEmployeePosition: true },
   lead_troll_officer: { id: 'lead_troll_officer', title: 'Lead Troll Officer', department: 'Utromail Leadership', icon: Shield, isEmployeePosition: true },
   journalist: { id: 'journalist', title: 'Journalist', department: 'TCNN', icon: Briefcase, isEmployeePosition: false },
-  agency_hr_manager: { id: 'agency_hr_manager', title: 'Agency HR Manager', department: 'Agency HR', icon: Building2, isEmployeePosition: false },
-  agency_leader: { id: 'agency_leader', title: 'Agency Leader', department: 'Agencies', icon: Users, isEmployeePosition: false },
   ceo_assistant: { id: 'ceo_assistant', title: 'CEO Assistant', department: 'Executive Office', icon: Briefcase, isEmployeePosition: true },
   noah_assistant: { id: 'noah_assistant', title: 'Noah Assistant', department: 'Executive Office', icon: Briefcase, isEmployeePosition: true },
   troller: { id: 'troller', title: 'Troller', department: 'Broadcasting', icon: UserIcon, isEmployeePosition: false },
@@ -376,7 +374,7 @@ export default function Application() {
       await notifyCareerApplicationSubmitted(user.id, position.id, position.title)
 
       toast.success('Application submitted! We will review it soon.')
-      navigate('/jobs')
+      navigate('/careers')
     } catch (err: any) {
       console.error('Application error:', err)
       toast.error(err.message || 'Failed to submit application')
@@ -389,7 +387,7 @@ export default function Application() {
 
   useEffect(() => {
     if (noPosition) {
-      navigate('/jobs')
+      navigate('/careers')
     }
   }, [noPosition, navigate])
 
@@ -426,7 +424,7 @@ export default function Application() {
             )}
           </div>
           <button
-            onClick={() => navigate('/jobs')}
+            onClick={() => navigate('/careers')}
             className="mt-6 w-full rounded-2xl bg-gradient-to-r from-cyan-500 to-purple-500 px-6 py-3 font-bold text-white transition hover:scale-[1.02]"
           >
             Back to Jobs
@@ -460,7 +458,7 @@ export default function Application() {
               You need a Mai Troll account to submit an employment application. Create one below and your application will be ready.
             </p>
             <button
-              onClick={() => navigate('/jobs/apply?position=' + position.id + '&signup=true')}
+              onClick={() => navigate('/apply?position=' + position.id + '&signup=true')}
               className="rounded-2xl bg-gradient-to-r from-cyan-500 to-purple-500 px-6 py-3 font-bold text-white transition hover:scale-[1.02]"
             >
               Create Account / Sign In

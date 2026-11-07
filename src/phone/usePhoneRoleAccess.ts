@@ -35,10 +35,6 @@ export interface PhoneRoleAccess {
   canSeeInmates: boolean
   canSeeCourt: boolean
   canSeeAuctionStudio: boolean
-  canSeeAgencyHR: boolean
-  canSeeTrollFamily: boolean
-  isFamilyMember: boolean
-  isFamilyLeader: boolean
   canAccessNightWatch: boolean
   canAccessTromail: boolean
   isPastor: boolean
@@ -71,10 +67,6 @@ const FALSE_ACCESS: PhoneRoleAccess = {
   canSeeCourt: false,
   canSeeAuctionStudio: false,
   isTeacher: false,
-  canSeeAgencyHR: false,
-  canSeeTrollFamily: false,
-  isFamilyMember: false,
-  isFamilyLeader: false,
   canAccessNightWatch: false,
   canAccessTromail: false,
   isPastor: false,
@@ -100,16 +92,12 @@ export function usePhoneRoleAccess(): PhoneRoleAccess {
   const isActiveFounder = useIsActiveFounder(profile?.id)
 
   const [canSeeOfficer, setCanSeeOfficer] = useState(false)
-  const [canSeeTrollFamily, setCanSeeTrollFamily] = useState(false)
-  const [isFamilyLeader, setIsFamilyLeader] = useState(false)
-  const [isFamilyMember, setIsFamilyMember] = useState(false)
   const [canSeeSecretary, setCanSeeSecretary] = useState(false)
   const [isStaff, setIsStaff] = useState(false)
   const [isAttorney, setIsAttorney] = useState(false)
   const [isProsecutor, setIsProsecutor] = useState(false)
   const [canSeeInmates, setCanSeeInmates] = useState(false)
   const [canSeeAuctionStudio, setCanSeeAuctionStudio] = useState(false)
-  const [canSeeAgencyHR, setCanSeeAgencyHR] = useState(false)
 
   const role = String(profile?.role || '')
   const trollRole = String(profile?.troll_role || '')
@@ -118,7 +106,6 @@ export function usePhoneRoleAccess(): PhoneRoleAccess {
     role === String(UserRole.ADMIN) ||
     trollRole === String(UserRole.ADMIN) ||
     role === String(UserRole.HR_ADMIN) ||
-    role === String(UserRole.AGENCY_HR_MANAGER) ||
     !!(profile as any)?.is_admin ||
     role === 'superadmin' ||
     role === 'owner' ||
@@ -194,43 +181,6 @@ export function usePhoneRoleAccess(): PhoneRoleAccess {
         if (cancelled) return
         setCanSeeOfficer(!!officerData)
 
-        const { data: familyData } = await supabase
-          .from('troll_families')
-          .select('*')
-          .or(`leader_id.eq.${profile.id}`)
-          .maybeSingle()
-
-        let finalFamilyData = familyData
-        if (!finalFamilyData) {
-          const { data: memberData } = await supabase
-            .from('family_members')
-            .select('family_id')
-            .eq('user_id', profile.id)
-            .eq('approval_status', 'approved')
-            .limit(1)
-            .maybeSingle()
-          if (memberData) {
-            const { data: familyFromMembers } = await supabase
-              .from('troll_families')
-              .select('*')
-              .eq('id', memberData.family_id)
-              .maybeSingle()
-            if (familyFromMembers) finalFamilyData = familyFromMembers
-          }
-        }
-        if (cancelled) return
-
-        const hasFamilyRole = profile?.role === 'troll_family' || profile?.troll_role === 'troll_family'
-        if (finalFamilyData || hasFamilyRole) {
-          setCanSeeTrollFamily(true)
-          setIsFamilyLeader(finalFamilyData?.leader_id === profile.id)
-          setIsFamilyMember(true)
-        } else {
-          setCanSeeTrollFamily(false)
-          setIsFamilyLeader(false)
-          setIsFamilyMember(false)
-        }
-
         const { data: secData } = await supabase
           .from('user_profiles')
           .select('role')
@@ -290,24 +240,6 @@ export function usePhoneRoleAccess(): PhoneRoleAccess {
             secData?.role === UserRole.ADMIN ||
             secData?.role === UserRole.LEAD_TROLL_OFFICER
         )
-
-        const { data: agencyHRData } = await supabase
-          .from('user_profiles')
-          .select('role')
-          .eq('id', profile.id)
-          .single()
-        if (cancelled) return
-        setCanSeeAgencyHR(
-          agencyHRData?.role === String(UserRole.AGENCY_HR_MANAGER) ||
-            agencyHRData?.role === String(UserRole.HR_ADMIN) ||
-            agencyHRData?.role === String(UserRole.ADMIN) ||
-            role === 'agency_hr' ||
-            trollRole === 'agency_hr' ||
-            trollRole === String(UserRole.AGENCY_HR_MANAGER) ||
-            trollRole === 'agency_hr_manager' ||
-            !!(profile as any)?.is_agency_hr ||
-            !!(profile as any)?.is_agency_hr_manager
-        )
       } catch (error) {
         console.error('[usePhoneRoleAccess] error:', error)
       }
@@ -337,10 +269,6 @@ export function usePhoneRoleAccess(): PhoneRoleAccess {
     canSeeInmates,
     canSeeCourt,
     canSeeAuctionStudio,
-    canSeeAgencyHR: canSeeAgencyHR,
-    canSeeTrollFamily,
-    isFamilyMember,
-    isFamilyLeader,
     canAccessNightWatch,
     canAccessTromail: canAccessTromail ? canAccessTromail(profile as any) : false,
     isPastor,

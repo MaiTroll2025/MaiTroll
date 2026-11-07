@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom';
 import { SafeLink } from '@/hooks/useSafeNavigate'
-import { AlertTriangle, Banknote, BookOpen, Briefcase, Building2, Calendar, ChevronLeft, ChevronRight, Church, Coins, Crown, Database, DollarSign, FileText, Gamepad2, Gavel, Home, Landmark, LayoutDashboard, LifeBuoy, List, Lock, Mail, Megaphone, Newspaper, Package, Radio, Scale, Settings, Shield, ShoppingBag, Shuffle, Store, TrendingUp, Trophy, Users, Video, Warehouse, Waves, Zap } from 'lucide-react';
+import { AlertTriangle, Banknote, BookOpen, Briefcase, Building2, Calendar, ChevronLeft, ChevronRight, Church, Coins, Crown, Database, DollarSign, FileText, Gamepad2, Gavel, Home, Landmark, LayoutDashboard, LifeBuoy, List, Lock, Mail, Megaphone, Newspaper, Package, Radio, Scale, Settings, Shield, ShoppingBag, Shuffle, Store, TrendingUp, Trophy, Users, Video, Waves, Zap } from 'lucide-react';
 
 import CourtEntryModal from '@/components/CourtEntryModal'
 import UserProfileWidget from '@/components/sidebar/UserProfileWidget'
@@ -74,10 +74,6 @@ export default function Sidebar() {
   const isHytroGamingActive = location.pathname === '/hytrogaming' || location.pathname.startsWith('/gaming/watch/')
 
   const [canSeeOfficer, setCanSeeOfficer] = useState(false)
-  const [canSeeTrollFamily, setCanSeeTrollFamily] = useState(false)
-  const [hasFamily, setHasFamily] = useState(false)
-  const [_isFamilyLeader, setIsFamilyLeader] = useState(false)
-  const [isFamilyMember, setIsFamilyMember] = useState(false)
   const [canSeeSecretary, setCanSeeSecretary] = useState(false)
   const [_isStaff, setIsStaff] = useState(false)
   const [isAttorney, setIsAttorney] = useState(false)
@@ -126,7 +122,6 @@ export default function Sidebar() {
     role === String(UserRole.ADMIN) ||
     trollRole === String(UserRole.ADMIN) ||
     role === String(UserRole.HR_ADMIN) ||
-    role === String(UserRole.AGENCY_HR_MANAGER) ||
     profile?.is_admin ||
     role === 'superadmin' ||
     trollRole === 'ceo' ||
@@ -146,18 +141,6 @@ export default function Sidebar() {
     canSeeProsecutorDashboard ||
     profile?.role === UserRole.PRESIDENT ||
     (profile as any)?.is_pastor
-  )
-
-  const canSeeAgencyHRDashboard = Boolean(
-    role === String(UserRole.AGENCY_HR_MANAGER) ||
-    role === String(UserRole.HR_ADMIN) ||
-    role === String(UserRole.ADMIN) ||
-    role === 'agency_hr' ||
-    trollRole === 'agency_hr' ||
-    trollRole === String(UserRole.AGENCY_HR_MANAGER) ||
-    trollRole === 'agency_hr_manager' ||
-    (profile as any)?.is_agency_hr ||
-    (profile as any)?.is_agency_hr_manager
   )
 
   const _isSecretary = role === String(UserRole.SECRETARY) || trollRole === String(UserRole.SECRETARY)
@@ -207,49 +190,6 @@ export default function Sidebar() {
           .eq('user_id', profile.id)
           .maybeSingle()
         setCanSeeOfficer(!!officerData)
-
-
-
-        const { data: familyData } = await supabase
-          .from('troll_families')
-          .select('*')
-          .or(`leader_id.eq.${profile.id}`)
-          .maybeSingle()
-
-        let finalFamilyData = familyData
-
-        if (!finalFamilyData) {
-          const { data: memberData } = await supabase
-            .from('family_members')
-            .select('family_id')
-            .eq('user_id', profile.id)
-            .eq('approval_status', 'approved')
-            .limit(1)
-            .maybeSingle()
-
-          if (memberData) {
-            const { data: familyFromMembers } = await supabase
-              .from('troll_families')
-              .select('*')
-              .eq('id', memberData.family_id)
-              .maybeSingle()
-            if (familyFromMembers) finalFamilyData = familyFromMembers
-          }
-        }
-
-        const hasFamilyRole = profile?.role === 'troll_family' || profile?.troll_role === 'troll_family'
-
-        if (finalFamilyData || hasFamilyRole) {
-          setHasFamily(true)
-          setIsFamilyLeader(finalFamilyData?.leader_id === profile.id)
-          setIsFamilyMember(true)
-        } else {
-          setHasFamily(false)
-          setIsFamilyLeader(false)
-          setIsFamilyMember(false)
-        }
-
-        setCanSeeTrollFamily(!!finalFamilyData || hasFamilyRole || profile?.role === UserRole.ADMIN)
 
         const { data: secData } = await supabase
           .from('user_profiles')
@@ -331,22 +271,11 @@ export default function Sidebar() {
       expandGroup('Government Sector')
     } else if (path.startsWith('/city-registry')) {
       expandGroup('City Registry')
-    } else if (path.startsWith('/jobs')) {
-      expandGroup('Talent Offices')
-    } else if (path.startsWith('/agencies') || path.startsWith('/agency-dashboard')) {
-      expandGroup('Talent Offices')
     }
   }, [location.pathname, expandGroup])
 
   const _mainPaths = ['/', '/inventory', '/marketplace', '/leaderboard', '/credit-scores', '/store', '/creator-switch', '/troll-court', '/troll-games']
   const _supportPaths = ['/support', '/safety']
-  const socialPaths = ['/utromail', '/pool']
-  if (profile?.role === 'troll_family') {
-    socialPaths.push('/family/home')
-  } else {
-    socialPaths.push('/family/browse')
-    if (canSeeTrollFamily) socialPaths.push('/family/home')
-  }
   const specialAccessPaths: string[] = []
   if (canSeeCourt) specialAccessPaths.push('/admin/court-dockets')
   if (canSeeOfficer) specialAccessPaths.push('/officer/dashboard')
@@ -366,9 +295,8 @@ export default function Sidebar() {
     return [
       { label: 'Level', value: String(level || 1) },
       { label: 'Coins', value: coinBalance > 999 ? `${Math.floor(coinBalance / 1000)}K` : coinBalance.toLocaleString(), subValue: cashValue > 0 ? `$${cashValue.toFixed(2)}` : null },
-      { label: 'Family', value: hasFamily ? 'Yes' : 'No' },
     ]
-  }, [balances, hasFamily, level])
+  }, [balances, level])
 
   return (
     <aside
@@ -555,10 +483,7 @@ export default function Sidebar() {
               <GridItem collapsed={isSidebarCollapsed} icon={Mail} label="UTroMail" to="/utromail" active={isActivePath('/utromail')} highlight={isUpdated('/utromail')} onClick={() => markAsViewed('/utromail')} className="text-emerald-400" tone="green" glow="green" />
               <GridItem collapsed={isSidebarCollapsed} icon={Shield} label="Insurance" to="/insurance" active={isActive('/insurance')} highlight={isUpdated('/insurance')} onClick={() => markAsViewed('/insurance')} className="text-cyan-300" tone="cyan" />
               <GridItem collapsed={isSidebarCollapsed} icon={Package} label="Inventory" to="/inventory" active={isActive('/inventory')} highlight={isUpdated('/inventory')} onClick={() => markAsViewed('/inventory')} tone="purple" />
-              <GridItem collapsed={isSidebarCollapsed} icon={Users} label="Troll Family" to="/family/browse" active={isActive('/family/browse')} highlight={isUpdated('/family/browse')} onClick={() => markAsViewed('/family/browse')} className="text-pink-400" tone="pink" />
-              <GridItem collapsed={isSidebarCollapsed} icon={Crown} label="My Families" to={isFamilyMember ? "/family/home" : "/family/browse"} active={isActive('/family/home') || isActive('/family/browse')} highlight={isUpdated('/family/home')} onClick={() => markAsViewed('/family/home')} className="text-purple-400" tone="purple" />
               <GridItem collapsed={isSidebarCollapsed} icon={Trophy} label="Leaderboard" to="/leaderboard" active={isActive('/leaderboard')} highlight={isUpdated('/leaderboard')} onClick={() => markAsViewed('/leaderboard')} tone="purple" />
-              <GridItem collapsed={isSidebarCollapsed} icon={Warehouse} label="Living" to="/living" active={isActive('/living')} highlight={isUpdated('/living')} onClick={() => markAsViewed('/living')} tone="cyan" />
               <GridItem collapsed={isSidebarCollapsed} icon={Store} label="Marketplace" to="/marketplace" active={isActive('/marketplace')} highlight={isUpdated('/marketplace')} onClick={() => markAsViewed('/marketplace')} tone="purple" />
               {canSeeAuctionStudio && (
                 <GridItem collapsed={isSidebarCollapsed} icon={List} label="My Shows" to="/auctions/my-shows" active={location.pathname.startsWith('/auctions/my-shows')} highlight={isUpdated('/auctions/my-shows')} onClick={() => markAsViewed('/auctions/my-shows')} className="text-green-400" tone="green" />
@@ -604,9 +529,6 @@ export default function Sidebar() {
                 <GridItem collapsed={isSidebarCollapsed} icon={Mail} label="Tromail" to="/tromail" active={isActive('/tromail')} highlight={isUpdated('/tromail')} onClick={() => markAsViewed('/tromail')} className="text-cyan-300" tone="cyan" />
               )}
 
-              <SectionTitle title="Talent Offices" collapsed={isSidebarCollapsed} />
-              <GridItem collapsed={isSidebarCollapsed} icon={Building2} label="Agencies" to="/agencies" active={isActive('/agencies')} highlight={isUpdated('/agencies')} onClick={() => markAsViewed('/agencies')} className="text-cyan-400" tone="cyan" />
-              <GridItem collapsed={isSidebarCollapsed} icon={Users} label="My Agency" to="/agency-dashboard" active={isActive('/agency-dashboard')} highlight={isUpdated('/agency-dashboard')} onClick={() => markAsViewed('/agency-dashboard')} className="text-cyan-400" tone="cyan" />
               {canSeeAttorneyDashboard && (
                 <GridItem
                   collapsed={isSidebarCollapsed}
@@ -633,20 +555,6 @@ export default function Sidebar() {
                   tone="orange"
                 />
               )}
-              {canSeeAgencyHRDashboard && (
-                <GridItem
-                  collapsed={isSidebarCollapsed}
-                  icon={Briefcase}
-                  label="Agency HR"
-                  to="/agency-hr-dashboard"
-                  active={isActive('/agency-hr-dashboard')}
-                  highlight={isUpdated('/agency-hr-dashboard')}
-                  onClick={() => markAsViewed('/agency-hr-dashboard')}
-                  className="text-cyan-200"
-                  tone="cyan"
-                />
-              )}
-
               <SectionTitle title="Support" collapsed={isSidebarCollapsed} />
               <GridItem collapsed={isSidebarCollapsed} icon={LifeBuoy} label="Support" to="/support" active={isActive('/support')} highlight={isUpdated('/support')} onClick={() => markAsViewed('/support')} tone="blue" />
 
@@ -732,7 +640,6 @@ export default function Sidebar() {
             <GridItem collapsed={isSidebarCollapsed} icon={Briefcase} label="Attorney" to="/attorney" active={isActive('/attorney')} highlight={isUpdated('/attorney')} onClick={() => markAsViewed('/attorney')} tone="cyan" />
             <GridItem collapsed={isSidebarCollapsed} icon={Gavel} label="Prosecutor Dashboard" to="/prosecutor" active={isActive('/prosecutor')} highlight={isUpdated('/prosecutor')} onClick={() => markAsViewed('/prosecutor')} tone="red" />
             <GridItem collapsed={isSidebarCollapsed} icon={Church} label="Pastor Dashboard" to="/church/pastor" active={isActive('/church/pastor')} highlight={isUpdated('/church/pastor')} onClick={() => markAsViewed('/church/pastor')} tone="green" />
-            <GridItem collapsed={isSidebarCollapsed} icon={Briefcase} label="Agency HR Dashboard" to="/agency-hr-dashboard" active={isActive('/agency-hr-dashboard')} highlight={isUpdated('/agency-hr-dashboard')} onClick={() => markAsViewed('/agency-hr-dashboard')} tone="cyan" />
 
             <GridItem collapsed={isSidebarCollapsed} icon={LayoutDashboard} label="CEO Assistant Dashboard" to="/ceo-assistant-dashboard" active={isActive('/ceo-assistant-dashboard')} highlight={isUpdated('/ceo-assistant-dashboard')} onClick={() => markAsViewed('/ceo-assistant-dashboard')} tone="cyan" />
           </div>

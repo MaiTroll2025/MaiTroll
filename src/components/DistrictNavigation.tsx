@@ -57,7 +57,6 @@ export default function DistrictNavigation() {
         { feature_name: 'Live Streams', route_path: '/live', required_role: 'user' },
         { feature_name: 'Troll Pods', route_path: '/pods', required_role: 'user' },
         { feature_name: 'Utromail', route_path: '/utromail', required_role: 'user' },
-        { feature_name: 'Living & Housing', route_path: '/living', required_role: 'user' },
         { feature_name: 'Following', route_path: '/following', required_role: 'user' },
         { feature_name: 'Leaderboard', route_path: '/leaderboard', required_role: 'user' },
         { feature_name: 'MaiTroll Wall', route_path: '/wall', required_role: 'user' }
@@ -84,12 +83,6 @@ export default function DistrictNavigation() {
         { feature_name: 'Officer Lounge', route_path: '/officer/lounge', required_role: 'troll_officer' },
         { feature_name: 'Officer Moderation', route_path: '/officer/moderation', required_role: 'troll_officer' },
         { feature_name: 'Officer Dashboard', route_path: '/officer/dashboard', required_role: 'troll_officer' }
-      ],
-      family_neighborhood: [
-        { feature_name: 'Troll Families', route_path: '/family/home', required_role: 'family_member' },
-        { feature_name: 'Family War Hub', route_path: '/family/wars-hub', required_role: 'family_member' },
-        { feature_name: 'Family Leaderboard', route_path: '/family/leaderboard', required_role: 'family_member' },
-        { feature_name: 'Family Shop', route_path: '/family/shop', required_role: 'family_member' }
       ],
       admin_tower: [
         { feature_name: 'Admin Dashboard', route_path: '/admin', required_role: 'admin' },

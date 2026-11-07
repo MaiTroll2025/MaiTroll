@@ -8,7 +8,6 @@ const RTC_STAFF_ROLES = [
   'secretary',
   'officer',
   'hr_admin',
-  'agency_hr_manager',
   'ceo',
   'superadmin',
   'empire_partner',
@@ -19,8 +18,6 @@ const RTC_STAFF_ROLES = [
   'journalist',
   'tcnn_news_caster',
   'tcnn_chief_news_caster',
-  'agency_hr',
-  'agency_leader',
   'ceo_assistant',
   'noah_assistant',
 ]

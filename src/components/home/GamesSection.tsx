@@ -20,6 +20,13 @@ const GAMES: GameEntry[] = [
     path: '/mai-troll-run',
     icon: Gamepad2,
   },
+  {
+    id: 'mai-dont-know-game',
+    title: 'Mai Dont Know Game',
+    description: 'Trivia arena: answer fast, bluff smart, and climb the leaderboard. Solo, quick match, private lobby, and party modes.',
+    path: '/mai-dont-know-game',
+    icon: Gamepad2,
+  },
 ];
 
 interface LeaderboardEntry {

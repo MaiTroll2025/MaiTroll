@@ -3,14 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../lib/store'
 import { useCoins } from '../lib/hooks/useCoins'
 import { supabase } from '../lib/supabase'
-import { getFamilySeasonStats } from '../lib/familySeasons'
 import { useXPStore } from '../stores/useXPStore'
 import { useCreditScore } from '../lib/hooks/useCreditScore'
 import CreditScoreBadge from '../components/CreditScoreBadge'
 import ConvertHypeCoinsModal from '../components/modals/ConvertHypeCoinsModal'
 import { CreatorSeasonalGoals } from '../components/CreatorSeasonalGoals'
-import { Crown, Sword, Trophy, Coins, Star, Shield, Zap, ShoppingBag, Store, Package, DollarSign, TrendingUp, Loader2, Activity, Calendar, CheckCircle, Lock, ArrowRight, Building2, Briefcase } from 'lucide-react';
-import { RoleEarningRule, UserEarningSummary, AgencyEarningsData, FamilyConversionData, TreasuryPayoutItem, RoleStatus } from '../types/earnings';
+import { Sword, Trophy, Coins, Star, Shield, Zap, ShoppingBag, Store, Package, DollarSign, TrendingUp, Loader2, Activity, Calendar, CheckCircle, Lock, ArrowRight, Building2, Briefcase } from 'lucide-react';
+import { RoleEarningRule, UserEarningSummary, TreasuryPayoutItem, RoleStatus } from '../types/earnings';
 
 interface UserStats {
   level: number
@@ -19,10 +18,6 @@ interface UserStats {
   nextLevelXp: number
    troll_coins: number
    hype_coins: number
-  familyName?: string
-  familyLevel?: number
-  familyXp?: number
-  seasonScore?: number
   warWins?: number
   warLosses?: number
   warStreak?: string
@@ -132,11 +127,8 @@ export default function Stats() {
   const [earningSummary, setEarningSummary] = useState<UserEarningSummary | null>(null)
   const [activeRoles, setActiveRoles] = useState<ActiveEarningRole[]>([])
   const [_earningEvents, setEarningEvents] = useState<EarningTimelineEvent[]>([])
-  const [agencyData, setAgencyData] = useState<AgencyEarningsData | null>(null)
-  const [familyData, setFamilyData] = useState<FamilyConversionData | null>(null)
   const [treasuryPayouts, setTreasuryPayouts] = useState<TreasuryPayoutItem[]>([])
   const [roleRules, setRoleRules] = useState<RoleEarningRule[]>([])
-  const [_agencyApplicants, setAgencyApplicants] = useState<any[]>([])
   
   const isInitialized = useRef(false)
   const prevCreditScore = useRef<number | null>(null)
@@ -156,32 +148,6 @@ export default function Stats() {
 
     try {
       if (showLoading) setLoading(true)
-
-      let familyData = null
-
-      const { data: familyMember } = await supabase
-        .from('family_members')
-        .select('family_id, role')
-        .eq('user_id', user.id)
-        .maybeSingle()
-
-      if (familyMember?.family_id) {
-        const familyStats = await getFamilySeasonStats(familyMember.family_id)
-        const { data: family } = await supabase
-          .from('troll_families')
-          .select('name')
-          .eq('id', familyMember.family_id)
-          .maybeSingle()
-
-        if (family) {
-          familyData = {
-            familyName: family.name,
-            familyLevel: familyStats.seasonRank || 1,
-            familyXp: familyStats.weeklyCoins || 0,
-            seasonScore: familyStats.seasonCoins || 0,
-          }
-        }
-      }
 
       const { data: battleProfile, error: battleProfileError } = await supabase
         .from('user_profiles')
@@ -216,7 +182,6 @@ export default function Stats() {
 
       const badges = []
       if (profile?.role === 'admin' || profile?.troll_role === 'admin') badges.push('🛡️ Admin')
-      if (familyMember) badges.push('⚔️ Family War')
       if (currentXp.level >= 10) badges.push('👑 Top Rank')
       if (balances.troll_coins > 1000) badges.push('💰 Big Spender')
 
@@ -227,7 +192,6 @@ export default function Stats() {
         nextLevelXp: currentXp.xpToNext + currentXp.xpTotal,
         troll_coins: balances.troll_coins || 0,
         hype_coins: balances.hype_coins || 0,
-        ...familyData,
         warWins: battleWins,
         warLosses: battleLosses,
         warStreak: String(battleStreak),
@@ -306,83 +270,6 @@ export default function Stats() {
 
       setActiveRoles(roles)
 
-      // Load agency data
-      const { data: agencyMember } = await supabase
-        .from('agency_members')
-        .select('agency_id, role, status')
-        .eq('user_id', user.id)
-        .eq('status', 'active')
-        .maybeSingle()
-
-      if (agencyMember?.agency_id) {
-        const { data: agency } = await supabase
-          .from('agencies')
-          .select('name, status')
-          .eq('id', agencyMember.agency_id)
-          .maybeSingle()
-
-        const { data: contract } = await supabase
-          .from('agency_contracts')
-          .select('split_percent, applies_to, status')
-          .eq('creator_id', user.id)
-          .eq('status', 'active')
-          .maybeSingle()
-
-        const pendingEarnings = events?.filter((e: any) => e.source_type === 'agency' && e.status === 'pending')
-          .reduce((sum: number, e: any) => sum + (e.amount_coins || 0), 0) || 0
-        const paidEarnings = events?.filter((e: any) => e.source_type === 'agency' && e.status === 'paid')
-          .reduce((sum: number, e: any) => sum + (e.amount_coins || 0), 0) || 0
-
-        setAgencyData({
-          agency_id: agencyMember.agency_id,
-          agency_name: agency?.name || 'Unknown Agency',
-          agency_role: agencyMember.role,
-          contract_status: contract?.status || null,
-          split_percent: contract?.split_percent || 10,
-          applies_to: contract?.applies_to || 'gifts',
-          pending_agency_earnings: pendingEarnings,
-          paid_agency_earnings: paidEarnings,
-          application_fee_status: false,
-          monthly_agency_fee_status: agencyMember.role === 'owner',
-          agency_application_status: null,
-        })
-      } else {
-        setAgencyData(null)
-      }
-
-      // Load family conversion data
-      const { data: familyLeader } = await supabase
-        .from('troll_families')
-        .select('id, name')
-        .eq('leader_id', user.id)
-        .maybeSingle()
-
-      if (familyLeader?.id) {
-        const { count: memberCount } = await supabase
-          .from('family_members')
-          .select('*', { count: 'exact', head: true })
-          .eq('family_id', familyLeader.id)
-
-        const { data: agencyApp } = await supabase
-          .from('agency_applications')
-          .select('status')
-          .eq('applicant_id', user.id)
-          .eq('status', 'pending')
-          .maybeSingle()
-
-        setFamilyData({
-          family_id: familyLeader.id,
-          family_name: familyLeader.name,
-          member_count: (memberCount || 0) - 1, // exclude leader
-          is_leader: true,
-          conversion_eligible: (memberCount || 0) >= 16, // 15 members + leader
-          conversion_status: agencyApp?.status || null,
-          pending_application: !!agencyApp,
-        })
-      } else {
-        setFamilyData(null)
-      }
-
       // Load treasury payouts
       const { data: payouts } = await supabase
         .from('treasury_payout_items')
@@ -391,14 +278,6 @@ export default function Stats() {
         .order('created_at', { ascending: false })
         .limit(20)
       setTreasuryPayouts(payouts as any || [])
-
-      // Check for pending agency applications (as applicant)
-      const { data: appData } = await supabase
-        .from('agency_applications')
-        .select('*, agencies(name)')
-        .eq('applicant_id', user.id)
-        .eq('status', 'pending')
-      setAgencyApplicants(appData as any || [])
 
     } catch (err) {
       console.error('Error loading earnings data:', err)
@@ -448,7 +327,6 @@ export default function Stats() {
     progress !== undefined && progress !== null ? (progress > 0 ? progress : 0) : 0
 
   const levelProgress = Math.min(computedProgress, 99)
-  const familyXpProgress = stats?.familyXp ? Math.min((stats.familyXp / 1000) * 100, 100) : 0
   const statsCoinsPerUsd = 300
   const _statsUsdPerCoin = 1 / statsCoinsPerUsd
 
@@ -485,7 +363,7 @@ export default function Stats() {
               </h1>
 
               <p className="mt-3 max-w-2xl text-slate-400">
-                Track your level, coins, battle rank, credit score, family activity, and city achievements.
+                Track your level, coins, battle rank, credit score, and city achievements.
               </p>
             </div>
 
@@ -588,39 +466,6 @@ export default function Stats() {
                     trend7d={creditData?.trend_7d}
                     loading={creditLoading} />
                 </div>
-
-                {stats.familyName && (
-                  <div className={`${cityCard} p-6`}>
-                    <StatHeader icon={Crown} title="Family Status" subtitle="Family season rank and XP" />
-
-                    <div className="flex items-center justify-between">
-                      <span className="text-xl font-black text-white">🔥 {stats.familyName}</span>
-                      <span className="font-bold text-cyan-200">Level {stats.familyLevel}</span>
-                    </div>
-
-                    <div className="mt-5 rounded-2xl border border-cyan-300/10 bg-slate-950/60 p-4">
-                      <div className="mb-2 text-sm text-slate-300">
-                        Family XP:{' '}
-                        <span className="font-bold text-cyan-300">
-                          {stats.familyXp?.toLocaleString() || 0}
-                        </span>
-                      </div>
-
-                      <div className="h-2 overflow-hidden rounded-full bg-black/60">
-                        <div
-                          className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-purple-500"
-                          style={{ width: `${familyXpProgress}%` }} />
-                      </div>
-
-                      <div className="mt-4 border-t border-white/10 pt-3 text-sm text-slate-300">
-                        Season Score:{' '}
-                        <span className="font-bold text-cyan-300">
-                          {stats.seasonScore?.toLocaleString() || 0}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
 
                 <div className={`${cityCard} p-6`}>
                   <StatHeader icon={Sword} title="Battle / War Stats" subtitle="Crowns, streaks, wins, and tier" />
@@ -771,69 +616,6 @@ export default function Stats() {
                       </span>
                     </div>
                   ))}
-                </div>
-              </div>
-            )}
-
-            {agencyData && (
-              <div className={`${cityCard} p-6`}>
-                <StatHeader icon={Building2} title="Agency Earnings" subtitle="Split percentages and pending earnings" />
-
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-300">Agency</span>
-                    <span className="font-bold text-cyan-300">{agencyData.agency_name}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-300">Your Role</span>
-                    <span className="font-bold text-purple-300">{agencyData.agency_role}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-300">Split Percent</span>
-                    <span className="font-bold text-pink-300">{agencyData.split_percent}%</span>
-                  </div>
-                  <div className="border-t border-white/10 pt-3 mt-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-slate-300">Pending Agency Earnings</span>
-                      <span className="font-bold text-yellow-300">{agencyData.pending_agency_earnings.toLocaleString()} coins</span>
-                    </div>
-                    <div className="flex items-center justify-between mt-2">
-                      <span className="text-slate-300">Paid Agency Earnings</span>
-                      <span className="font-bold text-green-300">{agencyData.paid_agency_earnings.toLocaleString()} coins</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {familyData && (
-              <div className={`${cityCard} p-6`}>
-                <StatHeader icon={Crown} title="Family Conversion Status" subtitle="Path to agency conversion" />
-
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-300">Family</span>
-                    <span className="font-bold text-cyan-300">{familyData.family_name}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-300">Members</span>
-                    <span className="font-bold text-purple-300">{familyData.member_count + 1}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-300">Leader Bonus</span>
-                    <span className="font-bold text-pink-300">25,000 coins available</span>
-                  </div>
-                  <div className="border-t border-white/10 pt-3 mt-3">
-                    <div className="flex items-center gap-2">
-                      <Lock className="h-4 w-4 text-slate-400" />
-                      <span className="text-slate-300">Conversion Status:</span>
-                      <span className={`font-bold ${familyData.conversion_eligible ? 'text-green-300' : 'text-slate-400'}`}>
-                        {familyData.conversion_eligible
-                          ? familyData.conversion_status || 'Eligible - Apply for Agency Conversion'
-                          : 'Need 15 members to qualify'}
-                      </span>
-                    </div>
-                  </div>
                 </div>
               </div>
             )}

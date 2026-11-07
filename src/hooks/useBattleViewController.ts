@@ -9,7 +9,6 @@ import { Stream } from "../types/broadcast";
 import { useAuthStore } from "../lib/store";
 import { PreflightStore } from "../lib/preflightStore";
 import { useCoins } from "../lib/hooks/useCoins";
-import useTrollFamilyActivity from "./useTrollFamilyActivity";
 import { useBattleRealtime } from "./useBattleRealtime";
 import { toast } from "sonner";
 import { useActiveBattles, type ActiveBattle } from "./useActiveBattles";
@@ -129,10 +128,6 @@ export function useBattleViewController({
 
   // Get coin/crown balances for display
   const { troll_coins: _userCoins, crowns: _userCrowns, trollmonds: _userTrollmonds } = useCoins() as any;
-  
-  // Family activity recording
-  const { recordBattleWon, recordBattleLost, recordBattleJoined } = useTrollFamilyActivity();
-  const hasRecordedBattleJoinedRef = useRef(false);
   
   // Explicitly track enabled state to ensure camera stays on during battle
   const [isCameraEnabled, setIsCameraEnabled] = useState(true);
@@ -565,15 +560,6 @@ export function useBattleViewController({
       setRemoteUsers(Array.from(room.remoteParticipants.values()));
       bumpTrackRevision();
 
-      if (isBroadcaster && battleData?.id && !hasRecordedBattleJoinedRef.current) {
-        hasRecordedBattleJoinedRef.current = true;
-        try {
-          await recordBattleJoined(battleData.id, currentStreamId);
-        } catch (err) {
-          console.warn("[BattleView] Failed to record battle joined:", err);
-        }
-      }
-
       const localTracks = battleViewStateRef.current.effectiveLocalTracks;
       if (canPublishBattleMedia && localTracks) {
         const publishResult = await publishBattleMedia(room, localTracks);
@@ -621,7 +607,6 @@ export function useBattleViewController({
     isBattleStage,
     canPublishBattleMedia,
     currentStreamId,
-    recordBattleJoined,
     connectBattleRoom,
     publishBattleMedia,
     bumpTrackRevision,
@@ -1748,12 +1733,6 @@ export function useBattleViewController({
         setBattle((prev: any) => prev ? { ...prev, status: 'ended' } : prev);
         setShowResults(true);
         
-        if (endResult?.winner_id === user?.id) {
-          await recordBattleWon(battle.id, currentStreamId);
-        } else if (endResult?.winner_id !== null) {
-          await recordBattleLost(battle.id, currentStreamId);
-        }
-        
         try {
           await supabase.rpc('distribute_battle_winnings', { p_battle_id: battle.id });
         } catch (payoutErr) {
@@ -1762,12 +1741,6 @@ export function useBattleViewController({
         
         toast.success('Battle Ended!');
         return;
-      }
-
-      if (endResult?.winner_id === user?.id) {
-        await recordBattleWon(battle.id, currentStreamId);
-      } else if (endResult?.winner_id !== null) {
-        await recordBattleLost(battle.id, currentStreamId);
       }
 
       const { error: payoutError } = await supabase.rpc('distribute_battle_winnings', { p_battle_id: battle.id });
@@ -1799,7 +1772,7 @@ export function useBattleViewController({
         console.error('[BattleView] Force-end fallback failed:', fallbackErr);
       }
     }
-  }, [battle, user, challengerStream, opponentStream, recordBattleWon, recordBattleLost, currentStreamId]);
+  }, [battle, user, challengerStream, opponentStream, currentStreamId]);
 
   const [leaveLoading, setLeaveLoading] = useState(false);
 

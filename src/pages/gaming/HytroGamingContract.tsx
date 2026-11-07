@@ -25,7 +25,7 @@ export default function HytroGamingContract() {
     }
     try {
       const { data, error } = await supabase
-        .from('agency_contracts')
+        .from('contracts')
         .select('*')
         .eq('id', id)
         .eq('user_id', user.id)
@@ -67,7 +67,7 @@ export default function HytroGamingContract() {
     try {
       const signedAt = new Date().toISOString();
       const { error } = await supabase
-        .from('agency_contracts')
+        .from('contracts')
         .update({
           status: 'signed',
           signed_at: signedAt,
@@ -125,7 +125,7 @@ export default function HytroGamingContract() {
             </div>
             <div>
               <h1 className="text-2xl font-black text-white">Agency Contract</h1>
-              <p className="text-sm text-slate-400">Review and sign your HytroGaming agency agreement</p>
+              <p className="text-sm text-slate-400">Review and sign your HytroGaming contract</p>
             </div>
           </div>
 
@@ -137,7 +137,7 @@ export default function HytroGamingContract() {
                 You signed this contract on {contract.signed_at ? new Date(contract.signed_at).toLocaleDateString() : 'N/A'}.
               </p>
               <button
-                onClick={() => navigate('/agency-dashboard')}
+                 onClick={() => navigate('/hytrogaming')}
                 className="mt-4 rounded-xl bg-cyan-500/20 px-6 py-3 font-bold text-cyan-50 hover:bg-cyan-500/30"
               >
                 Go to Dashboard
@@ -208,7 +208,7 @@ export default function HytroGamingContract() {
                     className="mt-0.5 h-4 w-4 rounded border-white/20 bg-black/40 text-cyan-500 focus:ring-cyan-400"
                   />
                   <span className="text-sm text-slate-300">
-                    I have read and agree to the terms and conditions of this agency contract. I understand this agreement is legally binding.
+                                         I have read and agree to the terms and conditions of this contract. I understand this agreement is legally binding.
                   </span>
                 </label>
               </div>

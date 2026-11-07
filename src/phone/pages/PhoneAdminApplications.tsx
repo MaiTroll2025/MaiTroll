@@ -99,9 +99,6 @@ const CAREER_ROLE_LABELS: Record<string, string> = {
   journalist: 'Journalist',
   tcnn_news_caster: 'TCNN News Caster',
   tcnn_chief_news_caster: 'TCNN Chief News Caster',
-  agency_hr: 'Agency HR',
-  agency_hr_manager: 'Agency HR Manager',
-  agency_leader: 'Agency Leader',
   hr_manager: 'HR Manager',
 }
 
@@ -129,9 +126,6 @@ const PLATFORM_TYPE_LABELS: Record<string, string> = {
   tcnn_chief_news_caster: 'TCNN Chief News Caster',
   prosecutor: 'Prosecutor',
   attorney: 'Attorney',
-  agency_hr: 'Agency HR',
-  agency_hr_manager: 'Agency HR Manager',
-  agency_leader: 'Agency Leader',
   ceo_assistant: 'CEO Assistant',
   noah_assistant: 'Noah Assistant',
 }

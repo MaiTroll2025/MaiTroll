@@ -112,7 +112,7 @@ export default function EarningsDashboard() {
         .from('coin_transactions')
         .select('id, user_id, amount, created_at, type, description, metadata, source, coin_type, balance_after, from_user_id, from_user_name, to_user_id, to_user_name, stream_id')
         .eq('user_id', profile?.id)
-        .in('type', ['gift_receive', 'gift', 'gift_bonus', 'gift_received', 'guest_box_income', 'gift_return_reward', 'agency_leader_bonus', 'agency_recruiter_bonus'])
+        .in('type', ['gift_receive', 'gift', 'gift_bonus', 'gift_received', 'guest_box_income', 'gift_return_reward'])
         .gt('amount', 0)
         .order('created_at', { ascending: false })
         .limit(50)

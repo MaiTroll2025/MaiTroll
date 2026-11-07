@@ -75,7 +75,12 @@ export function useAgoraGamingViewer(): AgoraGamingViewerState & AgoraGamingView
     if (import.meta.env.DEV) console.log('[AgoraGamingViewer]', ...args);
   };
 
-  const fetchToken = useCallback(async (channel: string, uid: UID, streamId: string): Promise<string> => {
+  const fetchToken = useCallback(async (channel: string, uid: UID, streamId: string): Promise<{
+    token: string;
+    uid: UID;
+    publisherScreenUid?: UID;
+    publisherCameraUid?: UID;
+  }> => {
     const { data, error: tokenError } = await supabase.functions.invoke('agora-token', {
       body: {
         channel,
@@ -93,24 +98,23 @@ export function useAgoraGamingViewer(): AgoraGamingViewerState & AgoraGamingView
       debug('fetchToken error detail', tokenError);
       throw new Error(`Token error: ${tokenError.message}`);
     }
-    if (!data?.token) {
+    if (!data?.token || !Number.isInteger(data.uid)) {
       debug('fetchToken no token, data:', data);
       throw new Error('No token received');
     }
 
-    return data.token;
+    return {
+      token: data.token,
+      uid: data.uid as UID,
+      publisherScreenUid: Number.isInteger(data.publisherScreenUid) ? data.publisherScreenUid : undefined,
+      publisherCameraUid: Number.isInteger(data.publisherCameraUid) ? data.publisherCameraUid : undefined,
+    };
   }, []);
 
   const join = useCallback(async (channelName: string, userId: string, streamId: string) => {
     if (joinedRef.current || joiningRef.current) return;
 
     joiningRef.current = true;
-
-    // Pre-compute the expected UIDs for screen share and camera tracks.
-    // The broadcaster uses: screen UID = hash(channelName), camera UID = hash(channelName + "-camera")
-    expectedScreenUidRef.current = hashToUid(channelName);
-    expectedCameraUidRef.current = hashToUid(`${channelName}-camera`);
-    debug('Expected UIDs — screen:', expectedScreenUidRef.current, 'camera:', expectedCameraUidRef.current);
 
     setIsConnecting(true);
     setError(null);
@@ -273,8 +277,11 @@ export function useAgoraGamingViewer(): AgoraGamingViewerState & AgoraGamingView
       const uid = hashToUid(userId);
       debug('fetching agora token', { channelName, uid });
       const token = await fetchToken(channelName, uid, streamId);
-      debug('fetched agora token', { channelName, uid, tokenLen: token?.length ?? 0 });
-      const joinPromise = client.join(appId, channelName, token, uid);
+      expectedScreenUidRef.current = token.publisherScreenUid ?? hashToUid(channelName);
+      expectedCameraUidRef.current = token.publisherCameraUid ?? hashToUid(`${channelName}-camera`);
+      debug('Expected UIDs — screen:', expectedScreenUidRef.current, 'camera:', expectedCameraUidRef.current);
+      debug('fetched agora token', { channelName, uid: token.uid, tokenLen: token.token.length });
+      const joinPromise = client.join(appId, channelName, token.token, token.uid);
       const timeoutPromise = new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error('Agora join timed out')), 15000),
       );

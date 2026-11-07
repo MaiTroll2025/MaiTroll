@@ -1,7 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '@/lib/store'
-import { Home, Search, Compass, Bell, User, Video, Coins, MessageCircle, Sparkles, Mic, Gavel, Scale, Gamepad2, DollarSign, Trophy, Users, Store, Package, BookOpen, Shield, Car, Briefcase, Shuffle, Heart, Crown, Vote, Settings, ClipboardList, MonitorDot, Lock, FileText, Landmark } from 'lucide-react';
+import { Home, Search, Compass, Bell, User, Video, Coins, MessageCircle, Sparkles, Mic, Gavel, Scale, Gamepad2, DollarSign, Trophy, Users, Store, Package, BookOpen, Shield, Car, Briefcase, Shuffle, Crown, Vote, Settings, ClipboardList, MonitorDot, Lock, FileText, Landmark } from 'lucide-react';
 
 const PAGE_GUIDE: Record<string, { label: string; icon: any; desc: string; roles?: string[] }> = {
   '/home': { label: 'Home', icon: Home, desc: 'Main feed with live streams, posts, and city updates.' },
@@ -19,15 +19,12 @@ const PAGE_GUIDE: Record<string, { label: string; icon: any; desc: string; roles
   '/hytrogaming': { label: 'HydroGaming', icon: Gamepad2, desc: 'Gaming streams and community.' },
   '/mai-pay': { label: 'MAI Pay', icon: DollarSign, desc: 'Payments, cashouts, and financial tools.' },
   '/leaderboard': { label: 'Leaderboard', icon: Trophy, desc: 'Top users by XP, coins, and activity.' },
-  '/family/home': { label: 'Troll Family', icon: Users, desc: 'Your family, chat, and family features.' },
   '/marketplace': { label: 'Shop', icon: Store, desc: 'Buy and sell items in the marketplace.' },
   '/inventory': { label: 'Inventory', icon: Package, desc: 'Items you own and manage.' },
   '/church': { label: 'Church', icon: BookOpen, desc: 'Troll Church events and community.' },
   '/safety': { label: 'Safety', icon: Shield, desc: 'Safety guidelines, policies, and help.' },
   '/ktauto': { label: 'Cars', icon: Car, desc: 'KTAuto dealership and vehicles.' },
-  '/jobs': { label: 'Jobs', icon: Briefcase, desc: 'Jobs, applications, and career tools.' },
   '/troll-wheel': { label: 'Troll Wheel', icon: Shuffle, desc: 'Spin the wheel for rewards.' },
-  '/match': { label: 'Troll Match', icon: Heart, desc: 'Match with other users.' },
   '/government': { label: 'Government', icon: Landmark, desc: 'Government feeds, elections, and officials.', roles: ['admin', 'secretary', 'officer', 'president'] },
   '/admin': { label: 'Admin Panel', icon: Settings, desc: 'Full admin dashboard and analytics.', roles: ['admin'] },
   '/admin/chat-moderation': { label: 'Chat Mod', icon: MessageCircle, desc: 'Moderate live chat across the platform.', roles: ['admin', 'officer'] },
@@ -73,9 +70,9 @@ export default function HelpPage() {
 
   const categories = [
     { title: 'General', paths: ['/home', '/search', '/explore', '/notifications', '/profile', '/safety'] },
-    { title: 'Media & Social', paths: ['/broadcast/setup', '/treelz', '/podcast', '/utromail', '/family/home', '/match'] },
+    { title: 'Media & Social', paths: ['/broadcast/setup', '/treelz', '/podcast', '/utromail'] },
     { title: 'Economy', paths: ['/store', '/mai-pay', '/leaderboard', '/marketplace', '/inventory', '/auctions', '/troll-wheel'] },
-    { title: 'Games & Learning', paths: ['/hytrogaming', '/ktauto', '/jobs'] },
+    { title: 'Games & Learning', paths: ['/hytrogaming', '/ktauto'] },
     { title: 'City & Government', paths: ['/church', '/troll-court', '/government'] },
     { title: 'Staff & Admin', paths: ['/admin', '/admin/chat-moderation', '/admin/jail-management', '/admin/reports-queue', '/admin/stream-monitor', '/officer/dashboard', '/lead-officer', '/secretary', '/president'] },
   ]
@@ -151,9 +148,6 @@ export default function HelpPage() {
     </main>
   )
 }
-
-
-
 
 
 

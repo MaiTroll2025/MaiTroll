@@ -2,7 +2,7 @@
  * HytroGaming — MaiTroll neon live gaming arena.
  * Standalone, full-viewport page (no application sidebar).
  * Keeps the existing Supabase gaming-stream query, realtime refresh,
- * search, sorting, featured streams, agency restrictions, game library,
+ * search, sorting, featured streams, restrictions, game library,
  * and /gaming/watch/:id navigation.
  * The Tournaments tab is a truthful placeholder until tournament data
  * and routes exist; the Arcade Games tab renders the real GamesSection.
@@ -127,7 +127,6 @@ export default function HytroGaming() {
   const { user, profile, isLoading } = useAuthStore();
   const { isMobile } = useIsMobile();
   const isMobileOrPWA = isMobile || isStandalone();
-  const [agencyStatus, setAgencyStatus] = useState<'loading' | 'approved' | 'pending' | 'none' | 'exempt'>('loading');
   const [streams, setStreams] = useState<GamingStream[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
@@ -143,29 +142,6 @@ export default function HytroGaming() {
   });
 
   const trollRole = (profile as any)?.troll_role;
-  useEffect(() => {
-    if (!user?.id) { setAgencyStatus('none'); return; }
-    const exempt = ['admin', 'moderator', 'staff', 'troll_officer', 'lead_troll_officer'];
-    if (exempt.includes(profile?.role || '') || exempt.includes(trollRole || '')) {
-      setAgencyStatus('exempt'); return;
-    }
-    let cancelled = false;
-    const check = async () => {
-      try {
-        const { data: membership } = await supabase.from('agency_members')
-          .select('id').eq('user_id', user.id).eq('status', 'active').maybeSingle();
-        if (membership) { if (!cancelled) setAgencyStatus('approved'); return; }
-        const { data: application } = await supabase.from('agency_applications')
-          .select('status').eq('user_id', user.id).order('created_at', { ascending: false }).limit(1).maybeSingle();
-        if (!cancelled) setAgencyStatus(application?.status === 'approved' ? 'approved' : application?.status === 'pending' ? 'pending' : 'none');
-      } catch (error) {
-        console.warn('[HytroGaming] Agency check failed', error);
-        if (!cancelled) setAgencyStatus('none');
-      }
-    };
-    void check();
-    return () => { cancelled = true; };
-  }, [user?.id, profile?.role, trollRole]);
 
   const fetchStreams = useCallback(async () => {
     try {
@@ -231,7 +207,7 @@ export default function HytroGaming() {
           ? Number(b.is_featured) - Number(a.is_featured) || viewerTotal(b) - viewerTotal(a)
           : viewerTotal(b) - viewerTotal(a));
   }, [streams, query, sort]);
-  const canShare = agencyStatus === 'approved' || agencyStatus === 'exempt';
+  const canShare = true;
   const openStream = (stream: GamingStream) => navigate(`/gaming/watch/${stream.id}`);
   const selectTab = (selected: ArenaTab) => { setTab(selected); };
 
@@ -332,7 +308,7 @@ export default function HytroGaming() {
 
           {tab === 'share' && <section role="tabpanel" aria-label="Game Share" className="mt-4 rounded-2xl border border-cyan-400/25 bg-[#0b1428]/90 p-4 sm:p-6">
             <div className="mb-4 flex items-center gap-3"><MonitorPlay className="size-8 text-cyan-300" /><div><h2 className="text-xl font-black">GAME SHARE ARENA</h2><p className="text-xs text-slate-400">Share your gameplay live or watch active gaming broadcasts.</p></div></div>
-            {isMobileOrPWA ? <p className="rounded-xl border border-cyan-400/25 bg-cyan-500/10 p-4 text-sm text-cyan-100">Desktop is required to start game sharing. You can still watch broadcasts on this device.</p> : agencyStatus==='loading' ? <p className="flex items-center gap-2 text-sm"><Loader2 className="animate-spin" size={18}/> Checking agency membership...</p> : agencyStatus==='pending' ? <div className="rounded-xl border border-amber-400/25 bg-amber-400/10 p-4"><p className="font-bold">Agency application pending</p><button onClick={()=>navigate('/hytrogaming/apply')} className="mt-3 rounded-lg bg-amber-300 px-4 py-2 text-xs font-black text-black">View Application</button></div> : !canShare ? <div className="rounded-xl border border-cyan-400/25 bg-cyan-400/10 p-4"><h3 className="font-bold">Apply to Game Share</h3><p className="mt-1 text-xs text-slate-300">Agency membership is required to stream. The monthly fee is 5,000 Troll Coins; startup fees match regular agencies. Loans may be available.</p><div className="mt-3 flex gap-2"><button onClick={()=>navigate('/hytrogaming/apply')} className="rounded-lg bg-cyan-400 px-4 py-2 text-xs font-black text-black">Apply</button><button onClick={()=>navigate('/agencies')} className="rounded-lg border border-white/20 px-4 py-2 text-xs font-bold">Learn More</button></div></div> : <button onClick={()=>navigate('/broadcast/setup/gaming')} className="rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 px-5 py-3 text-xs font-black text-black"><Radio className="mr-2 inline size-4" /> Start Game Share</button>}
+            {isMobileOrPWA ? <p className="rounded-xl border border-cyan-400/25 bg-cyan-500/10 p-4 text-sm text-cyan-100">Desktop is required to start game sharing. You can still watch broadcasts on this device.</p> : <button onClick={()=>navigate('/broadcast/setup/gaming')} className="rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 px-5 py-3 text-xs font-black text-black"><Radio className="mr-2 inline size-4" /> Start Game Share</button>}
             <div className="mt-5 border-t border-white/10 pt-4"><div className="mb-3 flex items-center justify-between"><h3 className="font-black">Live Gaming Broadcasts</h3><button onClick={()=>selectTab('streams')} className="text-xs font-bold text-cyan-300">Browse arena →</button></div>{streams.length ? <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">{streams.slice(0,8).map(s=><StreamCard key={s.id} stream={s} onOpen={()=>openStream(s)} />)}</div> : <EmptyStreamState searching={false} />}</div>
           </section>}
         </div>

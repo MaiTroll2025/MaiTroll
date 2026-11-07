@@ -153,43 +153,11 @@ export function useFiveVFiveBattle({ streamId, isHost, category }: UseFiveVFiveB
     try {
       let opponent: { id: string; user_id: string; title: string; category: string; current_viewers: number } | null = null;
 
-      // Try TM (Troll Match) matchmaking first - use users you've matched with
-      try {
-        const { data: tmMatches } = await supabase.rpc('get_tm_matches', {
-          p_user_id: user.id,
-          p_dating: false,
-          p_limit: 20,
-        });
-
-        if (tmMatches && tmMatches.length > 0) {
-          // Find which matched users have a live stream in general chat
-          const matchedUserIds = tmMatches.map((m: any) => m.user_id);
-          const { data: liveStreams } = await supabase
-            .from('streams')
-            .select('id, user_id, title, category, current_viewers')
-            .in('user_id', matchedUserIds)
-            .eq('is_live', true)
-            .eq('category', 'general')
-            .neq('id', streamId)
-            .gt('current_viewers', 0);
-
-          if (liveStreams && liveStreams.length > 0) {
-            // Pick a random matched user's stream
-            opponent = liveStreams[Math.floor(Math.random() * liveStreams.length)];
-          }
-        }
-      } catch (tmErr) {
-        console.warn('[FiveVFive] TM matchmaking unavailable, falling back to random:', tmErr);
-      }
-
-      // Fallback: random matching via find_5v5_match
-      if (!opponent) {
-        const { data: opponents, error } = await supabase.rpc('find_5v5_match', {
-          p_stream_id: streamId,
-        });
-        if (error) throw error;
-        opponent = Array.isArray(opponents) && opponents.length > 0 ? opponents[0] : null;
-      }
+      const { data: opponents, error } = await supabase.rpc('find_5v5_match', {
+        p_stream_id: streamId,
+      });
+      if (error) throw error;
+      opponent = Array.isArray(opponents) && opponents.length > 0 ? opponents[0] : null;
 
       if (!opponent || !opponent.id) {
         toast.dismiss('battle-matchmaking');

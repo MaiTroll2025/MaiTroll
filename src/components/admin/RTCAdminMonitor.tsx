@@ -458,7 +458,7 @@ const [analyticsRange, setAnalyticsRange] = useState<1 | 7 | 30>(7);
     const _WALKIE_TALKIE_ALLOWED_ROLES = [
       'admin', 'ceo', 'staff', 'officer', 'broadofficer',
       'troll_officer', 'lead_troll_officer', 'secretary', 'president',
-      'agency_hr', 'agency_hr_manager', 'agency_leader', 'attorney',
+      'attorney',
       'prosecutor', 'journalist', 'tcnn_news_caster', 'tcnn_chief_news_caster',
       'auctioneer', 'pastor', 'org_admin', 'empire_partner',
       'ceo_assistant', 'noah_assistant',
@@ -1077,12 +1077,15 @@ const openAction = useCallback((user: UserListItem, action: string) => {
          if (activeAction === 'grant') {
              const amount = Number(actionAmount.trim());
              if (!Number.isSafeInteger(amount) || amount <= 0) throw new Error('Enter a valid amount');
-             const { error } = await supabase.rpc('admin_grant_coins', {
-                 p_user_id: actionTarget.id,
-                 p_amount: amount,
-                 p_reason: actionReason || 'Admin grant via RTC Monitor',
+             const { data, error } = await supabase.functions.invoke('coin-admin', {
+               body: {
+                 userId: actionTarget.id,
+                 amount,
+                 reason: actionReason || 'Admin grant via RTC Monitor',
+               },
              });
              if (error) throw error;
+             if (!data?.success) throw new Error(data?.error || 'Failed to grant coins');
              toast.success(`Granted ${amount.toLocaleString()} coins`);
          }
 
@@ -2991,28 +2994,37 @@ return (
               <Stamp className="h-4 w-4 text-amber-400" />
               <span className="text-xs font-bold uppercase tracking-wide text-amber-300">Notary Documents</span>
             </div>
-            <button
-              type="button"
-              onClick={async () => {
-                setNotaryLoading(true);
-                try {
-                  const { data } = await supabase
-                    .from('documents')
-                    .select('id, title, document_type_slug, status, submitted_by, created_at, version')
-                    .order('created_at', { ascending: false })
-                    .limit(50);
-                  setNotaryDocuments(data || []);
-                } catch (err) {
-                  console.error('Notary refresh error:', err);
-                } finally {
-                  setNotaryLoading(false);
-                }
-              }}
-              disabled={notaryLoading}
-              className="rounded bg-amber-600/30 px-2 py-1 text-[11px] font-medium text-amber-100 hover:bg-amber-600/45 disabled:opacity-50"
-            >
-              {notaryLoading ? 'Loading...' : 'Refresh'}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => navigate('/notary')}
+                className="rounded bg-amber-600/30 px-2 py-1 text-[11px] font-medium text-amber-100 hover:bg-amber-600/45"
+              >
+                Open Notary Dashboard
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  setNotaryLoading(true);
+                  try {
+                    const { data } = await supabase
+                      .from('documents')
+                      .select('id, title, document_type_slug, status, submitted_by, created_at, version')
+                      .order('created_at', { ascending: false })
+                      .limit(50);
+                    setNotaryDocuments(data || []);
+                  } catch (err) {
+                    console.error('Notary refresh error:', err);
+                  } finally {
+                    setNotaryLoading(false);
+                  }
+                }}
+                disabled={notaryLoading}
+                className="rounded bg-amber-600/30 px-2 py-1 text-[11px] font-medium text-amber-100 hover:bg-amber-600/45 disabled:opacity-50"
+              >
+                {notaryLoading ? 'Loading...' : 'Refresh'}
+              </button>
+            </div>
           </div>
 
           {/* Sub-tabs */}
