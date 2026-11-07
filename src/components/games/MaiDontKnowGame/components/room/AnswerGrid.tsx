@@ -1,6 +1,4 @@
 ﻿import { Check, X } from 'lucide-react';
-import { formatPoints } from '../../lib/players';
-
 const LETTERS = ['A', 'B', 'C', 'D'] as const;
 const LETTER_TONES = [
   'border-neon-blue/50 text-neon-blue',
@@ -10,7 +8,7 @@ const LETTER_TONES = [
 ] as const;
 
 interface AnswerGridProps {
-  options: number[];
+  options: string[];
   selected: number | null;
   correctIndex: number | null;
   disabled: boolean;
@@ -62,7 +60,7 @@ export default function AnswerGrid({
             </span>
             <span className="min-w-0 flex-1">
               <span className="block font-display text-xl font-bold text-slate-100 sm:text-2xl">
-                {formatPoints(value)}
+                {value}
               </span>
               {voters.length > 0 && (
                 <span className="mt-1 block truncate text-xs text-slate-400">
@@ -84,4 +82,3 @@ export default function AnswerGrid({
     </div>
   );
 }
-

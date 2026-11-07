@@ -49,7 +49,7 @@ export interface RoundState {
   round_number: number;
   category: string;
   prompt: string;
-  options: number[];
+  options: string[];
   status: 'open' | 'revealed';
   started_at: string;
   deadline_at: string;

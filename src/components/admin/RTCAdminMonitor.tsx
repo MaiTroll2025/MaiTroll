@@ -89,6 +89,7 @@ interface UserListItem {
 interface RTCStats {
   totalMinutes: number;
   activeSessions: number;
+  activeUsers: number;
   liveStreams: number;
   liveStreamDetails: StreamDetail[];
   totalUsers: number;
@@ -325,6 +326,7 @@ export default function RTCAdminMonitor({
   const [stats, setStats] = useState<RTCStats>({
     totalMinutes: 0,
     activeSessions: 0,
+    activeUsers: 0,
     liveStreams: 0,
     liveStreamDetails: [],
     totalUsers: 0,
@@ -602,6 +604,11 @@ return {
           .select('id, user_id, room_name, started_at, ended_at, duration_seconds, is_active, rtc_provider');
 
         const rtcSessions = (sessions || []) as RTSSession[];
+        const activeRtcUsers = new Set(
+          rtcSessions
+            .filter((session) => session.is_active && session.user_id)
+            .map((session) => session.user_id),
+        ).size;
 
         let totalMinutesFromDB: number | null = null;
         try {
@@ -635,6 +642,7 @@ return {
         setStats({
           totalMinutes,
           activeSessions: rtcSessions.filter((s) => s.is_active).length,
+          activeUsers: activeRtcUsers,
           liveStreams: streamDetails.length + singOffDetails.length,
           liveStreamDetails: [...singOffDetails, ...streamDetails],
           totalUsers: totalUsers || 0,
@@ -2374,7 +2382,7 @@ const renderRtcTab = () => (
               <Activity className="h-3 w-3 text-green-400" />
               <span className="truncate">Online</span>
             </div>
-            <div className="text-base font-bold leading-tight text-white">{displayOnlineCount}</div>
+            <div className="text-base font-bold leading-tight text-white">{stats.activeUsers}</div>
           </div>
           <StatCard label="Users" value={stats.totalUsers} tone="border-purple-500/20 bg-purple-500/10 text-purple-400" icon={<Users className="h-3 w-3" />} />
            <div className="rounded-md border border-blue-500/20 bg-blue-500/10 p-2">
