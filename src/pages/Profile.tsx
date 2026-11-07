@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Ban, Crown, Loader2, Award } from 'lucide-react';
+import { Ban, Crown, Loader2 } from 'lucide-react';
 
 import { toast } from 'sonner';
 
@@ -20,7 +20,7 @@ import { useCityStatus } from '../hooks/useCityStatus';
 
 import SubscriptionTierSelector from '../components/user/SubscriptionTierSelector';
 
-import { ProfileHeader, RoleCard, ProfileTabs } from '../components/profile/ProfileComponents';
+import { ProfileHeader, ProfileTabs } from '../components/profile/ProfileComponents';
 import { PROFILE_TABS } from '../components/profile/profileTabs';
 
 import ProfileFeed from '../components/profile/ProfileFeed';
@@ -41,7 +41,6 @@ import ProfilePurchases from '../components/profile/ProfilePurchases';
 
 import ProfileChurch from '../components/profile/ProfileChurch';
 
-import ProfileAgency from '../components/profile/ProfileAgency';
 
 import ProfileCourt from '../components/profile/ProfileCourt';
 
@@ -65,12 +64,6 @@ interface ActiveRole {
     role_type: string;
 
     is_active: boolean;
-
-}
-
-interface RoleStats {
-
-    [key: string]: any;
 
 }
 
@@ -106,8 +99,6 @@ function ProfileInner() {
 
     const [activeRoles, setActiveRoles] = useState<ActiveRole[]>([]);
 
-    const [roleStats, setRoleStats] = useState<RoleStats>({});
-
     const [isFollowing, setIsFollowing] = useState(false);
 
     const [isBlocked, setIsBlocked] = useState(false);
@@ -140,7 +131,7 @@ function ProfileInner() {
 
     const isAdminViewer = ['admin', 'troll_officer', 'lead_troll_officer'].includes(viewerRole);
 
-    const isStaffViewer = ['admin', 'moderator', 'troll_officer', 'lead_troll_officer', 'secretary', 'officer', 'hr_admin', 'agency_hr_manager', 'ceo', 'superadmin', 'empire_partner', 'attorney', 'prosecutor', 'pastor', 'journalist', 'tcnn_news_caster', 'tcnn_chief_news_caster', 'agency_hr', 'agency_leader', 'ceo_assistant', 'noah_assistant', 'academy_teacher', 'academy_director', 'admissions_officer'].includes(viewerRole) || currentUserProfile?.is_admin === true;
+    const isStaffViewer = ['admin', 'moderator', 'troll_officer', 'lead_troll_officer', 'secretary', 'officer', 'hr_admin', 'ceo', 'superadmin', 'empire_partner', 'attorney', 'prosecutor', 'pastor', 'journalist', 'tcnn_news_caster', 'tcnn_chief_news_caster', 'ceo_assistant', 'noah_assistant', 'academy_teacher', 'academy_director', 'admissions_officer'].includes(viewerRole) || currentUserProfile?.is_admin === true;
 
     const isViewBlocked = !isOwnProfile && !isAdminViewer && isBlocked;
 
@@ -165,8 +156,6 @@ function ProfileInner() {
             if (tab.key === 'broadcasts') return activeRoles.some(r => r.role_type === 'broadcaster') || isOwnProfile;
 
             if (tab.key === 'court') return activeRoles.some(r => ['attorney', 'prosecutor'].includes(r.role_type)) || isOwnProfile;
-
-            if (tab.key === 'agency') return activeRoles.some(r => ['agency_leader', 'agency_hr', 'agency_hr_manager', 'secretary'].includes(r.role_type)) || isOwnProfile;
 
             if (tab.key === 'church') return activeRoles.some(r => r.role_type === 'pastor') || isOwnProfile;
 
@@ -220,9 +209,15 @@ function ProfileInner() {
 
             }
 
-            const PROFILE_COLS = 'id,username,display_name,avatar_url,cover_url,banner_url,troll_coins,role,is_admin,level,xp,xp_to_next_level,created_at,updated_at,bio,city,country,website,pronouns,is_verified,is_broadcaster,is_minor,is_attorney,is_judge,is_prosecutor,is_ceo_assistant,is_noah_assistant,is_journalist,is_news_caster,is_chief_news_caster,is_pastor,is_secretary,is_jailed';
-
-            let query = supabase.from('user_profiles').select(PROFILE_COLS);
+            const isOwnProfile = Boolean(
+                currentUserId && (
+                    (!userId && !username) ||
+                    userId === currentUserId
+                )
+            );
+            let query = supabase
+                .from(isOwnProfile ? 'user_profiles' : 'public_profiles')
+                .select('*');
 
             if (userId) query = query.eq('id', userId);
 
@@ -314,25 +309,7 @@ function ProfileInner() {
 
             ]);
 
-            // Fetch role statistics
-
             const roles = (rolesRes.data || []) as ActiveRole[];
-
-            const stats: RoleStats = {};
-
-            for (const role of roles) {
-
-                const { data: roleStat } = await supabase.rpc('get_role_statistics', {
-
-                    p_user_id: data.id,
-
-                    p_role_type: role.role_type
-
-                });
-
-                if (roleStat) stats[role.role_type] = roleStat;
-
-            }
 
             // Check if current user is subscribed
 
@@ -365,8 +342,6 @@ function ProfileInner() {
                 setModActionsCount(modActionsRes.count || 0);
 
                 setActiveRoles(roles);
-
-                setRoleStats(stats);
 
                 setIsSubscribed(subscribed);
 
@@ -814,9 +789,6 @@ if (loading) {
 
                 return <ProfileChurch userId={profile.id} />;
 
-            case 'agency':
-
-                return <ProfileAgency userId={profile.id} />;
 
             case 'court':
 
@@ -896,11 +868,8 @@ if (loading) {
 
             </Helmet>
 
-            <div className="min-h-screen bg-slate-950 text-white pb-20 relative overflow-y-auto">
-
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%\_0%,rgba(147,51,234,0.22),transparent_32%),radial-gradient(circle_at_85%\_10%,rgba(45,212,191,0.16),transparent_32%),linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,0.85))]" />
-
-            <main className="relative mx-auto max-w-7xl px-3 py-5 sm:px-6 lg:px-8">
+            <main className="relative max-w-5xl mx-auto px-4 py-5">
+                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%\_0%,rgba(147,51,234,0.22),transparent_32%),radial-gradient(circle_at_85%\_10%,rgba(45,212,191,0.16),transparent_32%),linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,0.85))]" />
 
                 {/* 🔴 Scheduled Founder Broadcast banner (web parity) */}
 
@@ -1064,66 +1033,6 @@ if (loading) {
 
                 {!isOwnProfile && <div className="mt-6"><AccessPurchasePanel recipientId={profile.id} /></div>}
 
-                {/* Role Cards */}
-
-                {activeRoles.length > 0 && (
-
-                    <section className="mt-6">
-
-                        <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-
-                            <Award className="w-5 h-5 text-purple-400" />
-
-                            Career Roles
-
-                        </h2>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-
-                            {activeRoles.map(role => (
-
-                                <RoleCard
-
-                                    key={role.role_type}
-
-                                    roleType={role.role_type}
-
-                                    stats={roleStats[role.role_type]}
-
-                                    onClick={() => {
-
-                                        const tabMap: Record<string, string> = {
-
-                                            attorney: 'court',
-
-                                            prosecutor: 'court',
-
-                                            journalist: 'social',
-
-                                            pastor: 'church',
-
-                                            seller: 'marketplace',
-
-                                            broadcaster: 'broadcasts'
-
-                                        };
-
-                                        const targetTab = tabMap[role.role_type];
-
-                                        if (targetTab) handleTabSelect(targetTab);
-
-                                    }}
-
-                                />
-
-                            ))}
-
-                        </div>
-
-                    </section>
-
-                )}
-
                 {/* Profile Tabs */}
 
                 <section className="mt-6">
@@ -1147,8 +1056,6 @@ if (loading) {
                     </div>
 
                 </section>
-
-            </main>
 
             {/* Subscription Modal */}
 
@@ -1194,7 +1101,7 @@ if (loading) {
 
             )}
 
-            </div>
+            </main>
 
         </>
 

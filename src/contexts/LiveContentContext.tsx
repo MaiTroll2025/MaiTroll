@@ -67,7 +67,7 @@ export function LiveContentProvider({ children, enabled = true }: { children: Re
 
   const enrichStreamItem = useCallback(async (streamId: string, broadcasterId?: string) => {
     const profilePromise = broadcasterId
-      ? supabase.from('user_profiles').select('username, avatar_url').eq('id', broadcasterId).maybeSingle()
+      ? supabase.from('public_profiles').select('username, avatar_url').eq('id', broadcasterId).maybeSingle()
       : Promise.resolve({ data: null as any })
 
     const [{ data: profile }, { data: vis }, { data: mom }] = await Promise.all([
@@ -110,8 +110,7 @@ export function LiveContentProvider({ children, enabled = true }: { children: Re
             battle_format,
             battle_status,
             category,
-            broadcaster_id,
-            user_profiles!streams_broadcaster_id_fkey(username, avatar_url)
+            broadcaster_id
           `)
           .eq('is_live', true)
           .order('current_viewers', { ascending: false })
@@ -120,13 +119,21 @@ export function LiveContentProvider({ children, enabled = true }: { children: Re
         if (streamsError) throw streamsError
         if (!mountedRef.current) return
 
+        const broadcasterIds = [...new Set((streamsData || [])
+          .map((stream: any) => stream.broadcaster_id || stream.user_id)
+          .filter((id: unknown): id is string => typeof id === 'string'))]
+        const { data: profiles } = broadcasterIds.length > 0
+          ? await supabase.from('public_profiles').select('id, username, avatar_url').in('id', broadcasterIds)
+          : { data: [] as Array<{ id: string; username: string | null; avatar_url: string | null }> }
+        const profilesById = new Map((profiles || []).map((profile) => [profile.id, profile]))
+
         streams = (streamsData || []).map((stream: any) => ({
           id: stream.id,
           title: stream.title || 'Untitled Stream',
           type: 'stream' as const,
           viewerCount: stream.current_viewers || stream.viewer_count || 0,
-          streamerName: stream.user_profiles?.username || 'Unknown',
-          streamerAvatar: stream.user_profiles?.avatar_url || null,
+          streamerName: profilesById.get(stream.broadcaster_id || stream.user_id)?.username || 'Unknown',
+          streamerAvatar: profilesById.get(stream.broadcaster_id || stream.user_id)?.avatar_url || null,
           broadcasterId: stream.broadcaster_id || stream.user_id || null,
           isFeatured: stream.is_featured || false,
           isBattle: stream.battle_mode === 'universal',

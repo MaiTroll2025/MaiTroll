@@ -20,6 +20,15 @@ serve(async (req) => {
   }
 
   try {
+    const schedulerSecret = Deno.env.get('CLEANUP_NOTIFICATIONS_CRON_SECRET') ?? Deno.env.get('MAI_CALENDAR_CRON_SECRET');
+    if (!schedulerSecret || schedulerSecret.length < 32 ||
+        req.headers.get('authorization') !== `Bearer ${schedulerSecret}`) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 

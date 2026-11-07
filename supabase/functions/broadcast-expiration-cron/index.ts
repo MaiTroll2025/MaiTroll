@@ -68,6 +68,15 @@ serve(async (req: Request): Promise<Response> => {
   }
 
   try {
+    const schedulerSecret = Deno.env.get("BROADCAST_EXPIRATION_CRON_SECRET") ?? Deno.env.get("MAI_CALENDAR_CRON_SECRET");
+    if (!schedulerSecret || schedulerSecret.length < 32 ||
+        req.headers.get("authorization") !== `Bearer ${schedulerSecret}`) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     const body = await req.json().catch(() => ({}));
     const action: string = body?.action ?? "run";
 

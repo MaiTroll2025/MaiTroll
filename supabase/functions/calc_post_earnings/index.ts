@@ -7,6 +7,12 @@ const supabaseClient = createClient(supabaseUrl, supabaseServiceKey);
 
 serve(async (req) => {
   try {
+    const secret = Deno.env.get("CALC_POST_EARNINGS_SECRET") ?? Deno.env.get("MAI_CALENDAR_CRON_SECRET");
+    const authorization = req.headers.get("authorization");
+    if (!secret || secret.length < 32 || authorization !== `Bearer ${secret}`) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+    }
+
     const { postId } = await req.json();
 
     // 1. Get engagement data

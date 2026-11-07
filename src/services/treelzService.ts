@@ -12,6 +12,19 @@ import type {
 const FEED_PAGE_SIZE = 10
 const DOWNLOAD_COST = 10
 
+async function loadPublicAuthors(rows: Array<{ user_id?: string | null }>) {
+  const ids = [...new Set(rows.map((row) => row.user_id).filter((id): id is string => Boolean(id)))]
+  if (ids.length === 0) return new Map<string, any>()
+
+  const { data, error } = await supabase
+    .from('public_profiles')
+    .select('id, username, display_name, avatar_url, bio')
+    .in('id', ids)
+
+  if (error) throw error
+  return new Map((data || []).map((profile) => [profile.id, profile]))
+}
+
 // ─── Feed Algorithm (Mai Troll-style) ───
 function _calculateFeedScore(post: TreelzPost): number {
   const likes = post.likes_count || 0
@@ -34,9 +47,7 @@ export async function fetchTreelzFeed(
 ): Promise<{ posts: TreelzPost[]; nextCursor: TreelzFeedCursor | null }> {
   let query = supabase
     .from('treelz_posts')
-    .select(
-      '*, author:user_profiles(id, username, display_name, avatar_url, role, treelz_uploads_enabled)',
-    )
+    .select('*')
     .eq('status', 'active')
     .order('created_at', { ascending: false })
     .limit(FEED_PAGE_SIZE)
@@ -49,15 +60,15 @@ export async function fetchTreelzFeed(
 
   if (error) throw error
 
+  const authors = await loadPublicAuthors(posts || [])
   const mapped: TreelzPost[] = (posts || []).map((p: any) => ({
     ...p,
-    author: p.author
+    author: authors.get(p.user_id)
       ? {
-          id: p.author.id,
-          username: p.author.username,
-          display_name: p.author.display_name,
-          avatar_url: p.author.avatar_url,
-          role: p.author.role,
+          id: authors.get(p.user_id).id,
+          username: authors.get(p.user_id).username,
+          display_name: authors.get(p.user_id).display_name,
+          avatar_url: authors.get(p.user_id).avatar_url,
         }
       : undefined,
     user_interaction: { liked: false, saved: false },
@@ -89,16 +100,24 @@ export async function fetchTreelzFeed(
 export async function fetchTrendingTreelz(limit = 8): Promise<TreelzPost[]> {
   const { data, error } = await supabase
     .from('treelz_posts')
-    .select('*, author:user_profiles(id, username, display_name, avatar_url)')
+    .select('*')
     .eq('status', 'active')
     .order('likes_count', { ascending: false })
     .order('views_count', { ascending: false })
     .limit(limit)
 
   if (error) throw error
+  const authors = await loadPublicAuthors(data || [])
   return (data || []).map((p: any) => ({
     ...p,
-    author: p.author ? { id: p.author.id, username: p.author.username, display_name: p.author.display_name, avatar_url: p.author.avatar_url } : undefined,
+    author: authors.get(p.user_id)
+      ? {
+          id: authors.get(p.user_id).id,
+          username: authors.get(p.user_id).username,
+          display_name: authors.get(p.user_id).display_name,
+          avatar_url: authors.get(p.user_id).avatar_url,
+        }
+      : undefined,
   }))
 }
 
@@ -109,15 +128,23 @@ export async function fetchTreelzProfile(
 ): Promise<TreelzPost[]> {
   const { data, error } = await supabase
     .from('treelz_posts')
-    .select('*, author:user_profiles(id, username, display_name, avatar_url)')
+    .select('*')
     .eq('user_id', profileUserId)
     .eq('status', 'active')
     .order('created_at', { ascending: false })
 
   if (error) throw error
+  const authors = await loadPublicAuthors(data || [])
   const mapped: TreelzPost[] = (data || []).map((p: any) => ({
     ...p,
-    author: p.author ? { id: p.author.id, username: p.author.username, display_name: p.author.display_name, avatar_url: p.author.avatar_url } : undefined,
+    author: authors.get(p.user_id)
+      ? {
+          id: authors.get(p.user_id).id,
+          username: authors.get(p.user_id).username,
+          display_name: authors.get(p.user_id).display_name,
+          avatar_url: authors.get(p.user_id).avatar_url,
+        }
+      : undefined,
     user_interaction: { liked: false, saved: false },
   }))
 
@@ -161,14 +188,22 @@ export async function toggleTreelzTroll(userId: string, postId: string): Promise
 export async function fetchTreelzComments(postId: string): Promise<TreelzComment[]> {
   const { data, error } = await supabase
     .from('treelz_comments')
-    .select('*, author:user_profiles(id, username, display_name, avatar_url)')
+    .select('*')
     .eq('post_id', postId)
     .order('created_at', { ascending: false })
 
   if (error) throw error
+  const authors = await loadPublicAuthors(data || [])
   return (data || []).map((c: any) => ({
     ...c,
-    author: c.author ? { id: c.author.id, username: c.author.username, display_name: c.author.display_name, avatar_url: c.author.avatar_url } : undefined,
+    author: authors.get(c.user_id)
+      ? {
+          id: authors.get(c.user_id).id,
+          username: authors.get(c.user_id).username,
+          display_name: authors.get(c.user_id).display_name,
+          avatar_url: authors.get(c.user_id).avatar_url,
+        }
+      : undefined,
   }))
 }
 

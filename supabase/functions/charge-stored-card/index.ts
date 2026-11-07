@@ -2,6 +2,7 @@
 // Charges a stored card for coin purchases using Square
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 import { withCors, handleCorsPreflight } from '../_shared/cors.ts'
 import { getEnv } from '../_shared/env.ts'
 
@@ -22,8 +23,26 @@ Deno.serve(async (req) => {
     }
 
     try {
+      const authorization = req.headers.get('Authorization')
+      const token = authorization?.match(/^Bearer\s+(.+)$/i)?.[1]
+      if (!token) {
+        return withCors({ success: false, error: 'Authentication required' }, 401)
+      }
+
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')
+      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+      if (!supabaseUrl || !supabaseKey) {
+        return withCors({ success: false, error: 'Server not configured' }, 500)
+      }
+      const authClient = createClient(supabaseUrl, supabaseKey)
+      const { data: { user }, error: authError } = await authClient.auth.getUser(token)
+      if (authError || !user) {
+        return withCors({ success: false, error: 'Unauthorized' }, 401)
+      }
+
       const body = await req.json()
-      const { userId, amountUsd, coins, packageId, packageName, purchaseType, paymentMethodId } = body
+      const { amountUsd, coins, packageId, packageName, purchaseType, paymentMethodId } = body
+      const userId = user.id
 
       console.log(`[ChargeStoredCard ${requestId}] Request body:`, {
         userId, amountUsd, coins, packageId, packageName, purchaseType, paymentMethodId
@@ -49,9 +68,6 @@ Deno.serve(async (req) => {
     }
 
     const baseUrl = SQUARE_ENVIRONMENT === 'sandbox' ? SQUARE_SANDBOX_URL : SQUARE_API_URL
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-
     // Get VALID saved card from saved_cards table
     let cardId = null
     let customerId = null
