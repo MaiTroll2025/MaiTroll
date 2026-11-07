@@ -840,6 +840,41 @@ async function handleClaim(
   params: { violationId: string },
 ): Promise<Response> {
   const { violationId } = params;
+  const token = req.headers.get("authorization")?.match(/^Bearer\s+(.+)$/i)?.[1];
+  if (!token) {
+    return withCors({ error: "Authentication required" }, 401, req);
+  }
+
+  const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+  if (authError || !user) {
+    return withCors({ error: "Unauthorized" }, 401, req);
+  }
+
+  const { data: violation, error: violationError } = await supabase
+    .from("sla_violations")
+    .select("broadcaster_id")
+    .eq("id", violationId)
+    .maybeSingle();
+  if (violationError) {
+    console.error("[sla-monitor] Violation lookup error:", violationError);
+    return withCors({ error: "Unable to validate violation" }, 500, req);
+  }
+  if (!violation) {
+    return withCors({ error: "Violation not found" }, 404, req);
+  }
+
+  const { data: actorProfile, error: actorError } = await supabase
+    .from("user_profiles")
+    .select("is_admin")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (actorError) {
+    console.error("[sla-monitor] Actor lookup error:", actorError);
+    return withCors({ error: "Unable to validate claimant" }, 500, req);
+  }
+  if (violation.broadcaster_id !== user.id && actorProfile?.is_admin !== true) {
+    return withCors({ error: "Forbidden" }, 403, req);
+  }
 
   const { data, error } = await supabase.rpc("claim_sla_compensation", {
     p_violation_id: violationId,

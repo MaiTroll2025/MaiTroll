@@ -125,21 +125,8 @@ Deno.serve(async (req) => {
     if (fetchError || !request) {
       throw new Error('Payout request not found')
     }
-
-    if (request.payment_reference && request.payment_reference !== '') {
-      if (request.status === 'paid') {
-        return new Response(
-          JSON.stringify({ success: true, payoutRequestId, status: 'paid', paymentReference: request.payment_reference }),
-          { headers: { ...corsHeaders(req.headers.get('origin')), 'Content-Type': 'application/json' } },
-        )
-      }
-
-      if (['pending', 'processing', 'failed', 'denied', 'canceled', 'cancelled'].includes(String(request.status).toLowerCase())) {
-        return new Response(
-          JSON.stringify({ success: false, payoutRequestId, status: request.status, paymentReference: request.payment_reference, alreadySubmitted: true }),
-          { status: 409, headers: { ...corsHeaders(req.headers.get('origin')), 'Content-Type': 'application/json' } },
-        )
-      }
+    if (String(request.payment_method ?? request.provider_type ?? '').trim().toLowerCase() !== 'paypal') {
+      throw new Error('This payout request is not configured for PayPal')
     }
 
     const now = new Date()
@@ -147,7 +134,7 @@ Deno.serve(async (req) => {
     const mtDate = new Date(mtDateString)
     const day = mtDate.getDay()
     const hour = mtDate.getHours()
-    if (!([5, 6, 0].includes(day) && hour >= 1 && hour < 19) && !allowForce) {
+    if (!request.payment_reference && !([5, 6, 0].includes(day) && hour >= 1 && hour < 19) && !allowForce) {
       throw new Error('Payouts are only processed on Fridays, Saturdays, and Sundays between 1:00 AM and 7:00 PM MT')
     }
 
@@ -164,44 +151,6 @@ Deno.serve(async (req) => {
 
     if (!email) {
       throw new Error('No PayPal email found for this request')
-    }
-
-    if (request.status === 'processing') {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          payoutRequestId,
-          status: 'processing',
-          paymentReference: request.payment_reference || null,
-          alreadySubmitted: true,
-          message: 'This payout request is already being processed',
-        }),
-        { status: 409, headers: { ...corsHeaders(req.headers.get('origin')), 'Content-Type': 'application/json' } },
-      )
-    }
-
-    const claimResult = await supabase
-      .from('payout_requests')
-      .update({
-        status: 'processing',
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', payoutRequestId)
-      .eq('status', 'pending')
-      .select('id')
-
-    if (!claimResult.data || claimResult.data.length === 0) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          payoutRequestId,
-          status: request.status,
-          paymentReference: request.payment_reference || null,
-          alreadySubmitted: true,
-          message: 'Payout request is already locked or already in progress',
-        }),
-        { status: 409, headers: { ...corsHeaders(req.headers.get('origin')), 'Content-Type': 'application/json' } },
-      )
     }
 
     const clientId = Deno.env.get('PAYPAL_CLIENT_ID')
@@ -233,14 +182,15 @@ Deno.serve(async (req) => {
 
         if (existingStatus === 'SUCCESS') {
           if (request.status !== 'paid') {
-            const { error: rpcError } = await supabase.rpc('troll_bank_finalize_cashout', {
+            const { data: finalizeResult, error: rpcError } = await supabase.rpc('troll_bank_finalize_cashout', {
               p_request_id: payoutRequestId,
               p_admin_id: actorProfile.id,
+              p_paypal_batch_id: String(request.payment_reference),
             })
 
-            if (rpcError) {
+            if (rpcError || finalizeResult?.success !== true) {
               console.error('[paypal-payout] RPC Finalize Error after existing success', rpcError)
-              throw new Error(`Failed to finalize existing successful payout: ${rpcError.message}`)
+              throw new Error(`Failed to finalize existing successful payout: ${rpcError?.message || finalizeResult?.error || 'unknown error'}`)
             }
           }
 
@@ -286,6 +236,44 @@ Deno.serve(async (req) => {
         console.error('[paypal-payout] Existing PayPal batch status lookup failed', existingError)
         throw new Error('Existing PayPal payout batch could not be verified; creation was blocked to prevent duplicate payouts')
       }
+    }
+
+    if (request.status === 'processing') {
+      return new Response(
+        JSON.stringify({
+        success: false,
+        payoutRequestId,
+        status: 'processing',
+        paymentReference: request.payment_reference || null,
+        alreadySubmitted: true,
+        message: 'This payout request is already being processed',
+        }),
+        { status: 409, headers: { ...corsHeaders(req.headers.get('origin')), 'Content-Type': 'application/json' } },
+      )
+    }
+
+    const claimResult = await supabase
+      .from('payout_requests')
+      .update({
+        status: 'processing',
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', payoutRequestId)
+      .eq('status', 'pending')
+      .select('id')
+
+    if (!claimResult.data || claimResult.data.length === 0) {
+      return new Response(
+        JSON.stringify({
+        success: false,
+        payoutRequestId,
+        status: request.status,
+        paymentReference: request.payment_reference || null,
+        alreadySubmitted: true,
+        message: 'Payout request is already locked or already in progress',
+        }),
+        { status: 409, headers: { ...corsHeaders(req.headers.get('origin')), 'Content-Type': 'application/json' } },
+      )
     }
 
     const payoutPayload = {
@@ -383,6 +371,24 @@ Deno.serve(async (req) => {
       throw new Error('Payout request already has a payment reference and should not be reprocessed')
     }
 
+    if (!batchId) {
+      throw new Error('PayPal accepted the payout without a batch ID; the request remains locked for reconciliation')
+    }
+
+    const { error: referenceError } = await supabase
+      .from('payout_requests')
+      .update({
+        status: 'processing',
+        payment_reference: batchId,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', payoutRequestId)
+      .eq('status', 'processing')
+
+    if (referenceError) {
+      throw new Error(`Failed to persist PayPal batch ID for reconciliation: ${referenceError.message}`)
+    }
+
     if (['PENDING', 'PROCESSING'].includes(finalBatchStatus)) {
       const { error: updateError } = await supabase
         .from('payout_requests')
@@ -440,44 +446,19 @@ Deno.serve(async (req) => {
       )
     }
 
-    const { error: rpcError } = await supabase.rpc('troll_bank_finalize_cashout', {
+    if (!batchId) {
+      throw new Error('PayPal reported success without a payout batch ID')
+    }
+
+    const { data: finalizeResult, error: rpcError } = await supabase.rpc('troll_bank_finalize_cashout', {
       p_request_id: payoutRequestId,
       p_admin_id: actorProfile.id,
+      p_paypal_batch_id: batchId,
     })
 
-    if (rpcError) {
+    if (rpcError || finalizeResult?.success !== true) {
       console.error('[paypal-payout] RPC Finalize Error:', rpcError)
-      throw new Error(`Failed to finalize payout: ${rpcError.message}`)
-    }
-
-    const { error: updateError } = await supabase
-      .from('payout_requests')
-      .update({
-        status: 'paid',
-        payment_reference: batchId,
-        paid_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', payoutRequestId)
-
-    if (updateError) {
-      console.error('[paypal-payout] Failed to update payout status in DB:', updateError)
-      throw new Error(`Failed to update payout status: ${updateError.message}`)
-    }
-
-    if (request.escrowed_coins > 0) {
-      await supabase.from('coin_ledger').insert({
-        user_id: request.user_id,
-        delta: -request.escrowed_coins,
-        bucket: 'escrow',
-        source: 'cashout_finalized',
-        ref_id: payoutRequestId,
-        reason: 'Cashout Paid via PayPal',
-      })
-
-      await supabase.from('payout_requests')
-        .update({ escrowed_coins: 0 })
-        .eq('id', payoutRequestId)
+      throw new Error(`Failed to finalize payout: ${rpcError?.message || finalizeResult?.error || 'unknown error'}`)
     }
 
     return new Response(
